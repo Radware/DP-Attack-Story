@@ -1,5 +1,6 @@
 #App specific ignore:
 test.py
+Output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

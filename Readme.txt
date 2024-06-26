@@ -25,5 +25,9 @@
 
 # Version Control
 
-v0.4.0 - Initial Dev Build
+v0.4.1 - 26 June 2024 
+	Output has been moved to the folder ./Output/
+	Removed commented lines after reviewing with team.
+
+v0.4.0 - 25 June 2024 - Initial Dev Build
 	Steve: I merged my clsVision module into Prateek's code.

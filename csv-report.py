@@ -1,8 +1,8 @@
-#Version .4
-#Updated 25 June 2024
+#Version 0.4.1
+#Updated 26 June 2024
 
 import json
-import urllib3
+#import urllib3 #unused at this point
 import csv
 #import pandas as pd #unused at this point
 import time
@@ -10,8 +10,12 @@ from clsVision import *
 from datetime import datetime
 from tabulate import tabulate
 
+outputFolder = './Output/'
 
-#region ####################Helper functions####################
+if not os.path.exists(outputFolder):
+    os.makedirs(outputFolder)
+
+#region #################### Helper functions ####################
 
 def epoch_to_datetime(epoch_time):
     """Convert epoch time to human-readable datetime format."""
@@ -46,52 +50,22 @@ def attackipsid_to_syslog_id(attackid):
     return(syslog_id)
 #endregion
 
-
-
-
 #instantiate v as a logged in vision instance:
 v = clsVision()
 
-##Old code no longer needed:
-'''#vision_ip = input("Enter Vision / CC IP address:")
-
-# First request to login and get the jsessionid
-login_url = f'https://{vision_ip}/mgmt/system/user/login'
-login_headers = {
-    'accept': 'application/json, text/plain, */*',
-    'accept-language': 'en-US,en;q=0.9',
-    'content-type': 'application/json;charset=UTF-8',
-    'origin': f'https://{vision_ip}',
-    'priority': 'u=1, i',
-    'referer':f'https://{vision_ip}/login',
-    'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
-}
-login_data = '{"username":"radware","password":"radware"}'
-
-login_response = requests.post(login_url, headers=login_headers, data=login_data, verify=False)
-
-# Parse the JSON response to get the jsessionid
-login_response_json = login_response.json()
-#jsessionid = login_response_json.get('jsessionid')
-
-# Print the jsessionid
-#print(f"JSESSIONID: {jsessionid}")'''
-
 #Ask user for time period:
 print("Please select a time period:")
-print("1) The past 5 hours")
-print("2) Manually enter times")
-choice = input("Enter selection (1-2) or other to quit: ")
+print("1) The past 24 hours")
+print("2) The past 48 hours")
+print("3) Manually enter times")
+choice = input("Enter selection (1-3) or other to quit: ")
 if choice == '1':
-    epoch_from_time = (int(time.time()) - (60 * 60 * 5)) * 1000
+    epoch_from_time = (int(time.time()) - (60 * 60 * 24)) * 1000
     epoch_to_time = int(time.time()) * 1000
 elif choice == '2':
+    epoch_from_time = (int(time.time()) - (60 * 60 * 48)) * 1000
+    epoch_to_time = int(time.time()) * 1000
+elif choice == '3':
     from_time = input("Enter the duration start time (format: DD-MM-YYYY HH:MM:SS): ")
     epoch_from_time = convert_to_epoch(from_time)
     to_time = input("Enter the duration end time (format: DD-MM-YYYY HH:MM:SS): ")
@@ -100,7 +74,7 @@ else:
     print("Other input, quit")
     exit(1)
 
-DPlist = v.getDPDeviceList()
+#Display a list of available DefensePros
 DPString = '\nAvailable devices: '
 for DP in v.getDPDeviceList():
     DPString += DP['managementIp'] + " "
@@ -108,91 +82,19 @@ print(DPString)
 
 device_ip = input("Enter the device IP: ")
 
-
-#print(epoch_from_time)
-#print(epoch_to_time)
-
-##Old code no longer needed
-'''# Second request to the report endpoint using the obtained jsessionid
-report_url = 'https://155.1.1.6/mgmt/monitor/reporter/reports-ext/DP_ATTACK_REPORTS'
-headers = {
-    'accept': 'application/json, text/plain, */*',
-    'accept-language': 'en-US,en;q=0.9',
-    'content-type': 'application/json;charset=UTF-8',
-    'cookie': f'JSESSIONID={jsessionid}',
-    'origin': 'https://155.1.1.6',
-    'priority': 'u=1, i',
-    'referer': 'https://155.1.1.6/events',
-    'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
-}
-data = {
-    "criteria": [
-        {
-            "type": "timeFilter",
-            "inverseFilter": False,
-            "field": "endTime",
-            "lower": epoch_from_time,
-            "upper": epoch_to_time,
-            "includeUpper": False,
-            "includeLower": False
-        },
-        {
-            "type": "orFilter",
-            "inverseFilter": False,
-            "filters": [
-                {
-                    "type": "termFilter",
-                    "inverseFilter": False,
-                    "field": "deviceIp",
-                    "value": device_ip
-                }
-            ]
-        }
-    ],
-    "order": [
-        {
-            "aggregationName": None,
-            "field": "endTime",
-            "order": "DESC",
-            "sortingType": "STRING",
-            "type": "Order"
-        }
-    ],
-    "pagination": {
-        "page": 0,
-        "size": 20,
-        "topHits": 10000
-    },
-    "aggregation": None,
-    "sourceFilters": [],
-    "sourceIncludeFilters": [],
-    "useFullTableScan": False,
-    "validateReportStructure": False
-}
-
-response = requests.post(report_url, headers=headers, data=json.dumps(data), verify=False)
-'''
-
-
-
-# Parse the JSON response
+#Query Vision for attack data that matches the specified timeframe
 response_data = v.getAttackReports(device_ip, epoch_from_time, epoch_to_time)
 
+# Parse the JSON response
 try:
     total_hits = int(response_data["metaData"]["totalHits"])
     if total_hits == 0:
         raise ValueError("No data present for the specified time period.")
     
     # Save the formatted JSON to a file
-    with open('response.json', 'w') as file:
+    with open(outputFolder + 'response.json', 'w') as file:
         json.dump(response_data, file, indent=4)
-    
+
     print("Response saved to response.json")
     
     def parse_response_file(file_path):
@@ -251,10 +153,10 @@ try:
         
         table = tabulate(table_data, headers=headers, tablefmt="pretty")
         
-        with open('output_table.txt', 'w') as f:
+        with open(outputFolder + 'output_table.txt', 'w') as f:
             f.write(table)
         
-        output_csv_file = "output_table.csv"
+        output_csv_file = outputFolder + "output_table.csv"
 
         with open(output_csv_file, mode='w', newline='') as csv_file:
             writer = csv.writer(csv_file)
@@ -265,7 +167,7 @@ try:
         print(f"Data written to CSV file: {output_csv_file}")
 
     # Parse the saved response file and print the start and end times
-    parse_response_file('response.json')
+    parse_response_file(outputFolder + 'response.json')
 
 except ValueError as ve:
     print(str(ve))

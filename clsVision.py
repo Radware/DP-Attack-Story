@@ -7,6 +7,8 @@ import os
 import json
 import time
 
+# Egor demo #####
+
 LogfileName = "DP-Attack-Story.log"
 
 #We ignore if Vision has an invalid security certificate. The next 

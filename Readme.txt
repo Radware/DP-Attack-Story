@@ -36,4 +36,4 @@ v0.4.0 - 25 June 2024 - Initial Dev Build
 v0.5.0 - 26 June 2024 - Restructure code (Egor)
 	Added main.py
 	Added collector.py
-	Added parser.py (need to qa)
+	Added parser.py (need to qa, do not have data to test)

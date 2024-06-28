@@ -1,7 +1,7 @@
 #Version 0.4.1
 #Updated 26 June 2024
 
-#prateek test branch
+
 
 import json
 #import urllib3 #unused at this point
@@ -81,12 +81,22 @@ DPString = '\nAvailable devices: '
 for DP in v.getDPDeviceList():
     DPString += DP['managementIp'] + " "
 print(DPString)
-
-device_ip = input("Enter the device IP: ")
+#adding support for multiple DP addresses as input
+#adding a validation to make sure a DP IP address that dosent exist on vision is not queried
+device_list = v.getDPDeviceList()
+device_ips = [device['managementIp'] for device in device_list]
+device_ip_input = input("Enter the device IP (for multiple, use comma): ")
+device_ips_to_check = device_ip_input.split(',')
 
 #Query Vision for attack data that matches the specified timeframe
-response_data = v.getAttackReports(device_ip, epoch_from_time, epoch_to_time)
-
+for ip in device_ips_to_check:
+    ip = ip.strip()
+    if ip in device_ips:
+        #print(f"Device {ip} exists in the device list. Sending request...")
+        response_data = v.getAttackReports(ip, epoch_from_time, epoch_to_time)
+        #print(response_data)
+    else:
+        print(f"Device {ip} does not exist in the device list.")
 # Parse the JSON response
 try:
     total_hits = int(response_data["metaData"]["totalHits"])
@@ -150,7 +160,7 @@ try:
                 duration = 'N/A'
 
             syslog_id = attackipsid_to_syslog_id(attackid)
-            print(syslog_id)
+            #print(syslog_id)
             table_data.append([device_ip,policy_id,attackid,radwareid,syslog_id,attack_category,attack_name,Threat_Group,Protocol,Source_Address,Source_Port,Destination_Address,Destination_Port,Action_Type,Attack_Status,Latest_State,final_footprint,Average_Attack_Rate_PPS,Average_Attack_Rate_BPS,Packet_Count,duration,start_time,end_time,Direction,Physical_Port])
         
         table = tabulate(table_data, headers=headers, tablefmt="pretty")

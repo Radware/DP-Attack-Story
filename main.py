@@ -8,8 +8,6 @@ outputFolder = './Output/'
 
 if __name__ == '__main__':
 	if collect_data:
-		print('true')
-
 		#1 Get start time and end time
 		epoch_from_to_time_list = collector.set_user_time_period()
 		epoch_from_time = epoch_from_to_time_list[0]

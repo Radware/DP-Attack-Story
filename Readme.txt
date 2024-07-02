@@ -13,6 +13,7 @@
 # Prerequesites
 
 	Requires the tabulate library. 'pip install tabulate' to download
+	Requires the requests library. 'pip install requests' to download
 
 # How to run
 
@@ -31,3 +32,8 @@ v0.4.1 - 26 June 2024
 
 v0.4.0 - 25 June 2024 - Initial Dev Build
 	Steve: I merged my clsVision module into Prateek's code.
+
+v0.5.0 - 26 June 2024 - Restructure code (Egor)
+	Added main.py
+	Added collector.py
+	Added parser.py (need to qa, do not have data to test)

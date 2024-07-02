@@ -8,13 +8,8 @@ import time
 from clsVision import *
 from datetime import datetime
 
-outputFolder = './Output/'
 
-if not os.path.exists(outputFolder):
-    os.makedirs(outputFolder)
 
-#instantiate v as a logged in vision instance:
-v = clsVision()
 
 #################### Helper functions ####################
 
@@ -25,7 +20,8 @@ def convert_to_epoch(human_readable_time, time_format='%d-%m-%Y %H:%M:%S'):
     epoch_time = int(time.mktime(dt.timetuple()) * 1000)
     return epoch_time
 
-def set_user_time_period():
+def prompt_user_time_period():
+    """ Prompt user for time period, returns a list, [0] epoch start time, [1] epoch end time """
 
     #Ask user for time period:
     print("Please select a time period:")
@@ -51,7 +47,7 @@ def set_user_time_period():
     epoch_time_range = [epoch_from_time,epoch_to_time]
     return epoch_time_range
 
-def get_available_devices():
+def display_available_devices(v):
     #Display a list of available DefensePros
     DPString = '\nAvailable devices: '
     for DP in v.getDPDeviceList():
@@ -59,7 +55,11 @@ def get_available_devices():
     print(DPString)
     return DPString
 
-def get_attack_data(epoch_from_time,epoch_to_time):
+def get_attack_data(epoch_from_time,epoch_to_time,v):
+
+    #Display list of available devices
+    display_available_devices(v)
+          
     device_ip = input("Enter the device IP: ")
 
     #Query Vision for attack data that matches the specified timeframe
@@ -70,12 +70,6 @@ def get_attack_data(epoch_from_time,epoch_to_time):
         total_hits = int(response_data["metaData"]["totalHits"])
         if total_hits == 0:
             raise ValueError("No data present for the specified time period.")
-        
-        # Save the formatted JSON to a file
-        with open(outputFolder + 'response.json', 'w') as file:
-            json.dump(response_data, file, indent=4)
-
-        print("Response saved to response.json")
 
     except ValueError as ve:
         print(str(ve)) # type: ignore

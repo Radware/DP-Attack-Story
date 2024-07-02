@@ -3,7 +3,6 @@ import json
 from tabulate import tabulate
 import csv
 
-outputFolder = './Output/'
 
 #################### Helper functions ####################
 
@@ -32,8 +31,8 @@ def attackipsid_to_syslog_id(attackid):
 	return(syslog_id)
 
 
-def parse_response_file(file_path):
-	with open(file_path, 'r') as file:
+def parse_response_file(outputFolder):
+	with open(outputFolder, 'r') as file:
 		data = json.load(file)
 
 	# Parse and extract start time and end time for each "row" in "data"

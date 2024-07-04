@@ -4,8 +4,8 @@ import clsVision
 import os
 import json
 
-collect_data=True
-parse_data=False
+collect_data=False
+parse_data=True
 outputFolder = './Output/'
 
 if not os.path.exists(outputFolder):
@@ -20,7 +20,7 @@ if __name__ == '__main__':
 		epoch_to_time = epoch_from_to_time_list[1]
 
 		#2 Connect to Vision (instantiate v as a logged in vision instance)
-		v = clsVision()
+		v = clsVision.clsVision()
 
 		#3 Get attack data
 		attack_data= collector.get_attack_data(epoch_from_time,epoch_to_time,v)

@@ -26,6 +26,11 @@
 
 # Version Control
 
+v0.5.0 - 26 June 2024 - Restructure code (Egor)
+	Added main.py
+	Added collector.py
+	Added parser.py (need to qa, do not have data to test)
+
 v0.4.1 - 26 June 2024 
 	Output has been moved to the folder ./Output/
 	Removed commented lines after reviewing with team.
@@ -33,7 +38,5 @@ v0.4.1 - 26 June 2024
 v0.4.0 - 25 June 2024 - Initial Dev Build
 	Steve: I merged my clsVision module into Prateek's code.
 
-v0.5.0 - 26 June 2024 - Restructure code (Egor)
-	Added main.py
-	Added collector.py
-	Added parser.py (need to qa, do not have data to test)
+
+

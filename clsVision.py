@@ -1,4 +1,3 @@
-import requests
 import configparser
 import getpass
 import sys
@@ -7,7 +6,11 @@ import os
 import json
 import time
 
-# Egor demo #####
+try:
+    import requests
+except ImportError:
+    print("The python module 'requests' is not installed. Please install it by running: pip install requests")
+    exit()
 
 LogfileName = "DP-Attack-Story.log"
 
@@ -289,3 +292,30 @@ class clsVision:
         else:
             update_log(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
             raise Exception(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+    
+    def getAttackRate(self, StartTime, EndTime, Units = "bps"):
+        """Returns a JSON file containing the graph data from the specified time period.
+        Units can be 'bps' or 'pps'"""
+        
+        APIUrl = f'https://{self.ip}/mgmt/vrm/monitoring/traffic/periodic/report'
+        data = {
+            "unit": Units,
+            "direction": "Inbound",
+            "timeInterval": {
+                "from": StartTime,
+                "to": EndTime
+            },
+            #"selectedDevices":[]
+        }
+
+        update_log(f"Pulling attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+
+        response = self._post(APIUrl,json.dumps(data))
+        print(response)
+        if response.status_code == 200:
+            update_log(f"Successfully pulled attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+            return response.json()
+        else:
+            update_log(f"Error pulling attack rate data. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+            raise Exception(f"Error pulling attack rate data. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+    

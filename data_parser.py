@@ -1,8 +1,12 @@
 from datetime import datetime
 import json
-from tabulate import tabulate
 import csv
 
+try:
+    from tabulate import tabulate
+except ImportError:
+    print("The python module 'tabulate' is not installed. Please install it by running: pip install tabulate")
+    exit()
 
 #################### Helper functions ####################
 

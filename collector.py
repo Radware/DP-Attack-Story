@@ -25,12 +25,12 @@ def prompt_user_time_period():
 
     #Ask user for time period:
     print("Please select a time period:")
-    print("1) The past 24 hours")
+    print("1) The past 2 hours")
     print("2) The past 48 hours")
     print("3) Manually enter times")
     choice = input("Enter selection (1-3) or other to quit: ")
     if choice == '1':
-        epoch_from_time = (int(time.time()) - (60 * 60 * 24)) * 1000
+        epoch_from_time = (int(time.time()) - (60 * 60 * 2)) * 1000
         epoch_to_time = int(time.time()) * 1000
     elif choice == '2':
         epoch_from_time = (int(time.time()) - (60 * 60 * 48)) * 1000

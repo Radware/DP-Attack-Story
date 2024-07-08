@@ -25,6 +25,9 @@
 	5. View your report under .\Output\
 
 # Version Control
+v0.6.0 - 8 July 2024 
+	Added graph functionality
+	Added error handling for missing libraries
 
 v0.5.0 - 26 June 2024 - Restructure code (Egor)
 	Added main.py

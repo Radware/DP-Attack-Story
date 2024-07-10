@@ -55,26 +55,52 @@ def display_available_devices(v):
     print(DPString)
     return DPString
 
+
 def get_attack_data(epoch_from_time,epoch_to_time,v):
 
-    #Display list of available devices
-    display_available_devices(v)
-          
-    device_ip = input("Enter the device IP: ")
-
-    #Query Vision for attack data that matches the specified timeframe
-    response_data = v.getAttackReports(device_ip, epoch_from_time, epoch_to_time)
-    print(response_data)
 
     try:
-        total_hits = int(response_data["metaData"]["totalHits"])
-        if total_hits == 0:
-            raise ValueError("No data present for the specified time period.")
+        device_list = v.getDPDeviceList()
+        dp_list_ip = [device['managementIp'] for device in device_list] 
+    #Display list of available devices
+        device_ips = input("Enter the device IPs separated by commas: ").split(',')
+    # Validate IP addresses format
+        import re
+        ip_pattern = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$')
+        for ip in device_ips:
+            ip = ip.strip()
+            if not ip_pattern.match(ip):
+                raise ValueError(f"Invalid IP address format: {ip}")
+    
+        attack_data = {}
 
-    except ValueError as ve:
-        print(str(ve)) # type: ignore
-             
-    return response_data
+        for device_ip in device_ips:
+            device_ip = device_ip.strip()
+            if device_ip not in dp_list_ip:
+                print(f"Device IP {device_ip} is not available or does not exist. Skipping.")
+                continue
+            response_data = v.getAttackReports(device_ip, epoch_from_time, epoch_to_time)
+            print(f"Attack data for {device_ip}:")
+            print(response_data)
+            try:
+                    total_hits = int(response_data["metaData"]["totalHits"])
+                    if total_hits == 0:
+                        raise ValueError(f"No data present for the specified time period for {device_ip}")
+            except KeyError:
+                    print(f"No 'metaData' key in response for {device_ip}")
+                    continue
+            except ValueError as ve:
+                    print(str(ve))
+                    continue   
+
+            attack_data[device_ip] = response_data
+
+        
+        return attack_data
+
+    except Exception as e:
+        print(f"An error occurred: {e}")             
+    
 
 
         

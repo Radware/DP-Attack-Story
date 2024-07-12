@@ -56,21 +56,24 @@ def display_available_devices(v):
     return DPString
 
 
-def get_attack_data(epoch_from_time,epoch_to_time,v):
+def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips):
 
 
     try:
         device_list = v.getDPDeviceList()
         dp_list_ip = [device['managementIp'] for device in device_list] 
     #Display list of available devices
-        device_ips = input("Enter the device IPs separated by commas: ").split(',')
     # Validate IP addresses format
-        import re
-        ip_pattern = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$')
-        for ip in device_ips:
-            ip = ip.strip()
-            if not ip_pattern.match(ip):
-                raise ValueError(f"Invalid IP address format: {ip}")
+        print("Available Defensepros: " + ' '.join(dp_list_ip))
+        if device_ips[0].upper() == "ALL": 
+            device_ips = dp_list_ip
+        else:
+            import re
+            ip_pattern = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$')
+            for ip in device_ips:
+                ip = ip.strip()
+                if not ip_pattern.match(ip):
+                    raise ValueError(f"Invalid IP address format: {ip}")
     
         attack_data = {}
 

@@ -23,9 +23,13 @@ if __name__ == '__main__':
 
         #Connect to Vision (instantiate v as a logged in vision instance)
         v = clsVision.clsVision()
+        #print available devices
+        collector.display_available_devices(v)
+        device_ips = input("Enter the device IPs separated by commas. Input 'All' to use all available Defensepros: ").split(',')
 
         #Get attack data
-        attack_data= collector.get_attack_data(epoch_from_time,epoch_to_time,v)
+
+        attack_data = collector.get_attack_data(epoch_from_time, epoch_to_time, v, device_ips)
 
         #Save the formatted JSON to a file
         with open(outputFolder + 'response.json', 'w') as file:

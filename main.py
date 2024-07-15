@@ -24,12 +24,21 @@ if __name__ == '__main__':
         #Connect to Vision (instantiate v as a logged in vision instance)
         v = clsVision.clsVision()
         #print available devices
-        collector.display_available_devices(v)
-        device_ips = input("Enter the device IPs separated by commas. Input 'All' to use all available Defensepros: ").split(',')
+        #collector.display_available_devices(v)
+        #device_ips = input("Enter the device IPs separated by commas. Input 'All' to use all available Defensepros: ").split(',')
+
+        device_ips, dp_list_ip = collector.display_available_devices(v)
+
+        policies = {}
+        for ip in device_ips:
+            ip = ip.strip()
+            policy_input = input(f"Enter the policies for {ip} separated by commas (or leave blank to skip): ").strip()
+            if policy_input:
+                policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 
         #Get attack data
 
-        attack_data = collector.get_attack_data(epoch_from_time, epoch_to_time, v, device_ips)
+        attack_data = collector.get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_list_ip)
 
         #Save the formatted JSON to a file
         with open(outputFolder + 'response.json', 'w') as file:

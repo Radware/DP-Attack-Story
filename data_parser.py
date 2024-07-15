@@ -39,63 +39,66 @@ def parse_response_file(outputFolder):
 	with open(outputFolder, 'r') as file:
 		data = json.load(file)
 
-	# Parse and extract start time and end time for each "row" in "data"
-	rows = data.get('data', [])
+	#Parse and extract start time and end time for each "row" in "data"
+	#rows = data.get('data', [])
+	#print(rows)
+	
 	table_data = []
+	
 	headers = ["Device IP", "Policy", "Attack ID", "Radware ID", "Syslog ID" , "Attack Category", "Attack Name", "Threat Group", "Protocol", "Source Address", "Source Port", "Destination Address", "Destination Port", "Action", "Attack Status", "Latest Attack State", "Final Attack Footprint", "Average Attack Rate(PPS)", "Average Attack Rate(BPS)", "Packet Count", "Attack Duration", "Start Time", "End Time", "Direction", "Physical Port"]
-	
-	for row_data in rows:
-		row = row_data.get('row', {})
-		device_ip = row.get('deviceIp', 'N/A')
-		policy_id = row.get('ruleName', 'N/A')
-		attackid = row.get('attackIpsId', 'N/A')
-		radwareid = row.get('radwareId', 'N/A')
-		attack_category = row.get('category', 'N/A')
-		attack_name = row.get('name', 'N/A')
-		Threat_Group = row.get('threatGroup', 'N/A')
-		Protocol = row.get('protocol', 'N/A')
-		Source_Address = row.get('sourceAddress', 'N/A')
-		Source_Port = row.get('sourcePort', 'N/A')
-		Destination_Address = row.get('destAddress', 'N/A')
-		Destination_Port = row.get('destPort', 'N/A')
-		Action_Type = row.get('actionType', 'N/A')
-		Attack_Status = row.get('status', 'N/A')
-		Latest_State = row.get('latestBlockingState', 'N/A')
-		final_footprint = row.get('latestFootprintText', 'N/A')
-		Average_Attack_Rate_PPS = row.get('averageAttackPacketRatePps', 'N/A')
-		Average_Attack_Rate_BPS = row.get('averageAttackRateBps', 'N/A')
-		Packet_Count = row.get('packetCount', 'N/A')
-		start_time_epoch = row.get('startTime', 'N/A')
-		end_time_epoch = row.get('endTime', 'N/A')
-		Direction = row.get('direction', 'N/A')
-		Physical_Port = row.get('physicalPort', 'N/A')
 
-		if start_time_epoch != 'N/A':
-			start_time = epoch_to_datetime(start_time_epoch)
-		else:
-			start_time = 'N/A'
+	for ip_address, ip_data in data.items():
+		if ip_address == 'metaData':
+			continue
+        
+		for row_data in ip_data.get('data', []):
+			row = row_data.get('row', {})
+			device_ip = row.get('deviceIp', 'N/A')
+			policy_id = row.get('ruleName', 'N/A')
+			attackid = row.get('attackIpsId', 'N/A')
+			radwareid = row.get('radwareId', 'N/A')
+			attack_category = row.get('category', 'N/A')
+			attack_name = row.get('name', 'N/A')
+			Threat_Group = row.get('threatGroup', 'N/A')
+			Protocol = row.get('protocol', 'N/A')
+			Source_Address = row.get('sourceAddress', 'N/A')
+			Source_Port = row.get('sourcePort', 'N/A')
+			Destination_Address = row.get('destAddress', 'N/A')
+			Destination_Port = row.get('destPort', 'N/A')
+			Action_Type = row.get('actionType', 'N/A')
+			Attack_Status = row.get('status', 'N/A')
+			Latest_State = row.get('latestBlockingState', 'N/A')
+			final_footprint = row.get('latestFootprintText', 'N/A')
+			Average_Attack_Rate_PPS = row.get('averageAttackPacketRatePps', 'N/A')
+			Average_Attack_Rate_BPS = row.get('averageAttackRateBps', 'N/A')
+			Packet_Count = row.get('packetCount', 'N/A')
+			start_time_epoch = row.get('startTime', 'N/A')
+			end_time_epoch = row.get('endTime', 'N/A')
+			Direction = row.get('direction', 'N/A')
+			Physical_Port = row.get('physicalPort', 'N/A')
 
-		if end_time_epoch != 'N/A':
-			end_time = epoch_to_datetime(end_time_epoch)
-		else:
-			end_time = 'N/A'
+			if start_time_epoch != 'N/A':
+				start_time = epoch_to_datetime(start_time_epoch)
+			else:
+				start_time = 'N/A'
+			if end_time_epoch != 'N/A':
+				end_time = epoch_to_datetime(end_time_epoch)
+			else:
+				end_time = 'N/A'
+			if start_time != 'N/A' and end_time != 'N/A':
+				duration = calculate_duration(start_time, end_time)
+			else:
+				duration = 'N/A'
 
-		if start_time != 'N/A' and end_time != 'N/A':
-			duration = calculate_duration(start_time, end_time)
-		else:
-			duration = 'N/A'
+			syslog_id = attackid.split('-')[1] if attackid != 'N/A' else 'N/A'
+			table_data.append([device_ip, policy_id, attackid, radwareid, syslog_id, attack_category, attack_name, Threat_Group, Protocol, Source_Address, Source_Port, Destination_Address, Destination_Port, Action_Type, Attack_Status, Latest_State, final_footprint, Average_Attack_Rate_PPS, Average_Attack_Rate_BPS, Packet_Count, duration, start_time, end_time, Direction, Physical_Port])
 
-		syslog_id = attackipsid_to_syslog_id(attackid)
-		print(syslog_id)
-		table_data.append([device_ip,policy_id,attackid,radwareid,syslog_id,attack_category,attack_name,Threat_Group,Protocol,Source_Address,Source_Port,Destination_Address,Destination_Port,Action_Type,Attack_Status,Latest_State,final_footprint,Average_Attack_Rate_PPS,Average_Attack_Rate_BPS,Packet_Count,duration,start_time,end_time,Direction,Physical_Port])
-	
 	table = tabulate(table_data, headers=headers, tablefmt="pretty")
-	
+
 	with open(outputFolder + 'output_table.txt', 'w') as f:
 		f.write(table)
-	
-	output_csv_file = outputFolder + "output_table.csv"
 
+	output_csv_file = outputFolder + "output_table.csv"
 	with open(output_csv_file, mode='w', newline='') as csv_file:
 		writer = csv.writer(csv_file)
 		writer.writerow(headers)  # Write headers to CSV
@@ -103,6 +106,8 @@ def parse_response_file(outputFolder):
 			writer.writerow(row)
 
 	print(f"Data written to CSV file: {output_csv_file}")
+
+
 
 
  # type: ignore

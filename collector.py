@@ -48,33 +48,57 @@ def prompt_user_time_period():
     return epoch_time_range
 
 def display_available_devices(v):
-    #Display a list of available DefensePros
-    DPString = '\nAvailable devices: '
-    for DP in v.getDPDeviceList():
-        DPString += DP['managementIp'] + " "
-    print(DPString)
-    return DPString
+    """
+    Fetches the list of available DefensePro devices from Vision instance 'v',
+    displays them to the user, and validates user input for device IPs.
+    Returns:
+    - device_ips (list): A list of validated DefensePro device IPs entered by the user.
+    - dp_list_ip (dict): A dictionary mapping DefensePro device IPs to device information, fetched from the Vision instance 'v'.
+                         Keys are device IPs and values are the corresponding device information.
+    """
+    try:
+        device_list = v.getDPDeviceList()
+        dp_list_ip = {device['managementIp']: device for device in device_list}
+        
+        # Display list of available DefensePros
+        print("Available Defensepros: " + ' '.join(dp_list_ip.keys()))
+        
+        while True:
+            device_ips = input("Enter the device IPs separated by commas. Input 'All' to use all available DefensePros: ").split(',')
+            if device_ips[0].upper() == "ALL":
+                device_ips = list(dp_list_ip.keys())
+                break
+            else:
+                # Validate IP addresses format and existence
+                valid_ips = []
+                invalid_ips = []
+                for ip in device_ips:
+                    ip = ip.strip()
+                    if ip in dp_list_ip:
+                        valid_ips.append(ip)
+                    else:
+                        invalid_ips.append(ip)
+
+                if invalid_ips:
+                    print(f"The following IPs are invalid or not available: {', '.join(invalid_ips)}")
+                if valid_ips:
+                    device_ips = valid_ips
+                    break
+                else:
+                    print("Please enter valid IP addresses.")
+
+        return device_ips, dp_list_ip
+
+    except Exception as e:
+        print(f"An error occurred while fetching device list: {e}")
+        return [], {}
 
 
-def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips):
+def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips, policies, dp_list_ip):
 
 
     try:
-        device_list = v.getDPDeviceList()
-        dp_list_ip = [device['managementIp'] for device in device_list] 
-    #Display list of available devices
-    # Validate IP addresses format
-        print("Available Defensepros: " + ' '.join(dp_list_ip))
-        if device_ips[0].upper() == "ALL": 
-            device_ips = dp_list_ip
-        else:
-            import re
-            ip_pattern = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$')
-            for ip in device_ips:
-                ip = ip.strip()
-                if not ip_pattern.match(ip):
-                    raise ValueError(f"Invalid IP address format: {ip}")
-    
+  
         attack_data = {}
 
         for device_ip in device_ips:
@@ -82,9 +106,27 @@ def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips):
             if device_ip not in dp_list_ip:
                 print(f"Device IP {device_ip} is not available or does not exist. Skipping.")
                 continue
-            response_data = v.getAttackReports(device_ip, epoch_from_time, epoch_to_time)
+            device_policies = policies.get(device_ip, [])
+            filters = [
+                {
+                    "type": "termFilter",
+                    "inverseFilter": False,
+                    "field": "ruleName",
+                    "value": policy
+                }
+                for policy in device_policies
+            ]
+            
+            filter_json = {
+                "type": "orFilter",
+                "inverseFilter": False,
+                "filters": filters
+            } if filters else None
+
+            response_data = v.getAttackReports(device_ip, epoch_from_time, epoch_to_time,filter_json)
+
             print(f"Attack data for {device_ip}:")
-            print(response_data)
+            #print(response_data)
             try:
                     total_hits = int(response_data["metaData"]["totalHits"])
                     if total_hits == 0:

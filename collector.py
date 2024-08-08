@@ -9,8 +9,6 @@ from clsVision import *
 from datetime import datetime
 
 
-
-
 #################### Helper functions ####################
 
 def convert_to_epoch(human_readable_time, time_format='%d-%m-%Y %H:%M:%S'):
@@ -18,34 +16,50 @@ def convert_to_epoch(human_readable_time, time_format='%d-%m-%Y %H:%M:%S'):
     dt = datetime.strptime(human_readable_time, time_format)
     # Convert the datetime object to epoch time
     epoch_time = int(time.mktime(dt.timetuple()) * 1000)
-    return epoch_time
+    return epoch_time, dt.month
 
 def prompt_user_time_period():
     """ Prompt user for time period, returns a list, [0] epoch start time, [1] epoch end time """
 
     #Ask user for time period:
     print("Please select a time period:")
-    print("1) The past 2 hours")
+    print("1) The past 24 hours")
     print("2) The past 48 hours")
     print("3) Manually enter times")
     choice = input("Enter selection (1-3) or other to quit: ")
     if choice == '1':
         epoch_from_time = (int(time.time()) - (60 * 60 * 2)) * 1000
         epoch_to_time = int(time.time()) * 1000
+        from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
+        to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
     elif choice == '2':
         epoch_from_time = (int(time.time()) - (60 * 60 * 48)) * 1000
         epoch_to_time = int(time.time()) * 1000
+        from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
+        to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
     elif choice == '3':
         from_time = input("Enter the duration start time (format: DD-MM-YYYY HH:MM:SS): ")
-        epoch_from_time = convert_to_epoch(from_time)
+        epoch_from_time,from_time_month = convert_to_epoch(from_time)
         to_time = input("Enter the duration end time (format: DD-MM-YYYY HH:MM:SS): ")
-        epoch_to_time = convert_to_epoch(to_time)
+        epoch_to_time, to_time_month = convert_to_epoch(to_time)
+        from_month = from_time_month
+        to_month = to_time_month
     else:
         print("Other input, quit")
         exit(1)
+        
+    start_year = datetime.fromtimestamp(epoch_from_time / 1000).year
+    end_year = datetime.fromtimestamp(epoch_to_time / 1000).year
 
-    epoch_time_range = [epoch_from_time,epoch_to_time]
-    return epoch_time_range
+    if from_month == to_month and start_year == end_year:
+        epoch_time_range = [epoch_from_time,epoch_to_time, from_month, start_year]
+        return epoch_time_range
+        #return from_month
+    else:
+        epoch_time_range = [epoch_from_time,epoch_to_time, from_month, start_year, to_month]
+        return epoch_time_range
+    
+    #return epoch_time_range
 
 def display_available_devices(v):
     """

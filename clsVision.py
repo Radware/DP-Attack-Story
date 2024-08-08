@@ -235,31 +235,35 @@ class clsVision:
             update_log(f"Error getting device data for {DeviceIP}")
             raise Exception(f"Error getting device data for {DeviceIP} - {r}")
         
-    def getAttackReports(self, DeviceIP,StartTime,EndTime):
+    def getAttackReports(self, DeviceIP,StartTime,EndTime, filter_json=None):
+        criteria = [
+            {
+                "type": "timeFilter",
+                "inverseFilter": False,
+                "field": "endTime",
+                "lower": StartTime,
+                "upper": EndTime,
+                "includeUpper": False,
+                "includeLower": False
+            },
+            {
+                "type": "orFilter",
+                "inverseFilter": False,
+                "filters": [
+                    {
+                        "type": "termFilter",
+                        "inverseFilter": False,
+                        "field": "deviceIp",
+                        "value": DeviceIP
+                    }
+                ]
+            }
+        ]
+        # If a policy is provided, add the policy filter to the criteria
+        if filter_json:
+            criteria.append(filter_json)
         data = {
-            "criteria": [
-                {
-                    "type": "timeFilter",
-                    "inverseFilter": False,
-                    "field": "endTime",
-                    "lower": StartTime,
-                    "upper": EndTime,
-                    "includeUpper": False,
-                    "includeLower": False
-                },
-                {
-                    "type": "orFilter",
-                    "inverseFilter": False,
-                    "filters": [
-                        {
-                            "type": "termFilter",
-                            "inverseFilter": False,
-                            "field": "deviceIp",
-                            "value": DeviceIP
-                        }
-                    ]
-                }
-            ],
+            "criteria": criteria,
             "order": [
                 {
                     "aggregationName": None,

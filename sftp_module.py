@@ -1,9 +1,13 @@
-import pysftp
 import re
 import warnings
 import configparser
 from getpass import getpass  # For secure password input
 
+try:
+    import pysftp
+except ImportError:
+    print("The python module 'pysftp' is not installed. Please install it by running: pip install pysftp")
+    exit()
 
 warnings.filterwarnings(action='ignore', module='pysftp', category=UserWarning)
 

@@ -36,7 +36,7 @@ if __name__ == '__main__':
         policies = {}
         for ip in device_ips:
             ip = ip.strip()
-            policy_input = input(f"Enter the policies for {ip} separated by commas (or leave blank to skip): ").strip()
+            policy_input = input(f"Enter the policies for {ip} separated by commas (or leave blank for All Policies): ").strip()
             if policy_input:
                 policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 
@@ -55,21 +55,24 @@ if __name__ == '__main__':
        
         syslog_ids, syslog_details = data_parser.parse_response_file(outputFolder + 'response.json')
         #print(syslog_details)
+        all_results = {}
 
         for file in found_files:
             file_path = os.path.join(outputFolder, file)
             print(f"Processing file for BDoS attack logs: {file}")
             result = data_parser.parse_log_file(file_path, syslog_ids)
+            
+            all_results.update(result)
             #print(f"Result for {file}: {result}")
-
-        categorized_logs = data_parser.categorize_logs_by_state(result)
-
+        print(all_results)
+        categorized_logs = data_parser.categorize_logs_by_state(all_results)
+        #print(categorized_logs) 
         metrics = data_parser.calculate_attack_metrics(categorized_logs)
         for syslog_id in syslog_ids:
             if syslog_id in metrics:
                 syslog_details[syslog_id].update(metrics[syslog_id])
 
-        print(syslog_details)
+        #print(syslog_details)
 
         
 

@@ -47,7 +47,7 @@ def parse_response_file(outputFolder):
 	
 	table_data = []
 	syslog_ids = []
-	headers = ["Device IP", "Policy", "Attack ID", "Radware ID", "Syslog ID" , "Attack Category", "Attack Name", "Threat Group", "Protocol", "Source Address", "Source Port", "Destination Address", "Destination Port", "Action", "Attack Status", "Latest Attack State", "Final Attack Footprint", "Average Attack Rate(PPS)", "Average Attack Rate(BPS)", "Max Attack Rate(BPS)", "Packet Count", "Attack Duration", "Start Time", "End Time", "Direction", "Physical Port"]
+	headers = ["Device IP", "Policy", "Attack ID", "Radware ID", "Syslog ID" , "Attack Category", "Attack Name", "Threat Group", "Protocol", "Source Address", "Source Port", "Destination Address", "Destination Port", "Action", "Attack Status", "Latest Attack State", "Final Attack Footprint", "Average Attack Rate(PPS)", "Average Attack Rate(BPS)", "Max Attack Rate(BPS)", "Max Attack Rate(PPS)", "Packet Count", "Attack Duration", "Start Time", "End Time", "Direction", "Physical Port"]
 
 	for ip_address, ip_data in data.items():
 		if ip_address == 'metaData':
@@ -73,7 +73,8 @@ def parse_response_file(outputFolder):
 			final_footprint = row.get('latestFootprintText', 'N/A')
 			Average_Attack_Rate_PPS = row.get('averageAttackPacketRatePps', 'N/A')
 			Average_Attack_Rate_BPS = row.get('averageAttackRateBps', 'N/A')
-			Max_Attack_Rate_BPS = row.get('maxAttackRateBps',' N/A')   
+			Max_Attack_Rate_BPS = row.get('maxAttackRateBps',' N/A')
+			Max_Attack_Rate_PPS = row.get('maxAttackPacketRatePps', 'N/A')         
 			Packet_Count = row.get('packetCount', 'N/A')
 			start_time_epoch = row.get('startTime', 'N/A')
 			end_time_epoch = row.get('endTime', 'N/A')
@@ -94,10 +95,31 @@ def parse_response_file(outputFolder):
 				duration = 'N/A'
 			syslog_id = attackipsid_to_syslog_id(attackid)	
 			#syslog_id = attackid.split('-')[1] if attackid != 'N/A' else 'N/A'
-			table_data.append([device_ip, policy_id, attackid, radwareid, syslog_id, attack_category, attack_name, Threat_Group, Protocol, Source_Address, Source_Port, Destination_Address, Destination_Port, Action_Type, Attack_Status, Latest_State, final_footprint, Average_Attack_Rate_PPS, Average_Attack_Rate_BPS, Max_Attack_Rate_BPS, Packet_Count, duration, start_time, end_time, Direction, Physical_Port])
+			table_data.append([device_ip, policy_id, attackid, radwareid, syslog_id, attack_category, attack_name, Threat_Group, Protocol, Source_Address, Source_Port, Destination_Address, Destination_Port, Action_Type, Attack_Status, Latest_State, final_footprint, Average_Attack_Rate_PPS, Average_Attack_Rate_BPS, Max_Attack_Rate_BPS, Max_Attack_Rate_PPS, Packet_Count, duration, start_time, end_time, Direction, Physical_Port])
 			syslog_ids.append(syslog_id)
 
-	table_data.sort(key=lambda x: float(x[19]) if x[19] != 'N/A' else 0, reverse=True)    
+	table_data.sort(key=lambda x: float(x[19]) if x[19] != 'N/A' else 0, reverse=True)
+
+	syslog_details = {
+          row[4] : {
+               "Device IP" : row[0],
+               "Policy" : row[1],
+               "Attack ID" : row[2],
+               "Attack Category" : row[5],
+               "Attack Name" : row[6],
+               "Threat Group" : row[7],
+               "Protocol" : row[8],
+               "Action" : row[13],
+               "Attack Status" : row[14],
+               "Max_Attack_Rate_BPS" : row[19],
+               "Max_Attack_Rate_PPS" : row[20],
+               "Final Footprint" : row[16],
+               "Start Time" : row[23],
+               "End Time" : row[24]
+		  }
+          for row in table_data    
+	} 
+	
 	table = tabulate(table_data, headers=headers, tablefmt="pretty")
 
 
@@ -112,7 +134,7 @@ def parse_response_file(outputFolder):
 			writer.writerow(row)
 
 	print(f"Data written to CSV file: {output_csv_file}")
-	return syslog_ids
+	return syslog_ids, syslog_details
 	
 def parse_log_file(outputFolder, syslog_ids):
     # Initialize a dictionary to hold the log entries for each attack ID
@@ -191,22 +213,26 @@ def categorize_logs_by_state(attack_logs):
 
 def calculate_attack_metrics(categorized_logs):
     metrics = {}
-    metrics_html = "<h2>Attack Metrics</h2>"
-
-    metrics_html += """
-    <table border="1" style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <th style="width: 30%;">Attack ID</th>
-            <th style="width: 70%;">Metrics</th>
-         </tr>
-    """
-
+    def format_timedelta(td):
+            if td is None:
+                return "N/A"
+            total_seconds = int(td.total_seconds())
+            hours, remainder = divmod(total_seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            return f"{hours:02}:{minutes:02}:{seconds:02}"
+        
+    def format_percentage(value):
+            """Format a float value as a percentage with two decimal places."""
+            if value is None:
+                return 'N/A'
+            return f"{value:.2f}%"
+    
     for syslog_id, entries in categorized_logs.items():
         state_2_time = None
         state_4_time = None
         state_6_start = None
         state_0_time = None
-        state_6_footprint = None
+        
         
         timestamps = [entry[0] for entry in entries]
         if not timestamps:
@@ -280,32 +306,101 @@ def calculate_attack_metrics(categorized_logs):
         blocking_time_percentage = None
         if duration and blocking_time:
             blocking_time_percentage = (blocking_time / duration) * 100
+        
 
+        
         # Store the metrics for this syslog_id
+        formatted_total_duration = format_timedelta(duration)
+        formatted_state_2_to_4_duration = format_timedelta(state_2_to_4_duration)
+        formatted_state_4_to_6_duration = format_timedelta(state_4_to_6_duration)
+        formatted_blocking_time = format_timedelta(blocking_time)
+        formatted_blocking_time_percentage = format_percentage(blocking_time_percentage)
+
+        # Combine metrics into a single formatted string
         metrics[syslog_id] = {
-            'total_duration': duration,
-            'state_2_to_4_duration': state_2_to_4_duration,
-            'state_4_to_6_duration': state_4_to_6_duration,
-            'blocking_time': blocking_time,
-            'blocking_time_percentage': blocking_time_percentage
+            'metrics_summary': (
+                f"Total Attack Duration: {formatted_total_duration}\n"
+                f"Time taken to create initial footprint: {formatted_state_2_to_4_duration}\n"
+                f"Time taken to optimize and create final footprint: {formatted_state_4_to_6_duration}\n"
+                f"Blocking Time: {formatted_blocking_time}\n"
+                f"Blocking Time Percentage: {formatted_blocking_time_percentage}"
+            )
         }
 
-        metrics_html += f"<tr><td>{syslog_id}</td><td>"
-        metrics_html += f"Total Attack Duration: {duration}<br>"
-        if state_2_to_4_duration is not None:
-            metrics_html += f"Time taken to create initial footprint: {state_2_to_4_duration}<br>"
-        else:
-            metrics_html += "Time taken to create initial footprint: N/A<br>"
-        if state_4_to_6_duration is not None:
-            metrics_html += f"Time taken to optimize and create final footprint: {state_4_to_6_duration}<br>"
-        else:
-            metrics_html += "Time taken to optimize and create final footprint: N/A<br>"  
-        metrics_html += f"Blocking Time: {blocking_time}<br>"
-        if blocking_time_percentage is not None:
-            metrics_html += f"Blocking Time Percentage: {blocking_time_percentage:.2f}%"
-        else:
-            metrics_html += "Blocking Time Percentage: N/A"
-        metrics_html += "</td></tr>"
+    return metrics
 
-    metrics_html += "</table>"
-    return metrics, metrics_html
+def generate_html_report(syslog_details):
+	
+    html_content = """
+    <html>
+    <head>
+        <title>Attack Report</title>
+        <style>
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            h2 {
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Attack Report</h2>
+        <table>
+            <tr>
+                <th>Start Time</th>	
+                <th>End Time</th>	
+                <th>Syslog ID</th>
+                <th>Device IP</th>
+                <th>Policy</th>
+                <th>Attack Category</th>		  
+                <th>Attack Name</th>
+                <th>Threat Group</th>
+                <th>Protocol</th>
+                <th>Action</th>
+                <th>Attack Status</th>
+                <th>Max_Attack_Rate_BPS</th>
+                <th>Max_Attack_Rate_PPS</th>
+                <th>Final Footprint</th>
+                <th>BDOS Life Cycle</th>
+            </tr>
+    """
+
+    for syslog_id, details in syslog_details.items():
+        metrics_summary = details.get('metrics_summary', 'N/A')
+        html_content += f"""
+            <tr>
+                <td>{details.get('Start Time', 'N/A')}</td>
+                <td>{details.get('End Time', 'N/A')}</td>
+                <td>{syslog_id}</td>
+                <td>{details.get('Device IP', 'N/A')}</td>
+                <td>{details.get('Policy', 'N/A')}</td>
+                <td>{details.get('Attack Category', 'N/A')}</td>
+                <td>{details.get('Attack Name', 'N/A')}</td>
+                <td>{details.get('Threat Group', 'N/A')}</td>
+                <td>{details.get('Protocol', 'N/A')}</td>
+                <td>{details.get('Action', 'N/A')}</td>
+                <td>{details.get('Attack Status', 'N/A')}</td>
+                <td>{details.get('Max_Attack_Rate_BPS', 'N/A')}</td>
+                <td>{details.get('Max_Attack_Rate_PPS', 'N/A')}</td>
+                <td>{details.get('Final Footprint', 'N/A')}</td>
+                <td><pre>{metrics_summary}</pre></td>
+            </tr>
+        """
+
+    html_content += """
+        </table>
+    </body>
+    </html>
+    """
+
+    return html_content

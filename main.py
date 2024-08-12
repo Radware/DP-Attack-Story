@@ -5,6 +5,7 @@ import data_parser
 import clsVision
 import graph_parser
 import sftp_module
+from datetime import datetime
 
 collect_data=True
 parse_data=True
@@ -52,8 +53,8 @@ if __name__ == '__main__':
         found_files = sftp_module.get_attack_log(device_ips,from_month, start_year, to_month)
         print(f"Files found: {found_files}")
        
-        syslog_ids = data_parser.parse_response_file(outputFolder + 'response.json')
-        #print(syslog_ids)
+        syslog_ids, syslog_details = data_parser.parse_response_file(outputFolder + 'response.json')
+        #print(syslog_details)
 
         for file in found_files:
             file_path = os.path.join(outputFolder, file)
@@ -62,26 +63,15 @@ if __name__ == '__main__':
             #print(f"Result for {file}: {result}")
 
         categorized_logs = data_parser.categorize_logs_by_state(result)
-        '''for syslog_id, entries in categorized_logs.items():
-            if entries:
-                print(f"\nBDOS Attack logs for Syslog ID {syslog_id}:")
-            #for state, entries in state_logs.items():
-                for entry in entries:
-                    timestamp, state_description, log_entry = entry
-                    print(f"{timestamp}: {state_description} - {log_entry}")'''
 
-        print(categorized_logs)
-        metrics, metricsHTML = data_parser.calculate_attack_metrics(categorized_logs)
+        metrics = data_parser.calculate_attack_metrics(categorized_logs)
+        for syslog_id in syslog_ids:
+            if syslog_id in metrics:
+                syslog_details[syslog_id].update(metrics[syslog_id])
 
-        for syslog_id, metric in metrics.items():
-            print(f"\nMetrics for Attack ID {syslog_id}:")
-            print(f"Total Attack Duration: {metric['total_duration']}")
-            print(f"Time taken to create initial footprint : {metric['state_2_to_4_duration']}")
-            print(f"Time taken to optimize and create final footprint: {metric['state_4_to_6_duration']}")
-            print(f"Blocking Time: {metric['blocking_time']}")
-            print(f"Blocking Time Percentage: {metric['blocking_time_percentage']:.2f}%")
+        print(syslog_details)
 
-
+        
 
         #Get the attack rate graph data for the specified time period
         rate_data = {
@@ -103,10 +93,11 @@ if __name__ == '__main__':
         
 
         graphHTML = graph_parser.createGraphHTML(rate_data['bps'], rate_data['pps'])
+        attackdataHTML = data_parser.generate_html_report(syslog_details)
         
         endHTML = "</body></html>"
 
-        finalHTML = headerHTML + metricsHTML + graphHTML + endHTML
+        finalHTML = headerHTML + attackdataHTML + graphHTML + endHTML
 
         with open(outputFolder + 'graphs.html', 'w') as file:
             file.write(finalHTML)

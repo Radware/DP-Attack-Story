@@ -12,6 +12,12 @@ except ImportError:
     print("The python module 'requests' is not installed. Please install it by running: pip install requests")
     exit()
 
+try:
+    import paramiko
+except ImportError:
+    print("The python module 'paramiko' is not installed. Please install it by running: pip install paramiko")
+    exit()
+
 LogfileName = "DP-Attack-Story.log"
 
 #We ignore if Vision has an invalid security certificate. The next 
@@ -46,6 +52,8 @@ def create_connection_section(config):
         config.set('Vision', 'username', '')
     if not config.has_option('Vision', 'password'):
         config.set('Vision', 'password', '')
+    if not config.has_option('Vision', 'rootPassword'):
+        config.set('Vision', 'rootPassword', '')
 
 
 class clsVision:
@@ -69,6 +77,19 @@ class clsVision:
         if password != stored_password:
             if input("Password has changed. Do you want to save the new password? (yes/no): ").lower() in ['yes','y']:
                 config.set('Vision', 'password', password)
+
+        #Do it again for the root password
+        stored_rootpassword = config.get('Vision', 'rootpassword')
+        stars=''
+        for char in stored_rootpassword:
+            stars+='*'
+        rootpassword = getpass.getpass(prompt=f"Enter root Password [{stars}]: ") or stored_rootpassword if len(sys.argv) == 1 else stored_rootpassword
+
+        # Check if entered password is different from the stored password
+        if rootpassword != stored_rootpassword:
+            if input("Root password has changed. Do you want to save the new password? (yes/no): ").lower() in ['yes','y']:
+                config.set('Vision', 'rootpassword', rootpassword)
+        self.rootpassword = rootpassword
 
         # Save the management IP and username in the configuration
         config.set('Vision', 'ip', ip)
@@ -113,6 +134,10 @@ class clsVision:
             update_log(f"Error logging in to Vision at {ip}.\n{r}")
             raise Exception(f"Error logging in to Vision at {ip}.\n{r}")
             
+    def __del__(self):
+        if hasattr(self, "client"):
+            self.client.close()
+
     def _post(self, URL, requestData = ""):
         try:
             r = self.sess.post(url=URL, verify=False, data=requestData)
@@ -297,13 +322,13 @@ class clsVision:
             update_log(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
             raise Exception(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
     
-    def getAttackRate(self, StartTime, EndTime, Units = "bps"):
+    def getAttackRate(self, StartTime, EndTime, Units = "bps", AttackID = None, DeviceID = None, PolicyName = None):
         """Returns a JSON file containing the graph data from the specified time period.
         Units can be 'bps' or 'pps'"""
         
         APIUrl = f'https://{self.ip}/mgmt/vrm/monitoring/traffic/periodic/report'
         data = {
-            "unit": Units,
+            #"unit": Units,
             "direction": "Inbound",
             "timeInterval": {
                 "from": StartTime,
@@ -311,6 +336,16 @@ class clsVision:
             },
             #"selectedDevices":[]
         }
+        if Units:
+            data.update({"unit": Units})
+        if AttackID:
+            data.update({"attackID": AttackID})
+        if DeviceID and PolicyName:
+            scope = {
+                "deviceId": DeviceID,
+                "networkPolicy": PolicyName
+            }
+            data.update({"selectedScope": scope})
 
         update_log(f"Pulling attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
 
@@ -322,4 +357,65 @@ class clsVision:
         else:
             update_log(f"Error pulling attack rate data. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
             raise Exception(f"Error pulling attack rate data. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
-    
+    def connectSSH(self):
+        #Initialize the client
+        self.client = paramiko.SSHClient()
+        #Auto accept and add the server's host key
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            self.client.connect(self.ip, 22, 'root', self.rootpassword)
+        except paramiko.AuthenticationException:
+            print("root authentication failed. Please verify the root password!")
+            exit(1)
+        except paramiko.SSHException as sshException:
+            print(f"Unable to establish SSH connection: {sshException}")
+        except Exception as e:
+            print(f"Exception in establishing SSH connection to the server: {e}")
+
+    def getRawAttackSSH(self, AttackID):
+        if not hasattr(self, "client"):
+            self.connectSSH()
+
+        command = f"""curl -X GET http://localhost:9200/dp-ts-attack-raw*/_search -H 'Content-Type: application/json' -d '
+{{
+  "query": {{
+    "bool": {{
+      "must": {{
+        "term": {{
+          "attackIpsId": "{AttackID}"
+        }}
+      }}
+    }}
+  }},
+  "size": 1000
+}}'"""
+        print(f"Pulling graph data for attack {AttackID}")
+        stdin, stdout, stderr = self.client.exec_command(command)
+        #print("---stdout---")
+        rawout = stdout.read().decode()
+        outjson = json.loads(rawout)
+        err = stderr.read().decode()
+        print(err)
+
+        if outjson.get('_shards',False):
+            if outjson['_shards']['failed'] > 0:
+                print(f"Pulling attack details for attack id {AttackID} has failed!")
+                print(outjson)
+                exit(1)
+        
+        #List of keys to include in output:
+        includedKeys = ['startTime', 'maxAttackPacketRatePps', 'maxAttackRateBps']
+        out = []
+        for hit in outjson['hits']['hits']:
+            curOut = {}
+            source = hit['_source']
+            for key in includedKeys:
+                if key in source:
+                    if key == 'startTime':
+                        curOut.update({'timeStamp': source[key]})
+                    else:
+                        curOut.update({key.replace("maxAttackPacketRate","").replace("maxAttackRate",""): source[key]})
+            if len(curOut) > 0:
+                out.append({'row': curOut})
+
+        return {'data': out}

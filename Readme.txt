@@ -25,7 +25,14 @@
 	5. View your report under .\Output\
 
 # Version Control
-v0.6.0 - 8 July 2024 
+v0.8.0 - 15 July 2024 (Steve)
+	Added 'Past X hours' option to time period selection.
+	Changed deviceIP selection input so blank entry selects all instead of having to type 'All'
+	Added graph for each attack ID.
+	Added a graph that combines all Attack IDs with checkboxes to select individual attacks. 
+	Updated launch.json for easier troubleshooting
+v0.7.0 - ? (Prateek)
+v0.6.0 - 8 July 2024 (Steve)
 	Added graph functionality
 	Added error handling for missing libraries
 
@@ -34,12 +41,12 @@ v0.5.0 - 26 June 2024 - Restructure code (Egor)
 	Added collector.py
 	Added parser.py (need to qa, do not have data to test)
 
-v0.4.1 - 26 June 2024 
+v0.4.1 - 26 June 2024 (Steve)
 	Output has been moved to the folder ./Output/
 	Removed commented lines after reviewing with team.
 
-v0.4.0 - 25 June 2024 - Initial Dev Build
-	Steve: I merged my clsVision module into Prateek's code.
+v0.4.0 - 25 June 2024 - Initial Dev Build (Steve)
+	Merged my clsVision module into Prateek's code.
 
 
 

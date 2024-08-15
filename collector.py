@@ -23,21 +23,28 @@ def prompt_user_time_period():
 
     #Ask user for time period:
     print("Please select a time period:")
-    print("1) The past 24 hours")
-    print("2) The past 48 hours")
-    print("3) Manually enter times")
+    print("1) The past x hours")
+    print("2) The past 24 hours")
+    print("3) The past 48 hours")
+    print("4) Manually enter times")
     choice = input("Enter selection (1-3) or other to quit: ")
     if choice == '1':
-        epoch_from_time = (int(time.time()) - (60 * 60 * 2)) * 1000
+        hours = int(input("Enter number of hours: "))
+        epoch_from_time = (int(time.time()) - (60 * 60 * hours)) * 1000
         epoch_to_time = int(time.time()) * 1000
         from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
         to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
     elif choice == '2':
-        epoch_from_time = (int(time.time()) - (60 * 60 * 48)) * 1000
+        epoch_from_time = (int(time.time()) - (60 * 60 * 24)) * 1000
         epoch_to_time = int(time.time()) * 1000
         from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
         to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
     elif choice == '3':
+        epoch_from_time = (int(time.time()) - (60 * 60 * 48)) * 1000
+        epoch_to_time = int(time.time()) * 1000
+        from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
+        to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
+    elif choice == '4':
         from_time = input("Enter the duration start time (format: DD-MM-YYYY HH:MM:SS): ")
         epoch_from_time,from_time_month = convert_to_epoch(from_time)
         to_time = input("Enter the duration end time (format: DD-MM-YYYY HH:MM:SS): ")
@@ -78,8 +85,8 @@ def display_available_devices(v):
         print("Available Defensepros: " + ' '.join(dp_list_ip.keys()))
         
         while True:
-            device_ips = input("Enter the device IPs separated by commas. Input 'All' to use all available DefensePros: ").split(',')
-            if device_ips[0].upper() == "ALL":
+            device_ips = input("Enter the device IPs separated by commas (or leave blank for All available devices): ").split(',')
+            if len(device_ips[0]) == 0 and len(device_ips) == 1:
                 device_ips = list(dp_list_ip.keys())
                 break
             else:

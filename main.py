@@ -77,9 +77,6 @@ if __name__ == '__main__':
         #for each attack in syslog_details, get the graph.
         attackGraphData = {}
         for syslogID, details in syslog_details.items():
-            #epochStart = collector.convert_to_epoch(details['Start Time'])[0]
-            #epochEnd = collector.convert_to_epoch(details['End Time'])[0]
-            #graphData = v.getAttackRate(epochStart, epochEnd, None, details['Attack ID'], details['Device IP'], details['Policy'])
             attackData = v.getRawAttackSSH(details['Attack ID'])
 
 

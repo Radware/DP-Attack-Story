@@ -1,123 +1,446 @@
-import os
 import json
-import collector
-import data_parser
-import clsVision
-import graph_parser
-import sftp_module
+import random
 from datetime import datetime
+import time
+import math
 
-collect_data=True
-parse_data=True
-outputFolder = './Output/'
+def get_outer_times(data):
+    min_start_time = float('inf')
+    max_end_time = float('0')
 
-if not os.path.exists(outputFolder):
-    os.makedirs(outputFolder)
+    for key, value in data.items():
+        start_time = datetime.strptime(value['Start Time'], '%d-%m-%Y %H:%M:%S')
+        end_time = datetime.strptime(value['End Time'], '%d-%m-%Y %H:%M:%S')
+
+        start_epoch = time.mktime(start_time.timetuple())
+        end_epoch = time.mktime(end_time.timetuple())
+
+        if start_epoch < min_start_time:
+            min_start_time = start_epoch
+        if end_epoch > max_end_time:
+            max_end_time = end_epoch
+    return (min_start_time, max_end_time)
+
+def makeEmptyList(minTime, maxTime, entries):
+    '''Initialize our table. First row will be headers. First entry will be "Timestamp". Each row will start with a timestamp value.'''
+    out = []
+    out.append(["TimeStamp"])
+    duration = float(maxTime - minTime)
+    interval = float(duration / entries)
+    for x in range(0, entries):
+        out.append([math.ceil(minTime + (x * interval))])
+    pass
+    return out
+
+def createGraphHTMLOverall(BPSjson,PPSjson):
+    #if BPSjson is None:
+        #print("Setting bps")
+        #BPSjson = TEMP_PopulateData()
+
+    #if PPSjson is None:
+        #print("setting pps ")
+        #PPSjson = TEMP_PopulateData()
+    #Add HTML head and chart initialization info
+    outStr = """
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawBPSChart);
+      function drawBPSChart() {
+        var data = google.visualization.arrayToDataTable([
+        [ { label: 'Time', type: 'date'}, { label: 'Challenged', type: 'number'}, { label: 'Excluded', type: 'number'}, { label: 'Received', type: 'number'}, { label: 'Dropped', type: 'number'}]"""
+    for row in BPSjson['data']:
+        #%d-%m-%Y 
+        if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
+            outStr += f",\n        [new Date({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+
+    outStr += "]);"
+    outStr += OptionsHTML("Combined BPS")
+    outStr += """
+
+        var chart = new google.visualization.AreaChart(document.getElementById('bpsChart'));
+
+        chart.draw(data, options);
+      }
+      google.charts.setOnLoadCallback(drawPPSChart);
+      function drawPPSChart() {
+        var data = google.visualization.arrayToDataTable([
+        [ { label: 'Time', type: 'date'}, { label: 'Challenged', type: 'number'}, { label: 'Excluded', type: 'number'}, { label: 'Received', type: 'number'}, { label: 'Dropped', type: 'number'}]"""
+    for row in PPSjson['data']:
+        #%d-%m-%Y 
+        if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
+            outStr += f",\n        [new Date({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+
+    outStr += "]);"
+    outStr += OptionsHTML("Combined PPS")
+    outStr += """
+        var chart = new google.visualization.AreaChart(document.getElementById('ppsChart'));
+
+        chart.draw(data, options);
+      }
+    </script>
+
+    <div id="bpsChart" style="width: 90%; height: 500px"></div>
+    <div id="ppsChart" style="width: 90%; height: 500px"></div>
+"""
+    return outStr
+
+def TEMP_PopulateData():
+    return {'metaData': {'totalTime': '0.075 sec.'}, 'data': [{'row': {'timeStamp': '1720444500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720444800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445400000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445700000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446000000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446300000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446600000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446900000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447200000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448400000', 'excluded': '0.0', 'discards': '314.0', 'trafficValue': '689.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448700000', 'excluded': '0.0', 'discards': '7101.0', 'trafficValue': '7101.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449000000', 'excluded': '0.0', 'discards': '7015.0', 'trafficValue': '7015.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449300000', 'excluded': '0.0', 'discards': '7010.0', 'trafficValue': '7010.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449600000', 'excluded': '0.0', 'discards': '7162.0', 'trafficValue': '7162.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449900000', 'excluded': '0.0', 'discards': '7087.0', 'trafficValue': '7087.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450200000', 'excluded': '0.0', 'discards': '7032.0', 'trafficValue': '7032.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450500000', 'excluded': '0.0', 'discards': '7221.0', 'trafficValue': '7221.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450800000', 'excluded': '0.0', 'discards': '7047.0', 'trafficValue': '7047.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451100000', 'excluded': '0.0', 'discards': '7005.6', 'trafficValue': '7005.6', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451400000', 'excluded': '0.0', 'discards': '7020.6', 'trafficValue': '7020.6', 'challengeIng': '0.0'}}], 'dataMap': {'minValue': {'timeStamp': '1720444500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '0.0'}, 'maxValue': {'timeStamp': '1720450500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '7221.0'}}}
+
+def OptionsHTML(Title):
+    output =  """
+        var options = {
+            title: '"""
+    output += Title
+    output +="""',
+            curveType: 'function',
+            width: '100%',
+            legend: { position: 'bottom' },
+            annotations: { style: 'line'},
+            displayAnnotations: true,
+            focusTarget: 'category',
+            vAxis: {viewWindow: {min:0} },
+            hAxis: {format: 'HH:mm:ss', slantedText:true, slantedTextAngle:45},
+            series: {
+                0: { labelInLegend: 'Challenged', color: "#ff8f00"},
+                1: { labelInLegend: 'Excluded', color: "#807be0"},
+                2: { labelInLegend: 'Received', color: "#088eb1"},
+                3: { labelInLegend: 'Dropped', color: "#f41414"},
+            },
+        };"""
+    return output
+    
+
+def createGraphHTML(Title = "",JSONData = None):
+    if JSONData is None:
+        print("Setting bps")
+        JSONData = TEMP_PopulateData()
+
+    rand_ID = random.randrange(100000000, 999999999)
+    functionName = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
+    #Add HTML head and chart initialization info
+    outStr = f"""
+    <script type="text/javascript">
+      google.charts.load('current', {{'packages':['corechart']}});
+      google.charts.setOnLoadCallback({functionName});
+      function {functionName}() {{
+        var data = google.visualization.arrayToDataTable([
+        [ {{ label: 'Time', type: 'date'}}, {{ label: 'Challenged', type: 'number'}}, {{ label: 'Excluded', type: 'number'}}, {{ label: 'Received', type: 'number'}}, {{ label: 'Dropped', type: 'number'}}]"""
+
+    for row in JSONData['data']:
+        #%d-%m-%Y 
+        if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
+            outStr += f",\n        [new Date({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+
+    outStr += "]);"
+    outStr += OptionsHTML(Title)
+    outStr += f"""
+
+        var chart = new google.visualization.AreaChart(document.getElementById('{Title}_{str(rand_ID)}'));
+
+        chart.draw(data, options);
+      }}
+    </script>
+
+    <div id="{Title}_{str(rand_ID)}" style="width: 90%; height: 500px"></div>
+"""
+    return outStr
+
+def createGraphHTMLChartJS(Title, myData):
+    # Define title for the chart
+
+    # Generate a random ID for the chart name
+    rand_ID = random.randrange(100000000, 999999999)
+    name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
+
+    # Extracting timestamps
+    timestamps = [int(item["row"]["timeStamp"]) for item in myData["data"]]
+    labels = [datetime.fromtimestamp(ts / 1000).strftime('%Y-%m-%d %H:%M:%S') for ts in timestamps]
+
+    # Extracting dynamic y-axis data
+    datasets = []
+    for key in myData["data"][0]["row"].keys():
+        if key != "timeStamp" and key != "footprint":
+            data = [
+                float(item["row"][key]) if item["row"][key] is not None else None 
+                for item in myData["data"]
+            ]
+            datasets.append({
+                "label": key,
+                "data": data,
+                "borderColor": f'rgba({abs(hash(key)) % 256}, {(abs(hash(key) * 2)) % 256}, {(abs(hash(key) * 3)) % 256}, 1)',
+                "borderWidth": 2,
+                "fill": False
+            })
+
+    # Create annotations for the points where a footprint exists
+    annotations = []
+    for idx, item in enumerate(myData["data"]):
+        if "footprint" in item["row"] and item["row"]["footprint"] is not None:
+            annotations.append({
+                "type": "line",
+                "mode": "vertical",
+                "scaleID": "x",
+                "value": labels[idx],
+                "borderColor": "red",
+                "borderWidth": 2,
+                "label": {
+                    "content": "Footprint",
+                    "enabled": True,
+                    "position": "top"
+                }
+            })
+
+    # Generate HTML content dynamically
+    html_content = f"""
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chart.js Dynamic Graph</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.0"></script>
+    </head>
+    <body>
+        <div style="width: 80%; margin: auto;">
+            <canvas id="{name}"></canvas>
+        </div>
+
+        <script>
+            var ctx = document.getElementById('{name}').getContext('2d');
+            var myChart = new Chart(ctx, {{
+                type: 'line',
+                data: {{
+                    labels: {json.dumps(labels)},
+                    datasets: {json.dumps(datasets)}
+                }},
+                options: {{
+                    scales: {{
+                        x: {{
+                            title: {{
+                                display: true,
+                                text: 'Timestamp'
+                            }}
+                        }},
+                        y: {{
+                            beginAtZero: false,
+                            title: {{
+                                display: true,
+                                text: 'Values'
+                            }}
+                        }}
+                    }},
+                    plugins: {{
+                        annotation: {{
+                            annotations: {json.dumps(annotations)}
+                        }}
+                    }}
+                }}
+            }});
+        </script>
+    </body>
+    </html>
+    """
+    return html_content
 
 
-if __name__ == '__main__':
-    if collect_data:
-        #Get start time and end time from the user input
-        epoch_from_to_time_list = collector.prompt_user_time_period()
-        epoch_from_time = epoch_from_to_time_list[0]
-        epoch_to_time = epoch_from_to_time_list[1]
-        from_month = epoch_from_to_time_list[2]
-        start_year = epoch_from_to_time_list[3]
-        to_month = epoch_from_to_time_list[4] if len(epoch_from_to_time_list) == 5 else None
+def createGraphHTMLGoogleCharts(Title, myData):
+    # Generate a random ID for the chart name
+    rand_ID = random.randrange(100000000, 999999999)
+    name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
 
-        #Connect to Vision (instantiate v as a logged in vision instance)
-        v = clsVision.clsVision()
-        #print available devices
-        #collector.display_available_devices(v)
-        #device_ips = input("Enter the device IPs separated by commas. Input 'All' to use all available Defensepros: ").split(',')
+    # Extracting timestamps
+    timestamps = [int(item["row"]["timeStamp"]) for item in myData["data"]]
+    labels = [datetime.fromtimestamp(ts / 1000).strftime('%Y-%m-%d %H:%M:%S') for ts in timestamps]
+    #labels = [f"new Date({ts})" for ts in timestamps]
 
-        device_ips, dp_list_ip = collector.display_available_devices(v)
+    # Prepare the data for Google Charts
+    data_table = [["Timestamp"] + [key for key in myData["data"][0]["row"].keys() if key != "timeStamp" and key != "footprint"]]
+    for i, item in enumerate(myData["data"]):
+        row = [labels[i]]
+        for key in data_table[0][1:]:
+            value = item["row"].get(key)
+            row.append(float(value) if value is not None else None)
+        data_table.append(row)
 
-        policies = {}
-        for ip in device_ips:
-            ip = ip.strip()
-            policy_input = input(f"Enter the policies for {ip} separated by commas (or leave blank for All Policies): ").strip()
-            if policy_input:
-                policies[ip] = [policy.strip() for policy in policy_input.split(',')]
+    # Annotations for footprints
+    annotations = []
+    for idx, item in enumerate(myData["data"]):
+        if "footprint" in item["row"] and item["row"]["footprint"] is not None:
+            annotations.append(f"{{x: {idx + 1}, shortText: 'F', text: 'Footprint detected', color: 'red'}}")
 
-        #Get attack data
-
-        attack_data = collector.get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_list_ip)
-
-        #Save the formatted JSON to a file
-        with open(outputFolder + 'response.json', 'w') as file:
-            json.dump(attack_data, file, indent=4)
-        print("Response saved to response.json")
-
-        #get bdos attack log from Defensepros
-        found_files = sftp_module.get_attack_log(device_ips,from_month, start_year, to_month)
-        print(f"Files found: {found_files}")
-       
-        syslog_ids, syslog_details = data_parser.parse_response_file(outputFolder + 'response.json')
-        #print(syslog_details)
-        all_results = {}
-
-        for file in found_files:
-            file_path = os.path.join(outputFolder, file)
-            print(f"Processing file for BDoS attack logs: {file}")
-            result = data_parser.parse_log_file(file_path, syslog_ids)
-            
-            all_results.update(result)
-            #print(f"Result for {file}: {result}")
-        print(all_results)
-        categorized_logs = data_parser.categorize_logs_by_state(all_results)
-        #print(categorized_logs) 
-        metrics = data_parser.calculate_attack_metrics(categorized_logs)
-        for syslog_id in syslog_ids:
-            if syslog_id in metrics:
-                syslog_details[syslog_id].update(metrics[syslog_id])
-
-        #print(syslog_details)
-
-        #for each attack in syslog_details, get the graph.
-        attackGraphData = {}
-        
-        for syslogID, details in syslog_details.items():
-            attackData = v.getRawAttackSSH(details['Attack ID'])
-            attackGraphData.update({details['Attack ID']: attackData})
-
-
-        #Get the overall attack rate graph data for the specified time period
-        rate_data = {
-            'bps': v.getAttackRate(epoch_from_time, epoch_to_time, "bps"),
-            'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps")
-            }
-        #Save the raw attack rate graph data to a file
-        ######
-
-    if parse_data:
-        headerHTML = """<html>
-  <head>
+    # Generate HTML content dynamically
+    html_content = f"""
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Charts Dynamic Graph</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-  </head>
-  <body>"""
+    <script type="text/javascript">
+        google.charts.load('current', {{'packages':['corechart', 'annotationchart']}});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {{
+            var data = google.visualization.arrayToDataTable({json.dumps(data_table)});
+
+            var options = {{
+                title: '{Title}',
+                curveType: 'function',
+                legend: {{ position: 'bottom' }},
+                annotations: {{
+                    style: 'line',
+                    textStyle: {{
+                        fontSize: 12,
+                        bold: true,
+                        color: 'red'
+                    }},
+                    stem: {{
+                        color: 'red',
+                        length: 8
+                    }}
+                }},
+                alwaysOutside: true,
+                displayAnnotations: true,
+                focusTarget: 'category',
+                vAxis: {{viewWindow: {{min:0}} }},
+                hAxis: {{format: 'HH:mm:ss', slantedText:true, slantedTextAngle:45}},
+                series: {{
+                    0: {{ color: '#ff8f00' }},
+                    1: {{ color: '#807be0' }},
+                    2: {{ color: '#088eb1' }},
+                    3: {{ color: '#f41414' }},
+                    4: {{ color: '#1c91c0' }},
+                    5: {{ color: '#43459d' }},
+                }}
+            }};
+
+            var chart = new google.visualization.LineChart(document.getElementById('{name}'));
+
+            chart.draw(data, options);
+
+            var chart_annotations = {json.dumps(annotations)};
+            chart_annotations.forEach(function(annotation) {{
+                chart.setAnnotation(annotation);
+            }});
+        }}
+    </script>
+    <div id="{name}" style="width: 100%; height: 500px;"></div>
+    """
+    return html_content
 
 
-        #attack_log_info = attack_log_parser.parse_log_file(outputFolder + 'response.json', attack_ids)
+def createCombinedChart(Title,myData):
+
+    # Generate a random ID for the chart name
+    rand_ID = random.randrange(100000000, 999999999)
+    name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
+
+    # Collect all timestamps from all datasets
+    timestamps = sorted(set(item["row"]["timeStamp"] for dataset in myData.values() for item in dataset["data"]))
+
+    # Initialize data structure for Google Charts
+    data_table = [["Timestamp"]]
+    dataset_headers = {}
+
+    # Add headers for each dataset and metric
+    for dataset_name, dataset in myData.items():
+        dataset_headers[dataset_name] = []
+        for key in dataset["data"][0]["row"].keys():
+            if key != "timeStamp":
+                column_name = f"{dataset_name}_{key}"
+                data_table[0].append(column_name)
+                dataset_headers[dataset_name].append(column_name)
+
+    # Populate data rows based on timestamps
+    for timestamp in timestamps:
+        date_object = f"new Date({timestamp})"
+        row = [date_object] + [None] * (len(data_table[0]) - 1)
         
-
-        graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
-        attackdataHTML = data_parser.generate_html_report(syslog_details)
+        for dataset_name, dataset in myData.items():
+            for item in dataset["data"]:
+                if item["row"]["timeStamp"] == timestamp:
+                    for key, value in item["row"].items():
+                        if key != "timeStamp" and value is not None:
+                            try:
+                                numeric_value = float(value)
+                                col_index = data_table[0].index(f"{dataset_name}_{key}")
+                                row[col_index] = numeric_value
+                            except ValueError:
+                                continue
+                    break
         
-        endHTML = "</body></html>"
+        data_table.append(row)
 
-        finalHTML = headerHTML + graphHTML + attackdataHTML 
+    # Convert data_table to JSON and replace the quotes around Date objects
+    json_data = json.dumps(data_table[1:])
+    json_data = json_data.replace('"new Date(', 'new Date(').replace(')"', ')')
 
-        finalHTML += graph_parser.createCombinedChart("All Attacks", attackGraphData) 
+    # Generate HTML content dynamically with checkboxes and Date objects for x-axis
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Google Charts Dynamic Graph</title>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript">
+            google.charts.load('current', {{'packages':['corechart']}});
+            google.charts.setOnLoadCallback(drawChart);
 
-        #Add an individual graph for each attack
-        for attackID, data in attackGraphData.items():
-            #finalHTML += graph_parser.createGraphHTMLChartJS(attackID, data)
-            finalHTML += graph_parser.createGraphHTMLGoogleCharts(attackID, data)
+            let data;
+            let chart;
+            let options = {{
+                title: '{Title}',
+                curveType: 'function',
+                legend: {{ position: 'right', alignment: 'start' }},
+                hAxis: {{
+                    title: 'Time',
+                    format: 'HH:mm:ss',
+                    slantedText: true,
+                    slantedTextAngle: 45
+                }},
+                vAxis: {{
+                    title: 'Value'
+                }},
+                focusTarget: 'category',
+                tooltip: {{
+                    isHtml: true
+                }}
+            }};
 
-        finalHTML += endHTML
+            function drawChart() {{
+                data = new google.visualization.DataTable();
+                data.addColumn('datetime', 'Time');
+                {"".join([f"data.addColumn('number', '{col}');" for col in data_table[0][1:]])}
+                data.addRows({json_data});
 
-        with open(outputFolder + 'graphs.html', 'w') as file:
-            file.write(finalHTML)
-        print("Graphs and metrics saved to graphs.html")
+                chart = new google.visualization.LineChart(document.getElementById('{name}'));
+                chart.draw(data, options);
+            }}
+
+            function updateChart() {{
+                let view = new google.visualization.DataView(data);
+                let columns = [0];
+                let selected_metric = document.querySelector('input[name="{name}_metric"]:checked').value;
+
+                {"".join([f'if (document.getElementById("{name}_{header}").checked && (selected_metric === "both" || "{header.split("_")[1]}" === selected_metric)) {{ columns.push(data.getColumnIndex("{header}")); }}' for headers in dataset_headers.values() for header in headers])}
+
+                view.setColumns(columns);
+                chart.draw(view, options);
+            }}
+        </script>
+    </head>
+    <body>
+        <div>
+            <label><input type="radio" name="{name}_metric" value="both" checked onclick="updateChart()"> Both</label>
+            <label><input type="radio" name="{name}_metric" value="Bps" onclick="updateChart()"> Bps</label>
+            <label><input type="radio" name="{name}_metric" value="Pps" onclick="updateChart()"> Pps</label>
+        </div>
+        <div>
+            {"".join([f'<label><input type="checkbox" id="{name}_{header}" checked onclick="updateChart()"> {header.replace("_", " ")}</label><br>' for headers in dataset_headers.values() for header in headers])}
+        </div>
+        <div id="{name}" style="width: 100%; height: 500px;"></div>
+    </body>
+    </html>
+    """
+    return html_content
 

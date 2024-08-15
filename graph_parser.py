@@ -328,13 +328,16 @@ def createGraphHTMLGoogleCharts(Title, myData):
 
 
 def createCombinedChart(Title,myData):
-
     # Generate a random ID for the chart name
     rand_ID = random.randrange(100000000, 999999999)
     name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
 
-    # Collect all timestamps from all datasets
-    timestamps = sorted(set(item["row"]["timeStamp"] for dataset in myData.values() for item in dataset["data"]))
+    # Function to round timestamp to the nearest 15 seconds
+    def round_to_nearest_15_seconds(timestamp):
+        return round(timestamp / 15000) * 15000
+
+    # Collect all timestamps from all datasets, rounding them to the nearest 15 seconds
+    timestamps = sorted(set(round_to_nearest_15_seconds(item["row"]["timeStamp"]) for dataset in myData.values() for item in dataset["data"]))
 
     # Initialize data structure for Google Charts
     data_table = [["Timestamp"]]
@@ -345,23 +348,24 @@ def createCombinedChart(Title,myData):
         dataset_headers[dataset_name] = []
         for key in dataset["data"][0]["row"].keys():
             if key != "timeStamp":
-                column_name = f"{dataset_name}_{key}"
+                column_name = f"{dataset_name.replace('_', '__')}__{key}"
                 data_table[0].append(column_name)
                 dataset_headers[dataset_name].append(column_name)
 
-    # Populate data rows based on timestamps
+    # Populate data rows based on rounded timestamps
     for timestamp in timestamps:
         date_object = f"new Date({timestamp})"
         row = [date_object] + [None] * (len(data_table[0]) - 1)
         
         for dataset_name, dataset in myData.items():
             for item in dataset["data"]:
-                if item["row"]["timeStamp"] == timestamp:
+                rounded_time = round_to_nearest_15_seconds(item["row"]["timeStamp"])
+                if rounded_time == timestamp:
                     for key, value in item["row"].items():
                         if key != "timeStamp" and value is not None:
                             try:
                                 numeric_value = float(value)
-                                col_index = data_table[0].index(f"{dataset_name}_{key}")
+                                col_index = data_table[0].index(f"{dataset_name.replace('_', '__')}__{key}")
                                 row[col_index] = numeric_value
                             except ValueError:
                                 continue
@@ -391,7 +395,14 @@ def createCombinedChart(Title,myData):
             let options = {{
                 title: '{Title}',
                 curveType: 'function',
-                legend: {{ position: 'right', alignment: 'start' }},
+                legend: {{
+                    position: 'top',
+                    textStyle: {{ fontSize: 12 }},
+                    maxLines: 3
+                }},
+                series: {{
+                    {"".join([f"{i}: {{lineDashStyle: [0, 0]}}, " for i in range(len(data_table[0])-1)])}
+                }},
                 hAxis: {{
                     title: 'Time',
                     format: 'HH:mm:ss',
@@ -420,23 +431,26 @@ def createCombinedChart(Title,myData):
             function updateChart() {{
                 let view = new google.visualization.DataView(data);
                 let columns = [0];
-                let selected_metric = document.querySelector('input[name="{name}_metric"]:checked').value;
-
-                {"".join([f'if (document.getElementById("{name}_{header}").checked && (selected_metric === "both" || "{header.split("_")[1]}" === selected_metric)) {{ columns.push(data.getColumnIndex("{header}")); }}' for headers in dataset_headers.values() for header in headers])}
+                {"".join([f'if (document.getElementById("{name}_{header}").checked) {{ columns.push(data.getColumnIndex("{header}")); }}' for headers in dataset_headers.values() for header in headers])}
 
                 view.setColumns(columns);
                 chart.draw(view, options);
+            }}
+
+            function toggleCheckboxes(metric) {{
+                {"".join([f'document.getElementById("{name}_{header}").checked = (metric === "both" || "{header.split("__")[-1]}" === metric);' for headers in dataset_headers.values() for header in headers])}
+                updateChart();
             }}
         </script>
     </head>
     <body>
         <div>
-            <label><input type="radio" name="{name}_metric" value="both" checked onclick="updateChart()"> Both</label>
-            <label><input type="radio" name="{name}_metric" value="Bps" onclick="updateChart()"> Bps</label>
-            <label><input type="radio" name="{name}_metric" value="Pps" onclick="updateChart()"> Pps</label>
+            <label><input type="radio" name="{name}_metric" value="both" checked onclick="toggleCheckboxes('both')"> Both</label>
+            <label><input type="radio" name="{name}_metric" value="Bps" onclick="toggleCheckboxes('Bps')"> Bps</label>
+            <label><input type="radio" name="{name}_metric" value="Pps" onclick="toggleCheckboxes('Pps')"> Pps</label>
         </div>
         <div>
-            {"".join([f'<label><input type="checkbox" id="{name}_{header}" checked onclick="updateChart()"> {header.replace("_", " ")}</label><br>' for headers in dataset_headers.values() for header in headers])}
+            {"".join([f'<label><input type="checkbox" id="{name}_{header}" checked onclick="updateChart()"> {header.replace("__", " ").replace("_", " ")}</label><br>' for headers in dataset_headers.values() for header in headers])}
         </div>
         <div id="{name}" style="width: 100%; height: 500px;"></div>
     </body>

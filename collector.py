@@ -27,7 +27,7 @@ def prompt_user_time_period():
     print("2) The past 24 hours")
     print("3) The past 48 hours")
     print("4) Manually enter times")
-    choice = input("Enter selection (1-3) or other to quit: ")
+    choice = input("Enter selection (1-4) or other to quit: ")
     if choice == '1':
         hours = int(input("Enter number of hours: "))
         epoch_from_time = (int(time.time()) - (60 * 60 * hours)) * 1000

@@ -74,14 +74,13 @@ if __name__ == '__main__':
 
         #print(syslog_details)
 
-        #for each attack in syslog_details, get the graph.
-        
+        #for each attack in syslog_details, check if ['graph'] is set to true. Graph is set to true for top_n graphs in the data_parser module.
         attackGraphData = {}
         for syslogID, details in syslog_details.items():
             if details.get('graph', False):
                 attackData = v.getRawAttackSSH(details['Attack ID'])
-                attackGraphData.update({details['Attack ID']: attackData})
-
+                #attackGraphData.update({details['Attack ID']: attackData})
+                attackGraphData.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
 
         #Get the overall attack rate graph data for the specified time period
         rate_data = {
@@ -113,8 +112,6 @@ if __name__ == '__main__':
 
         #Add an individual graph for each attack
         for attackID, data in attackGraphData.items():
-            #finalHTML += graph_parser.createGraphHTMLChartJS(attackID, data)
-            #if data.get('graph',False):
             finalHTML += graph_parser.createGraphHTMLGoogleCharts(attackID, data)
 
         finalHTML += endHTML

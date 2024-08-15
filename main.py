@@ -79,7 +79,6 @@ if __name__ == '__main__':
         for syslogID, details in syslog_details.items():
             if details.get('graph', False):
                 attackData = v.getRawAttackSSH(details['Attack ID'])
-                #attackGraphData.update({details['Attack ID']: attackData})
                 attackGraphData.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
 
         #Get the overall attack rate graph data for the specified time period

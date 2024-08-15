@@ -409,9 +409,7 @@ def createCombinedChart(Title,myData):
                     slantedText: true,
                     slantedTextAngle: 45
                 }},
-                vAxis: {{
-                    title: 'Value'
-                }},
+                vAxis: {{viewWindow: {{min:0}} }},
                 focusTarget: 'category',
                 tooltip: {{
                     isHtml: true

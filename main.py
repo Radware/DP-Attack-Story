@@ -64,7 +64,7 @@ if __name__ == '__main__':
             
             all_results.update(result)
             #print(f"Result for {file}: {result}")
-        print(all_results)
+        #print(all_results)
         categorized_logs = data_parser.categorize_logs_by_state(all_results)
         #print(categorized_logs) 
         metrics = data_parser.calculate_attack_metrics(categorized_logs)
@@ -75,12 +75,12 @@ if __name__ == '__main__':
         #print(syslog_details)
 
         #for each attack in syslog_details, get the graph.
+        
         attackGraphData = {}
         for syslogID, details in syslog_details.items():
-            attackData = v.getRawAttackSSH(details['Attack ID'])
-
-
-            attackGraphData.update({details['Attack ID']: attackData})
+            if details.get('graph', False):
+                attackData = v.getRawAttackSSH(details['Attack ID'])
+                attackGraphData.update({details['Attack ID']: attackData})
 
 
         #Get the overall attack rate graph data for the specified time period
@@ -103,13 +103,18 @@ if __name__ == '__main__':
         
 
         graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
-        attackdataHTML = data_parser.generate_html_report(syslog_details)
+        attackdataHTML = data_parser.generate_html_report(syslog_details, top_n = 5)
         
         endHTML = "</body></html>"
 
         finalHTML = headerHTML + graphHTML + attackdataHTML 
+
+        finalHTML += graph_parser.createCombinedChart("All Attacks", attackGraphData) 
+
+        #Add an individual graph for each attack
         for attackID, data in attackGraphData.items():
             #finalHTML += graph_parser.createGraphHTMLChartJS(attackID, data)
+            #if data.get('graph',False):
             finalHTML += graph_parser.createGraphHTMLGoogleCharts(attackID, data)
 
         finalHTML += endHTML

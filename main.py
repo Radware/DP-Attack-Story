@@ -74,12 +74,22 @@ if __name__ == '__main__':
 
         #print(syslog_details)
 
-        
+        #for each attack in syslog_details, get the graph.
+        attackGraphData = {}
+        for syslogID, details in syslog_details.items():
+            #epochStart = collector.convert_to_epoch(details['Start Time'])[0]
+            #epochEnd = collector.convert_to_epoch(details['End Time'])[0]
+            #graphData = v.getAttackRate(epochStart, epochEnd, None, details['Attack ID'], details['Device IP'], details['Policy'])
+            attackData = v.getRawAttackSSH(details['Attack ID'])
 
-        #Get the attack rate graph data for the specified time period
+
+            attackGraphData.update({details['Attack ID']: attackData})
+
+
+        #Get the overall attack rate graph data for the specified time period
         rate_data = {
-            'bps': v.getAttackRate(epoch_from_time,epoch_to_time,"bps"),
-            'pps': v.getAttackRate(epoch_from_time,epoch_to_time,"pps")
+            'bps': v.getAttackRate(epoch_from_time, epoch_to_time, "bps"),
+            'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps")
             }
         #Save the raw attack rate graph data to a file
         ######
@@ -95,12 +105,17 @@ if __name__ == '__main__':
         #attack_log_info = attack_log_parser.parse_log_file(outputFolder + 'response.json', attack_ids)
         
 
-        graphHTML = graph_parser.createGraphHTML(rate_data['bps'], rate_data['pps'])
+        graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
         attackdataHTML = data_parser.generate_html_report(syslog_details)
         
         endHTML = "</body></html>"
 
-        finalHTML = headerHTML + attackdataHTML + graphHTML + endHTML
+        finalHTML = headerHTML + graphHTML + attackdataHTML 
+        for attackID, data in attackGraphData.items():
+            #finalHTML += graph_parser.createGraphHTMLChartJS(attackID, data)
+            finalHTML += graph_parser.createGraphHTMLGoogleCharts(attackID, data)
+
+        finalHTML += endHTML
 
         with open(outputFolder + 'graphs.html', 'w') as file:
             file.write(finalHTML)

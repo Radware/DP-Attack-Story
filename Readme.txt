@@ -30,6 +30,8 @@
 
 # Version Control
 
+	v0.8.4 - 18 August 2024 (Prateek)
+		Added logic to ignore EAAF events.
 	v0.8.3 - 15 August 2024 (Steve)
 		Combined Graph: Added Attack Name to dataset names
 		Combined Graph: Selecting a Both/Bps/Pps will now check/uncheck the appropriate boxes.

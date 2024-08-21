@@ -3,6 +3,7 @@ import random
 from datetime import datetime
 import time
 import math
+import sys
 
 def get_outer_times(data):
     min_start_time = float('inf')
@@ -346,11 +347,15 @@ def createCombinedChart(Title,myData):
     # Add headers for each dataset and metric
     for dataset_name, dataset in myData.items():
         dataset_headers[dataset_name] = []
-        for key in dataset["data"][0]["row"].keys():
-            if key != "timeStamp":
-                column_name = f"{dataset_name.replace('_', '__')}__{key}"
-                data_table[0].append(column_name)
-                dataset_headers[dataset_name].append(column_name)
+        try:
+            for key in dataset["data"][0]["row"].keys():
+                if key != "timeStamp":
+                    column_name = f"{dataset_name.replace('_', '__')}__{key}"
+                    data_table[0].append(column_name)
+                    dataset_headers[dataset_name].append(column_name)
+        except:
+            print(f"Unexpected error processing {dataset_name}")
+            raise
 
     # Populate data rows based on rounded timestamps
     for timestamp in timestamps:

@@ -1,4 +1,5 @@
 import os
+import traceback
 import json
 import collector
 import data_parser
@@ -107,11 +108,19 @@ if __name__ == '__main__':
 
         finalHTML = headerHTML + graphHTML + attackdataHTML 
 
-        finalHTML += graph_parser.createCombinedChart("All Attacks", attackGraphData) 
+        try:
+            finalHTML += graph_parser.createCombinedChart("All Attacks", attackGraphData) 
+        except:
+            print("Unexpected createCombinedChart() error: ")
+            traceback.print_exc()
 
         #Add an individual graph for each attack
         for attackID, data in attackGraphData.items():
-            finalHTML += graph_parser.createGraphHTMLGoogleCharts(attackID, data)
+            try:
+                finalHTML += graph_parser.createGraphHTMLGoogleCharts(attackID, data)
+            except:
+                print(f"Error graphing attackID '{attackID}':")
+                traceback.print_exc()
 
         finalHTML += endHTML
 

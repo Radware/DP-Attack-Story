@@ -111,7 +111,7 @@ if __name__ == '__main__':
         #    rate_data = json.load(data_file)
         graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
 
-        attackdataHTML = data_parser.generate_html_report(syslog_details, top_n = 5)
+        attackdataHTML = data_parser.generate_html_report(syslog_details, top_n = 5, threshold_gbps=1)
         
         endHTML = "</body></html>"
 

@@ -11,37 +11,39 @@ except ImportError:
 
 warnings.filterwarnings(action='ignore', module='pysftp', category=UserWarning)
 
-def load_config():
-    config = configparser.ConfigParser()
-    config.read("config.ini")
-    return config
+#Remove commented section when script confirmed to work in multiple environments
+#def load_config():
+#    config = configparser.ConfigParser()
+#    config.read("config.ini")
+#    return config
+#
+#def save_config(config):
+#    with open("config.ini", "w") as config_file:
+#        config.write(config_file)
+#
+#def create_connection_section(config):
+#    if not config.has_section('DefensePro'):
+#        config.add_section('DefensePro')
+#    if not config.has_option('DefensePro', 'ip'):
+#        config.set('DefensePro', 'ip', '')
+#    if not config.has_option('DefensePro', 'username'):
+#        config.set('DefensePro', 'username', '')
+#    if not config.has_option('DefensePro', 'password'):
+#        config.set('DefensePro', 'password', '')
 
-def save_config(config):
-    with open("config.ini", "w") as config_file:
-        config.write(config_file)
-
-def create_connection_section(config):
-    if not config.has_section('DefensePro'):
-        config.add_section('DefensePro')
-    if not config.has_option('DefensePro', 'ip'):
-        config.set('DefensePro', 'ip', '')
-    if not config.has_option('DefensePro', 'username'):
-        config.set('DefensePro', 'username', '')
-    if not config.has_option('DefensePro', 'password'):
-        config.set('DefensePro', 'password', '')
-
-def get_attack_log(device_ips, from_month, start_year, to_month=None):
-    config = load_config()
-    create_connection_section(config)
-    
+def get_attack_log(v, device_ips, from_month, start_year, to_month=None):
+    #Remove commented section when script confirmed to work in multiple environments
+    #config = load_config()
+    #create_connection_section(config)
+    #
     # Prompt user for SFTP credentials
-    username = input("Enter Defensepro SSH username: ")
-    password = getpass("Enter Defensepro SSH password: ")  # Using getpass for secure input
-    port = 22  # Default SFTP port
-
-    config.set('DefensePro', 'username', username)
-    config.set('DefensePro', 'password', password)
-    save_config(config)
+    #username = input("Enter Defensepro SSH username: ")
+    #password = getpass("Enter Defensepro SSH password: ")  # Using getpass for secure input
+    #port = 22  # Default SFTP port
+    #
+    #config.set('DefensePro', 'username', username)
+    #config.set('DefensePro', 'password', password)
+    #save_config(config)
 
     cnopts = pysftp.CnOpts()
     cnopts.hostkeys = None  # Disable host key checking
@@ -63,6 +65,10 @@ def get_attack_log(device_ips, from_month, start_year, to_month=None):
     for device_ip in device_ips:
         try:
             device_ip = device_ip.strip()
+            dpData = v.getDeviceData(device_ip)
+            username = dpData['deviceSetup']['deviceAccess']['httpsUsername']
+            password = dpData['deviceSetup']['deviceAccess']['httpsPassword']
+            port = dpData['deviceSetup']['deviceAccess']['cliPort']
             with pysftp.Connection(device_ip, username=username, password=password, port=port, cnopts=cnopts) as sftp:
                 print(f"Connected to {device_ip} ... ")
 

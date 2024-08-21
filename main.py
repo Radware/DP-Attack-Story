@@ -82,14 +82,21 @@ if __name__ == '__main__':
                 attackData = v.getRawAttackSSH(details['Attack ID'])
                 if len(attackData.get('data',"")) > 2:
                     attackGraphData.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
+        with open(outputFolder + 'AttackGraphsData.json', 'w', encoding='utf-8') as file:
+            json.dump(attackGraphData, file, ensure_ascii=False, indent=4)
 
         #Get the overall attack rate graph data for the specified time period
+        selectedDevices = []
+        if len(device_ips) > 0:
+            for ip in device_ips:
+                selectedDevices.append({'deviceId': ip, 'networkPolicies': policies.get(ip, []), 'ports': []})
         rate_data = {
-            'bps': v.getAttackRate(epoch_from_time, epoch_to_time, "bps"),
-            'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps")
+            'bps': v.getAttackRate(epoch_from_time, epoch_to_time, "bps", selectedDevices),
+            'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps", selectedDevices)
             }
         #Save the raw attack rate graph data to a file
-        ######
+        with open(outputFolder + 'CombinedGraphData.json', 'w', encoding='utf-8') as file:
+            json.dump(rate_data, file, ensure_ascii=False, indent=4)
 
     if parse_data:
         headerHTML = """<html>
@@ -98,11 +105,12 @@ if __name__ == '__main__':
   </head>
   <body>"""
 
-
         #attack_log_info = attack_log_parser.parse_log_file(outputFolder + 'response.json', attack_ids)
         
-
+        #with open(outputFolder + 'CombinedGraphData.json') as data_file:
+        #    rate_data = json.load(data_file)
         graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
+
         attackdataHTML = data_parser.generate_html_report(syslog_details, top_n = 5)
         
         endHTML = "</body></html>"
@@ -110,6 +118,8 @@ if __name__ == '__main__':
         finalHTML = headerHTML + graphHTML + attackdataHTML 
 
         try:
+            #with open(outputFolder + 'AttackGraphsData.json') as data_file:
+            #    attackGraphData = json.load(data_file)
             finalHTML += graph_parser.createCombinedChart("All Attacks", attackGraphData) 
         except:
             print("Unexpected createCombinedChart() error: ")

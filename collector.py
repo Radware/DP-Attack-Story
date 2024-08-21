@@ -45,12 +45,24 @@ def prompt_user_time_period():
         from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
         to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
     elif choice == '4':
-        from_time = input("Enter the duration start time (format: DD-MM-YYYY HH:MM:SS): ")
-        epoch_from_time,from_time_month = convert_to_epoch(from_time)
-        to_time = input("Enter the duration end time (format: DD-MM-YYYY HH:MM:SS): ")
-        epoch_to_time, to_time_month = convert_to_epoch(to_time)
-        from_month = from_time_month
-        to_month = to_time_month
+        success = False
+        while not success:
+            try:
+                from_time = input("Enter the duration start time (format: DD-MM-YYYY HH:MM:SS): ")
+                epoch_from_time,from_time_month = convert_to_epoch(from_time)
+                from_month = from_time_month
+                success = True
+            except:
+                print("Error parsing start time, please try again!")
+        success = False
+        while not success:
+            try:
+                to_time = input("Enter the duration end time (format: DD-MM-YYYY HH:MM:SS): ")
+                epoch_to_time, to_time_month = convert_to_epoch(to_time)
+                to_month = to_time_month
+                success = True
+            except:
+                print("Error parsing end time, please try again.")
     else:
         print("Other input, quit")
         exit(1)
@@ -167,6 +179,3 @@ def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips, policies, dp_li
     except Exception as e:
         print(f"An error occurred: {e}")             
     
-
-
-        

@@ -29,6 +29,12 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.9.0 - 21 August 2024 (Steve)
+		Graph data now saves to a file.
+		Data for combined graphs will now be filtered according to selected DPs and policies.
+		Added error handling when entering a time range. Invalid entries will now prompt for a correction.
+		Will no longer include DefensePros in a 'FAILED' state.
+		Script will pull DefensePro CLI credentials from Vision instead of prompting user.
 	v0.8.5 - 21 August 2024 (Steve)
 		Added more robust error handling and reporting to graph operations. 
 		Renamed output html file from graph.html to DP-Attack-Story_Report.html

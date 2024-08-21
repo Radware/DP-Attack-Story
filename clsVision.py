@@ -328,7 +328,7 @@ class clsVision:
             update_log(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
             raise Exception(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
     
-    def getAttackRate(self, StartTime, EndTime, Units = "bps", AttackID = None, DeviceID = None, PolicyName = None):
+    def getAttackRate(self, StartTime, EndTime, Units = "bps", selectedDevices = []):
         """Returns a JSON file containing the graph data from the specified time period.
         Units can be 'bps' or 'pps'"""
         
@@ -344,14 +344,8 @@ class clsVision:
         }
         if Units:
             data.update({"unit": Units})
-        if AttackID:
-            data.update({"attackID": AttackID})
-        if DeviceID and PolicyName:
-            scope = {
-                "deviceId": DeviceID,
-                "networkPolicy": PolicyName
-            }
-            data.update({"selectedScope": scope})
+        if len(selectedDevices) > 0:
+            data.update({"selectedDevices": selectedDevices})
 
         update_log(f"Pulling attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
 

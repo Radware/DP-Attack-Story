@@ -331,8 +331,9 @@ def calculate_attack_metrics(categorized_logs):
 
     return metrics
 
-def generate_html_report(syslog_details, top_n=10):
+def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
     # Convert sorted syslog_details to a list of tuples for sorting by PPS
+    threshold_bps = threshold_gbps * 1e9
     sorted_by_pps = sorted(
         syslog_details.items(),
         key=lambda item: float(item[1].get('Max_Attack_Rate_PPS', '0').replace(' ', '')),
@@ -341,7 +342,20 @@ def generate_html_report(syslog_details, top_n=10):
 
     top_by_bps = list(syslog_details.items())[:top_n]
     top_by_pps = sorted_by_pps[:top_n]
-    
+    unique_protocols = set()
+    count_above_threshold = 0
+
+    for syslog_id, details in top_by_bps:
+        protocol = details.get('Protocol', 'N/A')
+        unique_protocols.add(protocol)
+
+
+    for syslog_id, details in top_by_bps:
+        max_bps = float(details.get('Max_Attack_Rate_BPS', '0').replace(' ', ''))
+        if max_bps > threshold_bps:
+            count_above_threshold += 1
+
+
     # Generate HTML content for the report
     html_content = f"""
     <html>
@@ -371,6 +385,8 @@ def generate_html_report(syslog_details, top_n=10):
     </head>
     <body>
         <h2>Attack Report - Top {top_n} Sorted by Max Attack Rate (BPS)</h2>
+        <p>Attack Vectors for the top {top_n} attacks: {', '.join(unique_protocols)}</p>
+        <p>Out of the top {top_n} attacks, {count_above_threshold} attacks were greater than {threshold_gbps} Gbps.</p>
         <table>
             <tr>
                 <th>Start Time</th>    

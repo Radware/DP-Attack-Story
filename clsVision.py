@@ -282,6 +282,12 @@ class clsVision:
                         "value": DeviceIP
                     }
                 ]
+            },
+            {
+                "type": "termFilter",
+                "inverseFilter": True,
+                "field": "enrichmentContainer.eaaf.eaaf",
+                "value": "true"
             }
         ]
         # If a policy is provided, add the policy filter to the criteria

@@ -30,7 +30,7 @@
 
 # Version Control
 	v0.8.5 - 18 August 2024 (Steve)
-		Added more robyst error handling and reporting to graph operations. 
+		Added more robust error handling and reporting to graph operations. 
 		Renamed output html file from graph.html to DP-Attack-Story_Report.html
 	v0.8.4 - 18 August 2024 (Prateek)
 		Added logic to ignore EAAF events.

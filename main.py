@@ -51,7 +51,7 @@ if __name__ == '__main__':
         print("Response saved to response.json")
 
         #get bdos attack log from Defensepros
-        found_files = sftp_module.get_attack_log(device_ips,from_month, start_year, to_month)
+        found_files = sftp_module.get_attack_log(v, device_ips, from_month, start_year, to_month)
         print(f"Files found: {found_files}")
        
         syslog_ids, syslog_details = data_parser.parse_response_file(outputFolder + 'response.json')

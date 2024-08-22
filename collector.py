@@ -91,7 +91,8 @@ def display_available_devices(v):
     """
     try:
         device_list = v.getDPDeviceList()
-        dp_list_ip = {device['managementIp']: device for device in device_list}
+        #dp_list_ip = {device['managementIp']: device for device in device_list}
+        dp_list_ip = {device['managementIp']: device for device in device_list if device['status'] != 'FAILED'}
         
         # Display list of available DefensePros
         print("Available Defensepros: " + ' '.join(dp_list_ip.keys()))
@@ -114,7 +115,7 @@ def display_available_devices(v):
 
                 if invalid_ips:
                     print(f"The following IPs are invalid or not available: {', '.join(invalid_ips)}")
-                if valid_ips:
+                elif valid_ips:
                     device_ips = valid_ips
                     break
                 else:

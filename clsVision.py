@@ -259,6 +259,20 @@ class clsVision:
         else:
             update_log(f"Error getting device data for {DeviceIP}")
             raise Exception(f"Error getting device data for {DeviceIP} - {r}")
+
+    def getActiveVersion(self, DeviceIP):
+        # Define the API URL with properties 
+        APIUrl = f"https://{self.ip}/mgmt/device/byip/{DeviceIP}/config/rsFSapplList?props=rsFSapplVersion,rsFSapplActive"
+        r = self._get(APIUrl)
+        if r.status_code == 200:
+            data = r.json()
+            # Find the rsFSapplVersion where rsFSapplActive is "1"
+            active_version = next((item['rsFSapplVersion'] for item in data.get("rsFSapplList", []) if item.get("rsFSapplActive") == "1"), None)
+            return active_version
+        else:
+            # Log and raise an exception if the request failed
+            update_log(f"Error getting application data for {DeviceIP}")
+            raise Exception(f"Error getting application data for {DeviceIP} - {r.status_code}: {r.text}")
         
     def getAttackReports(self, DeviceIP,StartTime,EndTime, filter_json=None):
         criteria = [

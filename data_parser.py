@@ -29,36 +29,114 @@ def calculate_duration(start_time, end_time):
     return str(duration)
 
 def attackipsid_to_syslog_id(attackid):
-   # This function converts AttackIpsID to Syslog ID
+    # Split the attackid into two parts
+    first_part, second_part = attackid.split('-')
+    # Format the second part by padding with zeros to make it 12 characters long
+    second_part_formatted = second_part.zfill(12)
+    # Reverse the first part to make it easier to split into chunks of 4 from the end
+    first_part_reversed = first_part[::-1]
+    chunks = [first_part_reversed[i:i+4][::-1] for i in range(0, len(first_part_reversed), 4)]
+    # Combine chunks in the correct order with '-' separator
+    first_part_formatted = '-'.join(chunks[::-1])
+    # first part is 12 characters long (prepend zeros if necessary)
+    first_part_formatted = first_part_formatted.zfill(12)
+    # Construct the syslog_id by appending the formatted parts
+    syslog_id = f"FFFFFFFF-{first_part_formatted}-{second_part_formatted}"
     
+    return syslog_id
+def attackipsid_to_syslog_id_hex(attackid):
+    # This function converts AttackIpsID to Syslog ID
+
     id_first_part_dec = int(attackid.split('-')[0])
     id_second_part_dec = int(attackid.split('-')[1])
 
-    # convert id_first_part_dec to hex removing 0x
-    id_first_part_new = '00' + str(id_first_part_dec)
-    id_second_part_new = '00' + str(id_second_part_dec)
-    syslog_id = 'FFFFFFFF-0000-0000-' + id_first_part_new + '-' + id_second_part_new
-    return(syslog_id)
+    # Convert decimal to hex and remove the '0x' prefix
+    id_first_part_hex = hex(id_first_part_dec)[2:]
+    id_second_part_hex = hex(id_second_part_dec)[2:]
 
+    # Pad the second part to ensure it is at least 8 characters
+    if id_second_part_dec >= 16777216 and id_second_part_dec <= 268435455:
+        id_second_part_hex = '0' + id_second_part_hex
+    elif id_second_part_dec >= 1048576 and id_second_part_dec <= 16777215:
+        id_second_part_hex = '00' + id_second_part_hex
+    elif id_second_part_dec >= 65536 and id_second_part_dec <= 1048575:
+        id_second_part_hex = '000' + id_second_part_hex
+    elif id_second_part_dec >= 4096 and id_second_part_dec <= 65535:
+        id_second_part_hex = '0000' + id_second_part_hex
+    elif id_second_part_dec >= 256 and id_second_part_dec <= 4095:
+        id_second_part_hex = '00000' + id_second_part_hex
+    elif id_second_part_dec >= 16 and id_second_part_dec <= 255:
+        id_second_part_hex = '000000' + id_second_part_hex
+    elif id_second_part_dec >= 0 and id_second_part_dec <= 15:
+        id_second_part_hex = '0000000' + id_second_part_hex
 
-def parse_response_file(outputFolder):
+    # Adjust first part and construct Syslog ID
+    if id_first_part_dec >= 0 and id_first_part_dec <= 15:
+        id_first_part_hex = '000' + id_first_part_hex
+        id_second_part_hex = '0000' + id_second_part_hex
+    elif id_first_part_dec >= 16 and id_first_part_dec <= 255:
+        id_first_part_hex = '00' + id_first_part_hex
+        id_second_part_hex = '0000' + id_second_part_hex
+    elif id_first_part_dec >= 256 and id_first_part_dec <= 4095:
+        id_first_part_hex = '0' + id_first_part_hex
+        id_second_part_hex = '0000' + id_second_part_hex
+    elif id_first_part_dec >= 4096 and id_first_part_dec <= 65535:
+        id_second_part_hex = '0000' + id_second_part_hex
+    elif id_first_part_dec >= 65536 and id_first_part_dec <= 1048575:
+        id_first_part_hex_prefix = id_first_part_hex[:1]
+        id_first_part_hex = id_first_part_hex[1:]
+        id_second_part_hex = '000' + id_first_part_hex_prefix + id_second_part_hex
+    elif id_first_part_dec >= 1048576 and id_first_part_dec <= 16777215:
+        id_first_part_hex_prefix = id_first_part_hex[:2]
+        id_first_part_hex = id_first_part_hex[2:]
+        id_second_part_hex = '00' + id_first_part_hex_prefix + id_second_part_hex
+    elif id_first_part_dec >= 16777216 and id_first_part_dec <= 268435455:
+        id_first_part_hex_prefix = id_first_part_hex[:3]
+        id_first_part_hex = id_first_part_hex[3:]
+        id_second_part_hex = '0' + id_first_part_hex_prefix + id_second_part_hex
+    elif id_first_part_dec >= 268435456 and id_first_part_dec <= 4294967295:
+        id_first_part_hex_prefix = id_first_part_hex[:4]
+        id_first_part_hex = id_first_part_hex[4:]
+        id_second_part_hex = id_first_part_hex_prefix + id_second_part_hex
+
+    # Final padding to ensure the format is correct: 4 characters for first part, 12 for second
+    id_first_part_hex = id_first_part_hex.zfill(4)
+    id_second_part_hex = id_second_part_hex.zfill(12)
+
+    # Construct the syslog_id and convert to uppercase
+    syslog_id = f'FFFFFFFF-FFFF-FFFF-{id_first_part_hex}-{id_second_part_hex}'.upper()
+    return syslog_id
+
+def parse_response_file(v, outputFolder):
+    # Open and read the JSON response file
     with open(outputFolder, 'r') as file:
         data = json.load(file)
 
-    #Parse and extract start time and end time for each "row" in "data"
-    #rows = data.get('data', [])
-    #print(rows)
-    
+    # Initialize lists and headers
     table_data = []
     syslog_ids = []
-    headers = ["Device IP", "Policy", "Attack ID", "Radware ID", "Syslog ID" , "Attack Category", "Attack Name", "Threat Group", "Protocol", "Source Address", "Source Port", "Destination Address", "Destination Port", "Action", "Attack Status", "Latest Attack State", "Final Attack Footprint", "Average Attack Rate(PPS)", "Average Attack Rate(BPS)", "Max Attack Rate(BPS)", "Max Attack Rate(PPS)", "Packet Count", "Attack Duration", "Start Time", "End Time", "Direction", "Physical Port"]
+    headers = ["Device IP", "Policy", "Attack ID", "Radware ID", "Syslog ID", "Attack Category", "Attack Name", "Threat Group", "Protocol", "Source Address", "Source Port", "Destination Address", "Destination Port", "Action", "Attack Status", "Latest Attack State", "Final Attack Footprint", "Average Attack Rate(PPS)", "Average Attack Rate(BPS)", "Max Attack Rate(BPS)", "Max Attack Rate(PPS)", "Packet Count", "Attack Duration", "Start Time", "End Time", "Direction", "Physical Port"]
+
+    device_version_cache = {}
 
     for ip_address, ip_data in data.items():
         if ip_address == 'metaData':
             continue
         
+        # Get the active version for the device IP
+        if ip_address not in device_version_cache:
+            active_version = v.getActiveVersion(ip_address)
+            device_version_cache[ip_address] = active_version
+        else:
+            active_version = device_version_cache[ip_address]
+        # Determine if the version is 8.32.x
+        print(device_version_cache)
+        is_version_8_32_x = active_version and active_version.startswith("8.32.")
+        
         for row_data in ip_data.get('data', []):
             row = row_data.get('row', {})
+            
+            # Extract all relevant fields
             device_ip = row.get('deviceIp', 'N/A')
             policy_id = row.get('ruleName', 'N/A')
             attackid = row.get('attackIpsId', 'N/A')
@@ -77,7 +155,7 @@ def parse_response_file(outputFolder):
             final_footprint = row.get('latestFootprintText', 'N/A')
             Average_Attack_Rate_PPS = row.get('averageAttackPacketRatePps', 'N/A')
             Average_Attack_Rate_BPS = row.get('averageAttackRateBps', 'N/A')
-            Max_Attack_Rate_BPS = row.get('maxAttackRateBps',' N/A')
+            Max_Attack_Rate_BPS = row.get('maxAttackRateBps', 'N/A')
             Max_Attack_Rate_PPS = row.get('maxAttackPacketRatePps', 'N/A')         
             Packet_Count = row.get('packetCount', 'N/A')
             start_time_epoch = row.get('startTime', 'N/A')
@@ -85,20 +163,21 @@ def parse_response_file(outputFolder):
             Direction = row.get('direction', 'N/A')
             Physical_Port = row.get('physicalPort', 'N/A')
 
-            if start_time_epoch != 'N/A':
-                start_time = epoch_to_datetime(start_time_epoch)
+            # Convert epoch times to datetime
+            start_time = epoch_to_datetime(start_time_epoch) if start_time_epoch != 'N/A' else 'N/A'
+            end_time = epoch_to_datetime(end_time_epoch) if end_time_epoch != 'N/A' else 'N/A'
+            
+            # Calculate duration
+            duration = calculate_duration(start_time, end_time) if start_time != 'N/A' and end_time != 'N/A' else 'N/A'
+            
+            # Determine syslog_id based on active version
+            if is_version_8_32_x:
+                syslog_id = attackipsid_to_syslog_id(attackid)
             else:
-                start_time = 'N/A'
-            if end_time_epoch != 'N/A':
-                end_time = epoch_to_datetime(end_time_epoch)
-            else:
-                end_time = 'N/A'
-            if start_time != 'N/A' and end_time != 'N/A':
-                duration = calculate_duration(start_time, end_time)
-            else:
-                duration = 'N/A'
-            syslog_id = attackipsid_to_syslog_id(attackid)    
-            #syslog_id = attackid.split('-')[1] if attackid != 'N/A' else 'N/A'
+                #print("not 8.32")
+                syslog_id = attackipsid_to_syslog_id_hex(attackid)
+            
+            # Append data to the table
             table_data.append([device_ip, policy_id, attackid, radwareid, syslog_id, attack_category, attack_name, Threat_Group, Protocol, Source_Address, Source_Port, Destination_Address, Destination_Port, Action_Type, Attack_Status, Latest_State, final_footprint, Average_Attack_Rate_PPS, Average_Attack_Rate_BPS, Max_Attack_Rate_BPS, Max_Attack_Rate_PPS, Packet_Count, duration, start_time, end_time, Direction, Physical_Port])
             syslog_ids.append(syslog_id)
 
@@ -167,7 +246,7 @@ def parse_log_file(outputFolder, syslog_ids):
             
             if prev_line is not None:
                 # Check if the previous line contains the special attack ID
-                if 'FFFFFFFF-0000-0000-0000-000000000000' in prev_line:
+                if 'FFFFFFFF-0000-0000-0000-000000000000' or 'FFFFFFFF-FFFF-FFFF-0000-000000000000' in prev_line:
                     for syslog_id in syslog_ids:
                         if syslog_id in line:
                             prev_timestamp = prev_line.split(',')[0].strip()
@@ -390,7 +469,8 @@ def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
         <table>
             <tr>
                 <th>Start Time</th>    
-                <th>End Time</th>    
+                <th>End Time</th>
+                <th>Attack ID</th>    
                 <th>Syslog ID</th>
                 <th>Device IP</th>
                 <th>Policy</th>
@@ -414,6 +494,7 @@ def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
             <tr>
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
+                <td>{details.get('Attack ID')}</td>
                 <td>{syslog_id}</td>
                 <td>{details.get('Device IP', 'N/A')}</td>
                 <td>{details.get('Policy', 'N/A')}</td>
@@ -437,7 +518,8 @@ def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
         <table>
             <tr>
                 <th>Start Time</th>    
-                <th>End Time</th>    
+                <th>End Time</th>
+                <th>Attack ID</th>    
                 <th>Syslog ID</th>
                 <th>Device IP</th>
                 <th>Policy</th>
@@ -461,6 +543,7 @@ def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
             <tr>
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
+                <td>{details.get('Attack ID', 'N/A')}</td>
                 <td>{syslog_id}</td>
                 <td>{details.get('Device IP', 'N/A')}</td>
                 <td>{details.get('Policy', 'N/A')}</td>

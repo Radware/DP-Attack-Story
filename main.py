@@ -54,7 +54,7 @@ if __name__ == '__main__':
         found_files = sftp_module.get_attack_log(v, device_ips, from_month, start_year, to_month)
         print(f"Files found: {found_files}")
        
-        syslog_ids, syslog_details = data_parser.parse_response_file(outputFolder + 'response.json')
+        syslog_ids, syslog_details = data_parser.parse_response_file(v,outputFolder + 'response.json')
         #print(syslog_details)
         all_results = {}
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
             if syslog_id in metrics:
                 syslog_details[syslog_id].update(metrics[syslog_id])
 
-        #print(syslog_details)
+        #print(metrics)
 
         #for each attack in syslog_details, check if ['graph'] is set to true. Graph is set to true for top_n graphs in the data_parser module.
         attackGraphData = {}

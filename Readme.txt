@@ -29,6 +29,9 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.9.2 - 28 August 2024 (Prateek)
+		Added functionality to process different attack-id to syslog-id conversion
+		Added AttackID to the HTML report
 	v0.9.1 - 22 August 2024
 		Will no longer include DefensePros in a 'FAILED' state in the list of available devices.
 		Fixed potential issue where DP selection input is accepted when the user inputs a mix of valid and invalid IPs.

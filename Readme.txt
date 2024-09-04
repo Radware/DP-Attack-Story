@@ -29,10 +29,16 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.9.3 - 4 September 2024 (Steve)
+		Improved display of graph timestamps.
+		We will now sort graph data received from vision prior to displaying it.
+		Set option interpolateNulls: true for 'All Attacks' graph to account for some datasets containing null values when merged.
+		Moved Vision log file to output foler
+		Increased verbosity of vision server logging.
 	v0.9.2 - 28 August 2024 (Prateek)
 		Added functionality to process different attack-id to syslog-id conversion
 		Added AttackID to the HTML report
-	v0.9.1 - 22 August 2024
+	v0.9.1 - 22 August 2024 (Steve)
 		Will no longer include DefensePros in a 'FAILED' state in the list of available devices.
 		Fixed potential issue where DP selection input is accepted when the user inputs a mix of valid and invalid IPs.
 		Fixed device_ips "TypeError: 'int' object is not iterable"

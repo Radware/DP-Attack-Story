@@ -249,14 +249,17 @@ def createGraphHTMLGoogleCharts(Title, myData):
     rand_ID = random.randrange(100000000, 999999999)
     name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
 
-    # Extracting timestamps
-    timestamps = [int(item["row"]["timeStamp"]) for item in myData["data"]]
-    labels = [datetime.fromtimestamp(ts / 1000).strftime('%Y-%m-%d %H:%M:%S') for ts in timestamps]
-    #labels = [f"new Date({ts})" for ts in timestamps]
+    # Sort the data by the timestamp
+    sorted_data = sorted(myData["data"], key=lambda item: item["row"]["timeStamp"])
+
+    # Extracting timestamps and formatting them as new Date objects in GMT
+    timestamps = [int(item["row"]["timeStamp"]) for item in sorted_data]
+    #labels = [f"new Date({ts} + (new Date().getTimezoneOffset() * 60000))" for ts in timestamps]
+    labels = [f"new Date({ts})" for ts in timestamps]
 
     # Prepare the data for Google Charts
-    data_table = [["Timestamp"] + [key for key in myData["data"][0]["row"].keys() if key != "timeStamp" and key != "footprint"]]
-    for i, item in enumerate(myData["data"]):
+    data_table = [["Timestamp"] + [key for key in sorted_data[0]["row"].keys() if key != "timeStamp" and key != "footprint"]]
+    for i, item in enumerate(sorted_data):
         row = [labels[i]]
         for key in data_table[0][1:]:
             value = item["row"].get(key)
@@ -265,9 +268,13 @@ def createGraphHTMLGoogleCharts(Title, myData):
 
     # Annotations for footprints
     annotations = []
-    for idx, item in enumerate(myData["data"]):
+    for idx, item in enumerate(sorted_data):
         if "footprint" in item["row"] and item["row"]["footprint"] is not None:
             annotations.append(f"{{x: {idx + 1}, shortText: 'F', text: 'Footprint detected', color: 'red'}}")
+
+    # Convert data_table to JSON and replace the quotes around Date objects
+    json_data = json.dumps(data_table)
+    json_data = json_data.replace('"new Date(', 'new Date(').replace(')"', ')')
 
     # Generate HTML content dynamically
     html_content = f"""
@@ -280,7 +287,7 @@ def createGraphHTMLGoogleCharts(Title, myData):
         google.charts.setOnLoadCallback(drawChart);
 
         function drawChart() {{
-            var data = google.visualization.arrayToDataTable({json.dumps(data_table)});
+            var data = google.visualization.arrayToDataTable({json_data});
 
             var options = {{
                 title: '{Title}',
@@ -327,8 +334,7 @@ def createGraphHTMLGoogleCharts(Title, myData):
     """
     return html_content
 
-
-def createCombinedChart(Title,myData):
+def createCombinedChart(Title, myData):
     # Generate a random ID for the chart name
     rand_ID = random.randrange(100000000, 999999999)
     name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
@@ -359,6 +365,7 @@ def createCombinedChart(Title,myData):
 
     # Populate data rows based on rounded timestamps
     for timestamp in timestamps:
+        #date_object = f"new Date({timestamp} + (new Date().getTimezoneOffset() * 60000))"
         date_object = f"new Date({timestamp})"
         row = [date_object] + [None] * (len(data_table[0]) - 1)
         
@@ -414,8 +421,11 @@ def createCombinedChart(Title,myData):
                     slantedText: true,
                     slantedTextAngle: 45
                 }},
-                vAxis: {{viewWindow: {{min:0}} }},
+                vAxis: {{
+                    viewWindow: {{min: 0}}  // Ensure the y-axis includes 0
+                }},
                 focusTarget: 'category',
+                interpolateNulls: true,
                 tooltip: {{
                     isHtml: true
                 }}
@@ -460,4 +470,3 @@ def createCombinedChart(Title,myData):
     </html>
     """
     return html_content
-

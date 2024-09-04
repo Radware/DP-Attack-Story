@@ -18,7 +18,7 @@ except ImportError:
     print("The python module 'paramiko' is not installed. Please install it by running: pip install paramiko")
     exit()
 
-LogfileName = "DP-Attack-Story.log"
+LogfileName = "./Output/P-Attack-Story.log"
 
 #We ignore if Vision has an invalid security certificate. The next 
 #lines prevent an error from being displayed every time we send 
@@ -137,6 +137,7 @@ class clsVision:
     def __del__(self):
         if hasattr(self, "client"):
             self.client.close()
+            print("Closed SSH session")
 
     def _post(self, URL, requestData = ""):
         try:
@@ -329,10 +330,11 @@ class clsVision:
             "useFullTableScan": False,
             "validateReportStructure": False
         }
-        update_log(f"Getting attack reports from {DeviceIP}")
 
         APIUrl = f'https://{self.ip}/mgmt/monitor/reporter/reports-ext/DP_ATTACK_REPORTS'
         
+        update_log(f"Getting attack reports from {DeviceIP} using url {APIUrl} and query data {data}")
+
         response = self._post(APIUrl,json.dumps(data))
         print(response)
         if response.status_code == 200:
@@ -361,7 +363,7 @@ class clsVision:
         if len(selectedDevices) > 0:
             data.update({"selectedDevices": selectedDevices})
 
-        update_log(f"Pulling attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+        update_log(f"Pulling attack rate. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))} url: {APIUrl} Query Data: {data}")
 
         response = self._post(APIUrl,json.dumps(data))
         print(response)
@@ -377,14 +379,16 @@ class clsVision:
         #Auto accept and add the server's host key
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
+            update_log(f"Attempting root SSH to Vision at {self.ip}")
             self.client.connect(self.ip, 22, 'root', self.rootpassword)
+            update_log("SSH connected successfully")
         except paramiko.AuthenticationException:
-            print("root authentication failed. Please verify the root password!")
+            update_log("root authentication failed. Please verify the root password!")
             exit(1)
         except paramiko.SSHException as sshException:
-            print(f"Unable to establish SSH connection: {sshException}")
+            update_log(f"Unable to establish SSH connection: {sshException}")
         except Exception as e:
-            print(f"Exception in establishing SSH connection to the server: {e}")
+            update_log(f"Exception in establishing SSH connection to the server: {e}")
 
     def getRawAttackSSH(self, AttackID):
         if not hasattr(self, "client"):
@@ -403,7 +407,7 @@ class clsVision:
   }},
   "size": 1000
 }}'"""
-        print(f"Pulling graph data for attack {AttackID}")
+        update_log(f"SSH: Pulling graph data for attack {AttackID}")
         stdin, stdout, stderr = self.client.exec_command(command)
         #print("---stdout---")
         rawout = stdout.read().decode()
@@ -413,8 +417,8 @@ class clsVision:
 
         if outjson.get('_shards',False):
             if outjson['_shards']['failed'] > 0:
-                print(f"Pulling attack details for attack id {AttackID} has failed!")
-                print(outjson)
+                update_log(f"SSH: Pulling attack details for attack id {AttackID} has failed!")
+                update_log(outjson)
                 exit(1)
         
         #List of keys to include in output:

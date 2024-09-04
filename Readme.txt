@@ -33,7 +33,7 @@
 		Improved display of graph timestamps.
 		We will now sort graph data received from vision prior to displaying it.
 		Set option interpolateNulls: true for 'All Attacks' graph to account for some datasets containing null values when merged.
-		Moved Vision log file to output foler
+		Moved Vision log file to .\Output\ folder
 		Increased verbosity of vision server logging.
 	v0.9.2 - 28 August 2024 (Prateek)
 		Added functionality to process different attack-id to syslog-id conversion

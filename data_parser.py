@@ -2,13 +2,7 @@ from datetime import datetime
 import json
 import csv
 import re
-from collections import defaultdict
 
-try:
-    from tabulate import tabulate
-except ImportError:
-    print("The python module 'tabulate' is not installed. Please install it by running: pip install tabulate")
-    exit()
 
 #number of entries to include in the attack table
 top_n = 5
@@ -203,7 +197,7 @@ def parse_response_file(v, outputFolder):
           for row in table_data    
     } 
     
-    table = tabulate(table_data, headers=headers, tablefmt="pretty")
+    #table = tabulate(table_data, headers=headers, tablefmt="pretty")
 
     sorted_by_pps = sorted(
         syslog_details.items(),
@@ -218,8 +212,8 @@ def parse_response_file(v, outputFolder):
     for syslog_id, detail in top_by_pps[:top_n]:
         syslog_details[syslog_id].update({'graph':True})
 
-    with open(outputFolder + 'output_table.txt', 'w') as f:
-        f.write(table)
+    #with open(outputFolder + 'output_table.txt', 'w') as f:
+    #    f.write(table)
 
     output_csv_file = outputFolder + "output_table.csv"
     with open(output_csv_file, mode='w', newline='') as csv_file:
@@ -296,10 +290,10 @@ def categorize_logs_by_state(attack_logs):
             if state_match:
                 state_code = state_match.group(1)
                 if state_code in state_definitions:
-                    current_state = state_match.group(1)
+                    current_state = state_code
                     state_description = state_definitions[state_code]
                     categorized_logs[syslog_id].append((timestamp, f"State {state_code}: {state_description}", entry))
-            elif footprint_match and current_state in state_definitions:
+            elif footprint_match and current_state:
                 state_description = state_definitions.get(current_state, "Unknown state")
                 categorized_logs[syslog_id].append((timestamp, f"State {current_state}: {state_description}", entry))
     
@@ -326,49 +320,50 @@ def calculate_attack_metrics(categorized_logs):
         state_2_times = []
         state_4_times = []
         state_6_times = []
-        state_0_time = None
+        #state_0_time = None
+        state_6_transition = False
 
         if not entries:
             continue
 
-        # Format for parsing timestamps
         fmt = '%d-%m-%Y %H:%M:%S'
 
-        # Print the entire log entries for debugging
-        print(f"Log Entries for Syslog ID {syslog_id}:")
-        for entry in entries:
-            timestamp, _, state_description = entry
-            #print(f"Timestamp: {timestamp}, State Description: {state_description}")
+        last_state_6 = None
+        next_state_after_6 = None
 
-        # Extract relevant state times
         for entry in entries:
             timestamp, _, state_description = entry
             log_time = datetime.strptime(timestamp, fmt)
 
             if "Entering state 2" in state_description:
                 state_2_times.append(log_time)
+                if last_state_6 and not next_state_after_6:
+                    next_state_after_6 = log_time
             elif "Entering state 4" in state_description:
                 state_4_times.append(log_time)
+                if last_state_6 and not next_state_after_6:
+                    next_state_after_6 = log_time
             elif "Entering state 6" in state_description:
                 state_6_times.append(log_time)
+                last_state_6 = log_time
+                state_6_transition = True
+                next_state_after_6 = None
+            elif 'FFFFFFFF-0000-0000-0000-000000000000' in state_description or \
+                    'FFFFFFFF-FFFF-FFFF-0000-000000000000' in state_description:
+                state_6_times.append(log_time)
+                last_state_6 = log_time
+                state_6_transition = True
+                next_state_after_6 = None
             elif "Entering state 0" in state_description:
-                state_0_time = log_time
+                #state_0_time = log_time
+                if last_state_6 and next_state_after_6:
+                    break
 
-        # Print extracted state times for debugging
-        #print(f"Syslog ID: {syslog_id}")
-        #print(f"State 2 Times: {state_2_times}")
-        #print(f"State 4 Times: {state_4_times}")
-        #print(f"State 6 Times: {state_6_times}")
-        #print(f"State 0 Time: {state_0_time}")
-
-        # Determine the first and last occurrences of relevant states
         first_state_2 = state_2_times[0] if state_2_times else None
         last_state_4 = state_4_times[-1] if state_4_times else None
-        last_state_6 = state_6_times[-1] if state_6_times else None
         first_time = datetime.strptime(entries[0][0], fmt)
         last_time = datetime.strptime(entries[-1][0], fmt)
 
-        # Calculate Initial Time
         initial_fp_time = None
         if last_state_4:
             if first_state_2:
@@ -376,25 +371,27 @@ def calculate_attack_metrics(categorized_logs):
             else:
                 initial_fp_time = last_state_4 - first_time
 
-        # Calculate Final Time
         final_fp_time = None
         if last_state_6 and last_state_4:
             final_fp_time = last_state_6 - last_state_4
+        elif not state_6_transition:
+            final_fp_time = "Final footprint not formed"
 
-        # Calculate Blocking Time Percentage
         blocking_time = None
         if last_state_6:
-            blocking_time = last_time - last_state_6
+            if next_state_after_6:
+                blocking_time = next_state_after_6 - last_state_6
+            else:
+                blocking_time = last_time - last_state_6
 
         total_duration = last_time - first_time
         blocking_time_percentage = None
         if blocking_time and total_duration.total_seconds() > 0:
             blocking_time_percentage = (blocking_time / total_duration) * 100
 
-        # Format times and add to metrics
         formatted_total_duration = format_timedelta(total_duration)
         formatted_initial_fp_time = format_timedelta(initial_fp_time)
-        formatted_final_fp_time = format_timedelta(final_fp_time)
+        formatted_final_fp_time = final_fp_time if isinstance(final_fp_time, str) else format_timedelta(final_fp_time)
         formatted_blocking_time = format_timedelta(blocking_time)
         formatted_blocking_time_percentage = format_percentage(blocking_time_percentage)
 

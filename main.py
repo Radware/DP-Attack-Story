@@ -6,7 +6,6 @@ import data_parser
 import clsVision
 import graph_parser
 import sftp_module
-from datetime import datetime
 
 collect_data=True
 parse_data=True

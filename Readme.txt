@@ -29,6 +29,9 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.9.4 - 4 September 2024 (Prateek)
+		Improved attack lifecycle calucation logic - transition between blocking and non-blocking states
+		Cleaned unused libraries - mainly tabulate
 	v0.9.3 - 4 September 2024 (Steve)
 		Improved display of graph timestamps.
 		We will now sort graph data received from vision prior to displaying it.

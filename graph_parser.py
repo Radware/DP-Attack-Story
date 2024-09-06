@@ -3,7 +3,7 @@ import random
 from datetime import datetime
 import time
 import math
-import sys
+
 
 def get_outer_times(data):
     min_start_time = float('inf')

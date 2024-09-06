@@ -1,9 +1,6 @@
 #Version 0.4.1
 #Updated 26 June 2024
 
-import json
-#import urllib3 #unused at this point
-#import pandas as pd #unused at this point
 import time
 from clsVision import *
 from datetime import datetime

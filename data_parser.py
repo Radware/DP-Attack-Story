@@ -271,9 +271,9 @@ def categorize_logs_by_state(attack_logs):
         #'3': "Anomaly state (Generated FP not able to mitigate the attack)",
         '4': "Initial fp created - FORWARDING",
         #'5': "Sub-hierarchy state (AND part of the FP is created)",
-        '6': "Final fp created - BLOCKING"
+        '6': "Final fp created - BLOCKING",
         #'7': "Non-strictness footprint state (When generated FP is not meeting strictness level)",
-        #'9': "Burst attack state (Handling burst attack)"
+        '9': "Burst attack state (Handling burst attack)"
     }
     
     # Initialize a dictionary to hold categorized logs based on states
@@ -300,6 +300,7 @@ def categorize_logs_by_state(attack_logs):
     return categorized_logs
 
 
+
 def calculate_attack_metrics(categorized_logs):
     metrics = {}
 
@@ -320,7 +321,6 @@ def calculate_attack_metrics(categorized_logs):
         state_2_times = []
         state_4_times = []
         state_6_times = []
-        #state_0_time = None
         state_6_transition = False
 
         if not entries:
@@ -355,7 +355,6 @@ def calculate_attack_metrics(categorized_logs):
                 state_6_transition = True
                 next_state_after_6 = None
             elif "Entering state 0" in state_description:
-                #state_0_time = log_time
                 if last_state_6 and next_state_after_6:
                     break
 
@@ -364,46 +363,61 @@ def calculate_attack_metrics(categorized_logs):
         first_time = datetime.strptime(entries[0][0], fmt)
         last_time = datetime.strptime(entries[-1][0], fmt)
 
-        initial_fp_time = None
-        if last_state_4:
-            if first_state_2:
-                initial_fp_time = last_state_4 - first_state_2
-            else:
-                initial_fp_time = last_state_4 - first_time
+        if state_6_times and state_6_times[0] == first_time:
+            # Burst attack detected
+            attack_time = last_time - first_time
+            blocking_time = last_time - state_6_times[0]
+            blocking_time_percentage = (blocking_time / attack_time) * 100 if attack_time.total_seconds() > 0 else None
 
-        final_fp_time = None
-        if last_state_6 and last_state_4:
-            final_fp_time = last_state_6 - last_state_4
-        elif not state_6_transition:
-            final_fp_time = "Final footprint not formed"
+            metrics[syslog_id] = {
+                'metrics_summary': (
+                    f"Burst Attack Detected, Using previous blocking footprint\n"
+                    f"Total Attack Duration: {format_timedelta(attack_time)}\n"
+                    f"Blocking Time: {format_timedelta(blocking_time)}\n"
+                    f"Blocking Time Percentage: {format_percentage(blocking_time_percentage)}"
+                )
+            }
+        else:
+            initial_fp_time = None
+            if last_state_4:
+                if first_state_2:
+                    initial_fp_time = last_state_4 - first_state_2
+                else:
+                    initial_fp_time = last_state_4 - first_time
 
-        blocking_time = None
-        if last_state_6:
-            if next_state_after_6:
-                blocking_time = next_state_after_6 - last_state_6
-            else:
-                blocking_time = last_time - last_state_6
+            final_fp_time = None
+            if last_state_6 and last_state_4:
+                final_fp_time = last_state_6 - last_state_4
+            elif not state_6_transition:
+                final_fp_time = "Final footprint not formed"
 
-        total_duration = last_time - first_time
-        blocking_time_percentage = None
-        if blocking_time and total_duration.total_seconds() > 0:
-            blocking_time_percentage = (blocking_time / total_duration) * 100
+            blocking_time = None
+            if last_state_6:
+                if next_state_after_6:
+                    blocking_time = next_state_after_6 - last_state_6
+                else:
+                    blocking_time = last_time - last_state_6
 
-        formatted_total_duration = format_timedelta(total_duration)
-        formatted_initial_fp_time = format_timedelta(initial_fp_time)
-        formatted_final_fp_time = final_fp_time if isinstance(final_fp_time, str) else format_timedelta(final_fp_time)
-        formatted_blocking_time = format_timedelta(blocking_time)
-        formatted_blocking_time_percentage = format_percentage(blocking_time_percentage)
+            total_duration = last_time - first_time
+            blocking_time_percentage = None
+            if blocking_time and total_duration.total_seconds() > 0:
+                blocking_time_percentage = (blocking_time / total_duration) * 100
 
-        metrics[syslog_id] = {
-            'metrics_summary': (
-                f"Total Attack Duration: {formatted_total_duration}\n"
-                f"Time taken to create initial LOW strictness footprint: {formatted_initial_fp_time}\n"
-                f"Time taken to optimize and create the final footprint: {formatted_final_fp_time}\n"
-                f"Blocking Time: {formatted_blocking_time}\n"
-                f"Blocking Time Percentage: {formatted_blocking_time_percentage}"
-            )
-        }
+            formatted_total_duration = format_timedelta(total_duration)
+            formatted_initial_fp_time = format_timedelta(initial_fp_time)
+            formatted_final_fp_time = final_fp_time if isinstance(final_fp_time, str) else format_timedelta(final_fp_time)
+            formatted_blocking_time = format_timedelta(blocking_time)
+            formatted_blocking_time_percentage = format_percentage(blocking_time_percentage)
+
+            metrics[syslog_id] = {
+                'metrics_summary': (
+                    f"Total Attack Duration: {formatted_total_duration}\n"
+                    f"Time taken to create initial LOW strictness footprint: {formatted_initial_fp_time}\n"
+                    f"Time taken to optimize and create the final footprint: {formatted_final_fp_time}\n"
+                    f"Blocking Time: {formatted_blocking_time}\n"
+                    f"Blocking Time Percentage: {formatted_blocking_time_percentage}"
+                )
+            }
 
     return metrics
 
@@ -468,7 +482,7 @@ def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
                 <th>Start Time</th>    
                 <th>End Time</th>
                 <th>Attack ID</th>    
-                <th>Syslog ID</th>
+                <th>BDOS Lifecycle log attack ID</th>
                 <th>Device IP</th>
                 <th>Policy</th>
                 <th>Attack Category</th>          
@@ -517,7 +531,7 @@ def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
                 <th>Start Time</th>    
                 <th>End Time</th>
                 <th>Attack ID</th>    
-                <th>Syslog ID</th>
+                <th>BDOS Lifecycle log attack ID</th>
                 <th>Device IP</th>
                 <th>Policy</th>
                 <th>Attack Category</th>          

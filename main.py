@@ -11,9 +11,21 @@ collect_data=True
 parse_data=True
 outputFolder = './Output/'
 
-if not os.path.exists(outputFolder):
-    os.makedirs(outputFolder)
+def clear_output_folder(folder_path):
+    if os.path.exists(folder_path):
+        # Remove all files in the output folder
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+            except Exception as e:
+                print(f"Failed to delete {file_path}. Reason: {e}")
+    else:
+        # Create the output folder if it doesn't exist
+        os.makedirs(folder_path)
 
+clear_output_folder(outputFolder)
 
 if __name__ == '__main__':
     if collect_data:

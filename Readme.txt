@@ -29,6 +29,10 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.9.5 - 12 September 2024 (Prateek)
+		Added enhancements to print BDoS lifecycle parsing for burst attacks accurately
+		Added functionality to clear output folder before running the script
+		Renamed "Syslog ID" in the output table as "BDOS Lifecycle log attack ID"
 	v0.9.4 - 4 September 2024 (Prateek)
 		Improved attack lifecycle calucation logic - transition between blocking and non-blocking states
 		Cleaned unused libraries - mainly tabulate

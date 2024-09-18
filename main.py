@@ -121,8 +121,8 @@ if __name__ == '__main__':
         #with open(outputFolder + 'CombinedGraphData.json') as data_file:
         #    rate_data = json.load(data_file)
         graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
-
-        attackdataHTML = data_parser.generate_html_report(syslog_details, top_n = 5, threshold_gbps=1)
+        top_by_bps, top_by_pps, unique_protocols, count_above_threshold = data_parser.get_top_n(syslog_details, top_n=10, threshold_gbps=1)
+        attackdataHTML = data_parser.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, top_n=10, threshold_gbps=1)
         
         endHTML = "</body></html>"
 

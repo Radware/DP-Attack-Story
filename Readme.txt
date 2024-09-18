@@ -29,6 +29,9 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.9.6 - 18 September 2024 (Prateek)
+		Bug fix for LOW footprint strictness time calucation
+		Seperated functions for creating topN attacks (in preparation for this is for sample data collection)
 	v0.9.5 - 12 September 2024 (Prateek)
 		Added enhancements to print BDoS lifecycle parsing for burst attacks accurately
 		Added functionality to clear output folder before running the script

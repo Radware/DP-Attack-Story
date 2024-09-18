@@ -232,35 +232,41 @@ def parse_log_file(outputFolder, syslog_ids):
     with open(outputFolder, 'r') as file:
         lines = file.readlines()
 
-        # Store previous line information
-        prev_line = None
-        
-        for i in range(len(lines)):
-            line = lines[i].strip()
+        # To store the most recent matching generic syslog_id for each region and attack type
+        latest_initial_log = {}
+
+        for line in lines:
+            line = line.strip()
+            parts = line.split(',')
             
-            if prev_line is not None:
-                # Check if the previous line contains the special attack ID
-                if 'FFFFFFFF-0000-0000-0000-000000000000' or 'FFFFFFFF-FFFF-FFFF-0000-000000000000' in prev_line:
-                    for syslog_id in syslog_ids:
-                        if syslog_id in line:
-                            prev_timestamp = prev_line.split(',')[0].strip()
-                            prev_data = prev_line.split(',', 5)[-1].strip()
-                            attack_logs[syslog_id].append((prev_timestamp, prev_data))
-                            break  # Move to the next line after processing the attack_id
+            # Extract timestamp, region, attack type, syslog_id, and data
+            timestamp = parts[0].strip()
+            region = parts[1].strip()  # Example: 'eu1_34_0-24'
+            attack_type = parts[3].strip()  # Example: 'network flood IPv4 UDP'
+            syslog_id = parts[4].strip()  # Example: 'FFFFFFFF-FFFF-FFFF-2CB3-040F66846000'
+            data = parts[5].strip()
             
-            # Check if the current line contains any attack ID
-            for syslog_id in syslog_ids:
-                if syslog_id in line:
-                    timestamp = line.split(',')[0].strip()
-                    data = line.split(',', 5)[-1].strip()
-                    attack_logs[syslog_id].append((timestamp, data))
+            # Check if this is a generic syslog_id
+            if syslog_id in ['FFFFFFFF-0000-0000-0000-000000000000', 'FFFFFFFF-FFFF-FFFF-0000-000000000000']:
+                # Store this line as the most recent generic syslog_id for this region and attack type
+                key = (region, attack_type)
+                latest_initial_log[key] = (timestamp, data)
+            
+            # Check if the current line contains a specific syslog_id
+            for attack_id in syslog_ids:
+                if attack_id in syslog_id:
+                    key = (region, attack_type)
+                    
+                    # If there is a corresponding initial log, add it to the attack log first
+                    if key in latest_initial_log:
+                        attack_logs[attack_id].append(latest_initial_log[key])
+                        del latest_initial_log[key]  # Remove the initial log once used
+                    
+                    # Add the current log entry to the correct attack log
+                    attack_logs[attack_id].append((timestamp, data))
                     break  # Move to the next line after processing the attack_id
-            
-            # Update previous line information
-            prev_line = line
 
     return attack_logs
-
  # type: ignore
 
 def categorize_logs_by_state(attack_logs):
@@ -421,31 +427,38 @@ def calculate_attack_metrics(categorized_logs):
 
     return metrics
 
-def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
-    # Convert sorted syslog_details to a list of tuples for sorting by PPS
+def get_top_n(syslog_details, top_n=10, threshold_gbps=0.02):
     threshold_bps = threshold_gbps * 1e9
+
+    # Sort by Max_Attack_Rate_BPS and Max_Attack_Rate_PPS
+    sorted_by_bps = sorted(
+        syslog_details.items(),
+        key=lambda item: float(item[1].get('Max_Attack_Rate_BPS', '0').replace(' ', '')),
+        reverse=True
+    )
+
     sorted_by_pps = sorted(
         syslog_details.items(),
         key=lambda item: float(item[1].get('Max_Attack_Rate_PPS', '0').replace(' ', '')),
         reverse=True
     )
 
-    top_by_bps = list(syslog_details.items())[:top_n]
+    # Get top N from both sorted lists
+    top_by_bps = sorted_by_bps[:top_n]
     top_by_pps = sorted_by_pps[:top_n]
-    unique_protocols = set()
-    count_above_threshold = 0
 
-    for syslog_id, details in top_by_bps:
-        protocol = details.get('Protocol', 'N/A')
-        unique_protocols.add(protocol)
+    # Count how many top BPS exceed the threshold
+    count_above_threshold = sum(
+        1 for syslog_id, details in top_by_bps
+        if float(details.get('Max_Attack_Rate_BPS', '0').replace(' ', '')) > threshold_bps
+    )
 
+    # Collect unique protocols from top_by_bps
+    unique_protocols = {details.get('Protocol', 'N/A') for syslog_id, details in top_by_bps}
 
-    for syslog_id, details in top_by_bps:
-        max_bps = float(details.get('Max_Attack_Rate_BPS', '0').replace(' ', ''))
-        if max_bps > threshold_bps:
-            count_above_threshold += 1
+    return top_by_bps, top_by_pps, unique_protocols, count_above_threshold
 
-
+def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, top_n=10, threshold_gbps=0.02):
     # Generate HTML content for the report
     html_content = f"""
     <html>
@@ -500,12 +513,12 @@ def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
 
     # Use existing sorted data (already sorted by Max_Attack_Rate_BPS)
     for syslog_id, details in top_by_bps:
-        metrics_summary = details.get('metrics_summary', 'N/A')  # Adjust if needed
+        metrics_summary = details.get('metrics_summary', 'N/A')
         html_content += f"""
             <tr>
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
-                <td>{details.get('Attack ID')}</td>
+                <td>{details.get('Attack ID', 'N/A')}</td>
                 <td>{syslog_id}</td>
                 <td>{details.get('Device IP', 'N/A')}</td>
                 <td>{details.get('Policy', 'N/A')}</td>
@@ -549,7 +562,7 @@ def generate_html_report(syslog_details, top_n=10, threshold_gbps=0.02):
 
     # Use the sorted_by_pps data
     for syslog_id, details in top_by_pps:
-        metrics_summary = details.get('metrics_summary', 'N/A')  # Adjust if needed
+        metrics_summary = details.get('metrics_summary', 'N/A')
         html_content += f"""
             <tr>
                 <td>{details.get('Start Time', 'N/A')}</td>

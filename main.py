@@ -118,9 +118,11 @@ if __name__ == '__main__':
 
         #attack_log_info = attack_log_parser.parse_log_file(outputFolder + 'response.json', attack_ids)
         
+        #Create the two graphs at the top of the HTML file
         #with open(outputFolder + 'CombinedGraphData.json') as data_file:
         #    rate_data = json.load(data_file)
         graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
+
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = data_parser.get_top_n(syslog_details, top_n=10, threshold_gbps=1)
         attackdataHTML = data_parser.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, top_n=10, threshold_gbps=1)
         
@@ -128,6 +130,7 @@ if __name__ == '__main__':
 
         finalHTML = headerHTML + graphHTML + attackdataHTML 
 
+        #Create dynamic graph combining all attacks into one graph.
         try:
             #with open(outputFolder + 'AttackGraphsData.json') as data_file:
             #    attackGraphData = json.load(data_file)

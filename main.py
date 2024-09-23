@@ -85,7 +85,6 @@ if __name__ == '__main__':
                 syslog_details[syslog_id].update(metrics[syslog_id])
 
         #print(metrics)
-
         #for each attack in syslog_details, check if ['graph'] is set to true. Graph is set to true for top_n graphs in the data_parser module.
         attackGraphData = {}
         for syslogID, details in syslog_details.items():
@@ -122,7 +121,10 @@ if __name__ == '__main__':
         #    rate_data = json.load(data_file)
         graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = data_parser.get_top_n(syslog_details, top_n=10, threshold_gbps=1)
-        attackdataHTML = data_parser.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, top_n=10, threshold_gbps=1)
+        bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps, outputFolder)
+        #print(bps_data)
+        #print(pps_data)
+        attackdataHTML = data_parser.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, top_n=10, threshold_gbps=1)
         
         endHTML = "</body></html>"
 

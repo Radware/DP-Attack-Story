@@ -1,7 +1,9 @@
 from datetime import datetime
+#from clsVision import *
 import json
 import csv
 import re
+#import os
 
 
 #number of entries to include in the attack table
@@ -458,7 +460,34 @@ def get_top_n(syslog_details, top_n=10, threshold_gbps=0.02):
 
     return top_by_bps, top_by_pps, unique_protocols, count_above_threshold
 
-def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, top_n=10, threshold_gbps=0.02):
+def generate_sample_data_section(title, sample_data):
+    # Generate a sample data table (used for both BPS and PPS)
+    html_content = f"<h2>{title}</h2><table>"
+    html_content += """
+        <tr>
+            <th>Attack ID</th>
+            <th>Source Address</th>
+            <th>Source Port</th>
+            <th>Destination Address</th>
+            <th>Destination Port</th>
+        </tr>
+    """
+    for entry in sample_data:
+        for attack_id, samples in entry.items():
+            for sample in samples:
+                html_content += f"""
+                <tr>
+                    <td>{attack_id}</td>
+                    <td>{sample.get('sourceAddress', 'N/A')}</td>
+                    <td>{sample.get('sourcePort', 'N/A')}</td>
+                    <td>{sample.get('destAddress', 'N/A')}</td>
+                    <td>{sample.get('destPort', 'N/A')}</td>
+                </tr>
+                """
+    html_content += "</table>"
+    return html_content
+
+def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, top_n=10, threshold_gbps=0.02):
     # Generate HTML content for the report
     html_content = f"""
     <html>
@@ -484,7 +513,40 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             pre {{
                 white-space: pre-wrap; /* Wraps long text and preserves formatting */
             }}
+            .above-threshold {{
+                background-color: #ffcccc;
+            }}
+            .collapsible {{
+                background-color: #777;
+                color: white;
+                cursor: pointer;
+                padding: 10px;
+                width: 100%;
+                border: none;
+                text-align: left;
+                outline: none;
+                font-size: 15px;
+            }}
+            .active, .collapsible:hover {{
+                background-color: #555;
+            }}
+            .content {{
+                padding: 0 18px;
+                display: none;
+                overflow: hidden;
+                background-color: #f9f9f9;
+            }}
         </style>
+        <script>
+            function toggleContent(id) {{
+                var content = document.getElementById(id);
+                if (content.style.display === "block") {{
+                    content.style.display = "none";
+                }} else {{
+                    content.style.display = "block";
+                }}
+            }}
+        </script>
     </head>
     <body>
         <h2>Attack Report - Top {top_n} Sorted by Max Attack Rate (BPS)</h2>
@@ -511,11 +573,22 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             </tr>
     """
 
-    # Use existing sorted data (already sorted by Max_Attack_Rate_BPS)
+    # Add top_by_bps data
     for syslog_id, details in top_by_bps:
         metrics_summary = details.get('metrics_summary', 'N/A')
+        
+        # Safely convert Max_Attack_Rate_BPS to float
+        max_attack_rate_bps_str = details.get('Max_Attack_Rate_BPS', '0')
+        try:
+            max_attack_rate_bps = float(max_attack_rate_bps_str)
+        except (ValueError, TypeError):
+            max_attack_rate_bps = 0.0
+
+        # Row class based on threshold
+        row_class = 'above-threshold' if max_attack_rate_bps > threshold_gbps * 1e9 else ''
+
         html_content += f"""
-            <tr>
+            <tr class="{row_class}">
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
                 <td>{details.get('Attack ID', 'N/A')}</td>
@@ -534,10 +607,39 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td><pre>{metrics_summary}</pre></td>
             </tr>
         """
+    
+    # Close the attack report table for BPS
+    html_content += "</table>"
 
+    # Add collapsible buttons and individual sample data sections for each attack in BPS
+    for entry in bps_data:
+        for attack_id, samples in entry.items():
+            # Button to toggle collapse for each attack
+            html_content += f"""
+            <button type="button" class="collapsible" onclick="toggleContent('bps_{attack_id}')">Sample Data for Attack ID {attack_id}</button>
+            <div id="bps_{attack_id}" class="content">
+            <table>
+                <tr>
+                    <th>Source Address</th>
+                    <th>Source Port</th>
+                    <th>Destination Address</th>
+                    <th>Destination Port</th>
+                </tr>
+            """
+            # Add the sample data for each attack
+            for sample in samples:
+                html_content += f"""
+                <tr>
+                    <td>{sample.get('sourceAddress', 'N/A')}</td>
+                    <td>{sample.get('sourcePort', 'N/A')}</td>
+                    <td>{sample.get('destAddress', 'N/A')}</td>
+                    <td>{sample.get('destPort', 'N/A')}</td>
+                </tr>
+                """
+            html_content += "</table></div>"
+
+    # Add the PPS section and close the tables
     html_content += f"""
-        </table>
-
         <h2>Attack Report - Top {top_n} Sorted by Max Attack Rate (PPS)</h2>
         <table>
             <tr>
@@ -560,11 +662,21 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             </tr>
     """
 
-    # Use the sorted_by_pps data
+    # Add top_by_pps data
     for syslog_id, details in top_by_pps:
         metrics_summary = details.get('metrics_summary', 'N/A')
+        
+        # Safely convert Max_Attack_Rate_PPS to float
+        max_attack_rate_pps_str = details.get('Max_Attack_Rate_PPS', '0')
+        try:
+            max_attack_rate_pps = float(max_attack_rate_pps_str)
+        except (ValueError, TypeError):
+            max_attack_rate_pps = 0.0
+
+        row_class = 'above-threshold' if max_attack_rate_pps > threshold_gbps * 1e9 else ''
+
         html_content += f"""
-            <tr>
+            <tr class="{row_class}">
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
                 <td>{details.get('Attack ID', 'N/A')}</td>
@@ -583,11 +695,38 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td><pre>{metrics_summary}</pre></td>
             </tr>
         """
+    
+    # Close the attack report table for PPS
+    html_content += "</table>"
 
-    html_content += """
-        </table>
-    </body>
-    </html>
-    """
+    # Add collapsible buttons and individual sample data sections for each attack in PPS
+    for entry in pps_data:
+        for attack_id, samples in entry.items():
+            # Button to toggle collapse for each attack
+            html_content += f"""
+            <button type="button" class="collapsible" onclick="toggleContent('pps_{attack_id}')">Sample Data for Attack ID {attack_id}</button>
+            <div id="pps_{attack_id}" class="content">
+            <table>
+                <tr>
+                    <th>Source Address</th>
+                    <th>Source Port</th>
+                    <th>Destination Address</th>
+                    <th>Destination Port</th>
+                </tr>
+            """
+            # Add the sample data for each attack
+            for sample in samples:
+                html_content += f"""
+                <tr>
+                    <td>{sample.get('sourceAddress', 'N/A')}</td>
+                    <td>{sample.get('sourcePort', 'N/A')}</td>
+                    <td>{sample.get('destAddress', 'N/A')}</td>
+                    <td>{sample.get('destPort', 'N/A')}</td>
+                </tr>
+                """
+            html_content += "</table></div>"
+
+    # Close the final HTML
+    html_content += "</body></html>"
 
     return html_content

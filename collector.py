@@ -177,3 +177,69 @@ def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips, policies, dp_li
     except Exception as e:
         print(f"An error occurred: {e}")             
     
+import json
+import os
+
+def get_all_sample_data(v, top_by_bps, top_by_pps, outputFolder):
+    # Initialize lists to store the filtered data
+    all_sample_data_bps = []
+    all_sample_data_pps = []
+
+    # Function to extract relevant fields from sample data
+    def extract_fields(sample_data):
+        extracted_data = []
+        for item in sample_data:
+            row = item.get('row', {})
+            extracted_data.append({
+                'sourceAddress': row.get('sourceAddress'),
+                'sourcePort': row.get('sourcePort'),
+                'destAddress': row.get('destAddress'),
+                'destPort': row.get('destPort')
+            })
+        return extracted_data
+
+    # Collect and filter attack IDs for both BPS and PPS
+    for _, details in top_by_bps:
+        attack_id = details.get('Attack ID')
+        if attack_id:
+            try:
+                sample_data = v.get_sample_data(attack_id)
+                if isinstance(sample_data, dict):
+                    filtered_data = extract_fields(sample_data.get('data', []))
+                    all_sample_data_bps.append({attack_id: filtered_data})
+                else:
+                    print(f"Unexpected data format for attack id {attack_id}: {sample_data}")
+            except Exception as e:
+                print(f"Failed to get sample data for attack id {attack_id}: {e}")
+
+    for _, details in top_by_pps:
+        attack_id = details.get('Attack ID')
+        if attack_id:
+            try:
+                sample_data = v.get_sample_data(attack_id)
+                if isinstance(sample_data, dict):
+                    filtered_data = extract_fields(sample_data.get('data', []))
+                    all_sample_data_pps.append({attack_id: filtered_data})
+                else:
+                    print(f"Unexpected data format for attack id {attack_id}: {sample_data}")
+            except Exception as e:
+                print(f"Failed to get sample data for attack id {attack_id}: {e}")
+
+    # Ensure the output directory exists
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
+
+    # Save results to JSON files
+    bps_file_path = os.path.join(outputFolder, 'top_by_bps_sample_data.json')
+    pps_file_path = os.path.join(outputFolder, 'top_by_pps_sample_data.json')
+
+    with open(bps_file_path, 'w') as f:
+        json.dump(all_sample_data_bps, f, indent=4)
+    print(f"Sample data for top_by_bps saved to {bps_file_path}")
+
+    with open(pps_file_path, 'w') as f:
+        json.dump(all_sample_data_pps, f, indent=4)
+    print(f"Sample data for top_by_pps saved to {pps_file_path}")
+
+    # Return the processed sample data for further use
+    return all_sample_data_bps, all_sample_data_pps

@@ -321,7 +321,7 @@ class clsVision:
             ],
             "pagination": {
                 "page": 0,
-                "size": 20,
+                #"size": 20,
                 "topHits": 10000
             },
             "aggregation": None,
@@ -343,7 +343,41 @@ class clsVision:
         else:
             update_log(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
             raise Exception(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
-    
+
+    def get_sample_data(self, attack_id):
+        data = {
+            "criteria": [
+                {
+                    "type": "termFilter",
+                    "inverseFilter": False,
+                    "field": "attackIpsId",
+                    "value": attack_id
+                }
+            ],
+            "order": [
+                {
+                    "type": "Order",
+                    "order": "ASC",
+                    "field": "startTime",
+                    "aggregationName": None,
+                    "sortingType": "LONG"
+                }
+            ],
+            "pagination": None,
+            "aggregation": None,
+            "sourceFilters": []
+        }
+
+        APIUrl = f'https://{self.ip}/reporter/mgmt/monitor/reporter/reports-ext/DP_SAMPLE_DATA'
+        print(f"Getting Sample Data using URL {APIUrl} and query data {data}")
+        response = self._post(APIUrl, json.dumps(data))
+        if response.status_code == 200:
+            print(f"Successfully pulled sample data for attack id {attack_id}")
+            return response.json()
+        else:
+            print(f"Error pulling sample data for attack id {attack_id}")
+            raise Exception(f"Error pulling sample data for attack id {attack_id}")
+
     def getAttackRate(self, StartTime, EndTime, Units = "bps", selectedDevices = []):
         """Returns a JSON file containing the graph data from the specified time period.
         Units can be 'bps' or 'pps'"""

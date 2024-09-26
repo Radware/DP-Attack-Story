@@ -23,7 +23,7 @@ def prompt_user_time_period():
     print("1) The past x hours")
     print("2) The past 24 hours")
     print("3) The past 48 hours")
-    print("4) Manually enter times")
+    print("4) Manually enter attack timeframe")
     choice = input("Enter selection (1-4) or other to quit: ")
     if choice == '1':
         hours = int(input("Enter number of hours: "))
@@ -45,7 +45,7 @@ def prompt_user_time_period():
         success = False
         while not success:
             try:
-                from_time = input("Enter the duration start time (format: DD-MM-YYYY HH:MM:SS): ")
+                from_time = input("Enter the closest time before the attack START (format: DD-MM-YYYY HH:MM:SS): ")
                 epoch_from_time,from_time_month = convert_to_epoch(from_time)
                 from_month = from_time_month
                 success = True
@@ -54,7 +54,7 @@ def prompt_user_time_period():
         success = False
         while not success:
             try:
-                to_time = input("Enter the duration end time (format: DD-MM-YYYY HH:MM:SS): ")
+                to_time = input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS): ")
                 epoch_to_time, to_time_month = convert_to_epoch(to_time)
                 to_month = to_time_month
                 success = True

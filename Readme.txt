@@ -29,6 +29,8 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.9.8 - 26 September 2024 (Steve)
+		Changed time format for first two graphs from date to datetime. onHover popup will now display the time as well as the date.
 	v0.9.7 - 26 September 2024 (Prateek)
 		Bug fix for Pagenation during data collection
 		Added Timezone (UTC) in attack report tables

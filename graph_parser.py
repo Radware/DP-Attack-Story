@@ -48,7 +48,7 @@ def createGraphHTMLOverall(BPSjson,PPSjson):
       google.charts.setOnLoadCallback(drawBPSChart);
       function drawBPSChart() {
         var data = google.visualization.arrayToDataTable([
-        [ { label: 'Time', type: 'date'}, { label: 'Challenged', type: 'number'}, { label: 'Excluded', type: 'number'}, { label: 'Received', type: 'number'}, { label: 'Dropped', type: 'number'}]"""
+        [ { label: 'Time', type: 'datetime'}, { label: 'Challenged', type: 'number'}, { label: 'Excluded', type: 'number'}, { label: 'Received', type: 'number'}, { label: 'Dropped', type: 'number'}]"""
     for row in BPSjson['data']:
         #%d-%m-%Y 
         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
@@ -65,7 +65,7 @@ def createGraphHTMLOverall(BPSjson,PPSjson):
       google.charts.setOnLoadCallback(drawPPSChart);
       function drawPPSChart() {
         var data = google.visualization.arrayToDataTable([
-        [ { label: 'Time', type: 'date'}, { label: 'Challenged', type: 'number'}, { label: 'Excluded', type: 'number'}, { label: 'Received', type: 'number'}, { label: 'Dropped', type: 'number'}]"""
+        [ { label: 'Time', type: 'datetime'}, { label: 'Challenged', type: 'number'}, { label: 'Excluded', type: 'number'}, { label: 'Received', type: 'number'}, { label: 'Dropped', type: 'number'}]"""
     for row in PPSjson['data']:
         #%d-%m-%Y 
         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:

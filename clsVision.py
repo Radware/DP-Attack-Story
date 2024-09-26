@@ -274,8 +274,8 @@ class clsVision:
             # Log and raise an exception if the request failed
             update_log(f"Error getting application data for {DeviceIP}")
             raise Exception(f"Error getting application data for {DeviceIP} - {r.status_code}: {r.text}")
-        
-    def getAttackReports(self, DeviceIP,StartTime,EndTime, filter_json=None):
+
+    def getAttackReports(self, DeviceIP, StartTime, EndTime, filter_json=None):
         criteria = [
             {
                 "type": "timeFilter",
@@ -305,9 +305,9 @@ class clsVision:
                 "value": "true"
             }
         ]
-        # If a policy is provided, add the policy filter to the criteria
         if filter_json:
             criteria.append(filter_json)
+
         data = {
             "criteria": criteria,
             "order": [
@@ -321,7 +321,7 @@ class clsVision:
             ],
             "pagination": {
                 "page": 0,
-                "size": 20,
+                "size": 10000,  # Fetch a larger amount per page if needed
                 "topHits": 10000
             },
             "aggregation": None,
@@ -332,17 +332,44 @@ class clsVision:
         }
 
         APIUrl = f'https://{self.ip}/mgmt/monitor/reporter/reports-ext/DP_ATTACK_REPORTS'
-        
         update_log(f"Getting attack reports from {DeviceIP} using url {APIUrl} and query data {data}")
 
-        response = self._post(APIUrl,json.dumps(data))
-        print(response)
-        if response.status_code == 200:
-            update_log(f"Successfully pulled attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
-            return response.json()
-        else:
-            update_log(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
-            raise Exception(f"Error pulling attack report from {DeviceIP}. Time range: {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(StartTime/1000))} - {time.strftime('%d-%b-%Y %H:%M:%S', time.localtime(EndTime/1000))}")
+        all_data = []
+        current_page = 0
+        total_hits = 0
+        metaData = None  # To store metaData from the first response
+
+        while True:
+            data["pagination"]["page"] = current_page
+            response = self._post(APIUrl, json.dumps(data))
+            
+            if response.status_code == 200:
+                response_data = response.json()
+                if "data" in response_data:
+                    all_data.extend(response_data["data"])  # Append the current page's data
+                    if not metaData:
+                        metaData = response_data.get("metaData", {})  # Get metaData only once
+
+                    total_hits += len(response_data["data"])
+
+                    # Stop if the current page has fewer results than the page size
+                    if len(response_data["data"]) < data["pagination"]["size"]:
+                        break  # No more data to fetch
+                    
+                    current_page += 1  # Move to the next page
+                else:
+                    update_log(f"No data in the response from {DeviceIP}")
+                    break
+            else:
+                update_log(f"Error pulling attack report from {DeviceIP}")
+                raise Exception(f"Error pulling attack report from {DeviceIP}")
+
+        # Return the results in the same structure, with all data combined and the same metaData
+        return {
+            "data": all_data,
+            "metaData": metaData or {"totalHits": total_hits}
+        }
+
     
     def getAttackRate(self, StartTime, EndTime, Units = "bps", selectedDevices = []):
         """Returns a JSON file containing the graph data from the specified time period.

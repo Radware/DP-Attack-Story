@@ -492,8 +492,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         <p>Out of the top {top_n} attacks, {count_above_threshold} attacks were greater than {threshold_gbps} Gbps.</p>
         <table>
             <tr>
-                <th>Start Time</th>    
-                <th>End Time</th>
+                <th>Start Time(UTC)</th>    
+                <th>End Time(UTC)</th>
                 <th>Attack ID</th>    
                 <th>BDOS Lifecycle log attack ID</th>
                 <th>Device IP</th>
@@ -541,8 +541,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         <h2>Attack Report - Top {top_n} Sorted by Max Attack Rate (PPS)</h2>
         <table>
             <tr>
-                <th>Start Time</th>    
-                <th>End Time</th>
+                <th>Start Time(UTC)</th>    
+                <th>End Time(UTC)</th>
                 <th>Attack ID</th>    
                 <th>BDOS Lifecycle log attack ID</th>
                 <th>Device IP</th>

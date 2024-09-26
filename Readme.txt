@@ -29,7 +29,10 @@
 	7. View your report under .\Output\
 
 # Version Control
-
+	v0.9.7 - 26 September 2024 (Prateek)
+		Bug fix for Pagenation during data collection
+		Added Timezone (UTC) in attack report tables
+		Modified wordings for option to manually input timeframes option
 	v0.9.6.1
 		adding run.sh to run from container
 	v0.9.6 - 18 September 2024 (Prateek)

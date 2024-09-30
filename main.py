@@ -6,6 +6,7 @@ import data_parser
 import clsVision
 import graph_parser
 import sftp_module
+import html_header
 
 collect_data=True
 parse_data=True
@@ -115,22 +116,23 @@ if __name__ == '__main__':
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   </head>
   <body>"""
+        headerHTML += html_header.getHeader()
 
         #attack_log_info = attack_log_parser.parse_log_file(outputFolder + 'response.json', attack_ids)
         
-        #with open(outputFolder + 'CombinedGraphData.json') as data_file:
-        #    rate_data = json.load(data_file)
+        with open(outputFolder + 'CombinedGraphData.json') as data_file:
+            rate_data = json.load(data_file)
         graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = data_parser.get_top_n(syslog_details, top_n=10, threshold_gbps=1)
         attackdataHTML = data_parser.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, top_n=10, threshold_gbps=1)
         
-        endHTML = "</body></html>"
+        
 
         finalHTML = headerHTML + graphHTML + attackdataHTML 
 
         try:
-            #with open(outputFolder + 'AttackGraphsData.json') as data_file:
-            #    attackGraphData = json.load(data_file)
+            with open(outputFolder + 'AttackGraphsData.json') as data_file:
+                attackGraphData = json.load(data_file)
             finalHTML += graph_parser.createCombinedChart("All Attacks", attackGraphData) 
         except:
             print("Unexpected createCombinedChart() error: ")
@@ -144,6 +146,7 @@ if __name__ == '__main__':
                 print(f"Error graphing attackID '{attackID}':")
                 traceback.print_exc()
 
+        endHTML = "</body></html>"
         finalHTML += endHTML
 
         with open(outputFolder + 'DP-Attack-Story_Report.html', 'w') as file:

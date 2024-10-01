@@ -29,7 +29,7 @@
 	7. View your report under .\Output\
 
 # Version Control
-	v1.0.0 - 01 October 2024 (Prateek)
+	v0.10.0 - 01 October 2024 (Prateek)
 		Added new feature to display saple data for the top N attacks 
 	v0.9.7 - 26 September 2024 (Prateek)
 		Bug fix for Pagenation during data collection

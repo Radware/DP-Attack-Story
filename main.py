@@ -122,8 +122,8 @@ if __name__ == '__main__':
         graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = data_parser.get_top_n(syslog_details, top_n=10, threshold_gbps=1)
         bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps, outputFolder)
-        #print(bps_data)
-        #print(pps_data)
+        #print("BPS Data:" , bps_data)
+        #print("PPS Data:" , pps_data)
         attackdataHTML = data_parser.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, top_n=10, threshold_gbps=1)
         
         endHTML = "</body></html>"

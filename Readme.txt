@@ -12,7 +12,7 @@
 
 # Prerequisites
 
-	This script requires the tabulate, requests, paramiko, and pysftp libraries. 'pip install tabulate requests paramiko pysftp' to download them.
+	This script requires the requests, paramiko, and pysftp libraries. 'requests paramiko pysftp' to download them.
 	You will need to know your Vision/CC username, password and root password. You will need to know the username and password for every defensepro you are pulling data from.
 	DefensePro version at least 8.32
 	DefensePro must have BDOS attack lifecycle logging enabled: 'system internal security bdos attack-log-status set enable'. 'Unknown command' means your DefensePro must be upgraded.
@@ -29,6 +29,8 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.10.0 - 01 October 2024 (Prateek)
+		Added new feature to display saple data for the top N attacks 
 	v0.9.8 - 26 September 2024 (Steve)
 		Changed time format for first two graphs from date to datetime. onHover popup will now display the time as well as the date.
 	v0.9.7 - 26 September 2024 (Prateek)

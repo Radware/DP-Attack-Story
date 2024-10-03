@@ -36,6 +36,21 @@ def makeEmptyList(minTime, maxTime, entries):
 def TEMP_PopulateData():
     return {'metaData': {'totalTime': '0.075 sec.'}, 'data': [{'row': {'timeStamp': '1720444500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720444800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445400000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445700000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446000000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446300000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446600000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446900000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447200000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448400000', 'excluded': '0.0', 'discards': '314.0', 'trafficValue': '689.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448700000', 'excluded': '0.0', 'discards': '7101.0', 'trafficValue': '7101.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449000000', 'excluded': '0.0', 'discards': '7015.0', 'trafficValue': '7015.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449300000', 'excluded': '0.0', 'discards': '7010.0', 'trafficValue': '7010.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449600000', 'excluded': '0.0', 'discards': '7162.0', 'trafficValue': '7162.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449900000', 'excluded': '0.0', 'discards': '7087.0', 'trafficValue': '7087.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450200000', 'excluded': '0.0', 'discards': '7032.0', 'trafficValue': '7032.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450500000', 'excluded': '0.0', 'discards': '7221.0', 'trafficValue': '7221.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450800000', 'excluded': '0.0', 'discards': '7047.0', 'trafficValue': '7047.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451100000', 'excluded': '0.0', 'discards': '7005.6', 'trafficValue': '7005.6', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451400000', 'excluded': '0.0', 'discards': '7020.6', 'trafficValue': '7020.6', 'challengeIng': '0.0'}}], 'dataMap': {'minValue': {'timeStamp': '1720444500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '0.0'}, 'maxValue': {'timeStamp': '1720450500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '7221.0'}}}
 
+def graphPrerequesites():
+    outStr = ""
+    #Workaround function to prevent google charts from auto-converting timezones to local time.
+    outStr += """
+<script type="text/javascript">
+    function correctedDate(inputTime) {
+    var date = new Date(inputTime);
+    var timezoneOffset = date.getTimezoneOffset();
+    var adjustedTime = new Date(inputTime + timezoneOffset * 60 * 1000);
+    return adjustedTime;
+    }
+</script>
+"""
+    return outStr
+
 def createGraphHTMLOverall(BPSjson,PPSjson):
     #if BPSjson is None:
         #print("Setting bps")
@@ -55,7 +70,7 @@ def createGraphHTMLOverall(BPSjson,PPSjson):
     for row in BPSjson['data']:
         #%d-%m-%Y 
         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
-            outStr += f",\n        [new Date.UTC({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+            outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
 
     outStr += "]);"
     outStr += OptionsHTML("Full Time Range Max BPS (UTC)")
@@ -71,7 +86,7 @@ def createGraphHTMLOverall(BPSjson,PPSjson):
     for row in PPSjson['data']:
         #%d-%m-%Y 
         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
-            outStr += f",\n        [new Date.UTC({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+            outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
 
     outStr += "]);"
     outStr += OptionsHTML("Full Time Range Max PPS (UTC)")
@@ -135,7 +150,7 @@ def createGraphHTML(Title = "",JSONData = None):
     for row in JSONData['data']:
         #%d-%m-%Y 
         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
-            outStr += f",\n        [new Date({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+            outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
 
     outStr += "]);"
     outStr += OptionsHTML(Title)
@@ -162,7 +177,7 @@ def createGraphHTMLGoogleCharts(Title, myData):
     # Extracting timestamps and formatting them as new Date objects in GMT
     timestamps = [int(item["row"]["timeStamp"]) for item in sorted_data]
     #labels = [f"new Date({ts} + (new Date().getTimezoneOffset() * 60000))" for ts in timestamps]
-    labels = [f"new Date({ts})" for ts in timestamps]
+    labels = [f"correctedDate({ts})" for ts in timestamps]
 
     # Prepare the data for Google Charts
     data_table = [["Timestamp"] + [key for key in sorted_data[0]["row"].keys() if key != "timeStamp" and key != "footprint"]]
@@ -181,7 +196,8 @@ def createGraphHTMLGoogleCharts(Title, myData):
 
     # Convert data_table to JSON and replace the quotes around Date objects
     json_data = json.dumps(data_table)
-    json_data = json_data.replace('"new Date(', 'new Date(').replace(')"', ')')
+    #json_data = json_data.replace('"new Date(', 'new Date(').replace(')"', ')')
+    json_data = json_data.replace('"correctedDate(', 'correctedDate(').replace(')"', ')')
 
     # Generate HTML content dynamically
     html_content = f"""
@@ -273,7 +289,7 @@ def createCombinedChart(Title, myData):
     # Populate data rows based on rounded timestamps
     for timestamp in timestamps:
         #date_object = f"new Date({timestamp} + (new Date().getTimezoneOffset() * 60000))"
-        date_object = f"new Date({timestamp})"
+        date_object = f"correctedDate({timestamp})"
         row = [date_object] + [None] * (len(data_table[0]) - 1)
         
         for dataset_name, dataset in myData.items():
@@ -294,7 +310,7 @@ def createCombinedChart(Title, myData):
 
     # Convert data_table to JSON and replace the quotes around Date objects
     json_data = json.dumps(data_table[1:])
-    json_data = json_data.replace('"new Date(', 'new Date(').replace(')"', ')')
+    json_data = json_data.replace('"correctedDate(', 'correctedDate(').replace(')"', ')')
 
     # Generate HTML content dynamically with checkboxes and Date objects for x-axis
     html_content = f"""

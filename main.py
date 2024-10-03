@@ -4,9 +4,10 @@ import json
 import collector
 import data_parser
 import clsVision
-import graph_parser
+import html_charts
 import sftp_module
 import html_header
+from datetime import datetime, timezone
 
 collect_data=True
 parse_data=True
@@ -108,21 +109,32 @@ if __name__ == '__main__':
         #Save the raw attack rate graph data to a file
         with open(outputFolder + 'CombinedGraphData.json', 'w', encoding='utf-8') as file:
             json.dump(rate_data, file, ensure_ascii=False, indent=4)
+        
+        #Save a file with the details of the current run.
+        executionStatistics=f"""\
+Start Time: {datetime.fromtimestamp(epoch_from_time/1000, tz=timezone.utc).strftime('%a, %d %b %Y %H:%M:%S %Z')}
+End Time: {datetime.fromtimestamp(epoch_to_time  /1000, tz=timezone.utc).strftime('%a, %d %b %Y %H:%M:%S %Z')}
+Vision / Cyber Controller IP: {v.ip}
+DPs: {', '.join(device_ips)}
+Policies: {"All" if len(policies) == 0 else policies}"""
+        with open(outputFolder + 'ExecutionDetails.txt', 'w', encoding='utf-8') as file:
+            file.write(executionStatistics)
 
     if parse_data:
-        headerHTML = """<html>
-  <head>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-  </head>
-  <body>"""
-        headerHTML += html_header.getHeader()
+        #Open executionStatistics.txt and include the contained information in the header
+        statsForHeader = ""
+        with open(outputFolder + 'ExecutionDetails.txt', "r") as file:
+            for line in file:
+                statsForHeader += f"<p>{line.strip()}</p>\n"
+
+        headerHTML = html_header.getHeader(statsForHeader) + html_charts.graphPrerequesites()
 
         #attack_log_info = attack_log_parser.parse_log_file(outputFolder + 'response.json', attack_ids)
         
         #Create the two graphs at the top of the HTML file
         with open(outputFolder + 'CombinedGraphData.json') as data_file:
             rate_data = json.load(data_file)
-        graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
+        graphHTML = html_charts.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
 
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = data_parser.get_top_n(syslog_details, top_n=10, threshold_gbps=1)
         bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps, outputFolder)
@@ -138,7 +150,7 @@ if __name__ == '__main__':
         try:
             with open(outputFolder + 'AttackGraphsData.json') as data_file:
                 attackGraphData = json.load(data_file)
-            finalHTML += graph_parser.createCombinedChart("All Attacks", attackGraphData) 
+            finalHTML += html_charts.createCombinedChart("All Attacks", attackGraphData) 
         except:
             print("Unexpected createCombinedChart() error: ")
             traceback.print_exc()
@@ -146,7 +158,7 @@ if __name__ == '__main__':
         #Add an individual graph for each attack
         for attackID, data in attackGraphData.items():
             try:
-                finalHTML += graph_parser.createGraphHTMLGoogleCharts(attackID, data)
+                finalHTML += html_charts.createGraphHTMLGoogleCharts(attackID, data)
             except:
                 print(f"Error graphing attackID '{attackID}':")
                 traceback.print_exc()

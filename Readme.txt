@@ -12,7 +12,7 @@
 
 # Prerequisites
 
-	This script requires the requests, paramiko, and pysftp libraries. 'requests paramiko pysftp' to download them.
+	This script requires the requests, paramiko, and pysftp libraries. 'pip install requests paramiko pysftp' to download them.
 	You will need to know your Vision/CC username, password and root password. You will need to know the username and password for every defensepro you are pulling data from.
 	DefensePro version at least 8.32
 	DefensePro must have BDOS attack lifecycle logging enabled: 'system internal security bdos attack-log-status set enable'. 'Unknown command' means your DefensePro must be upgraded.
@@ -29,21 +29,26 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.10.2 - 3 October 2024 (Steve)
+		Implemented a JavaScript function on the output html page to ensure that Google Charts displays times in UTC, compensating for automatic adjustments to the user's local time.
+		Improved header formatting
+		Header data is now populated
+		Corrected typos in Readme.txt
 	v0.10.1 - 30 September 2024 (Steve)
 		Initial concept for a header.
-	v0.10.0 - 01 October 2024 (Prateek)
-		Added new feature to display saple data for the top N attacks 
+	v0.10.0 - 1 October 2024 (Prateek)
+		Added new feature to display sample data for the top N attacks 
 	v0.9.8 - 26 September 2024 (Steve)
 		Changed time format for first two graphs from date to datetime. onHover popup will now display the time as well as the date.
 	v0.9.7 - 26 September 2024 (Prateek)
-		Bug fix for Pagenation during data collection
+		Bug fix for Pagination during data collection
 		Added Timezone (UTC) in attack report tables
-		Modified wordings for option to manually input timeframes option
+		Modified wording for option to manually input timeframes
 	v0.9.6.1
-		adding run.sh to run from container
+		Added run.sh to assist with running from a container
 	v0.9.6 - 18 September 2024 (Prateek)
-		Bug fix for LOW footprint strictness time calucation
-		Seperated functions for creating topN attacks (in preparation for this is for sample data collection)
+		Bug fix for LOW footprint strictness time calculation
+		Separated functions for creating topN attacks in preparation for sample data collection
 	v0.9.5 - 12 September 2024 (Prateek)
 		Added enhancements to print BDoS lifecycle parsing for burst attacks accurately
 		Added functionality to clear output folder before running the script
@@ -70,7 +75,7 @@
 		Added error handling when entering a time range. Invalid entries will now prompt for a correction.
 		Script will pull DefensePro CLI credentials from Vision instead of prompting user.
 	v0.8.6 - 21 August 2024 (Prateek)
-		added summary that displays acttack vector for top n attacks
+		added summary that displays attack vector for top n attacks
 		added summary that displays x attacks are over "y" gbps
 	v0.8.5 - 21 August 2024 (Steve)
 		Added more robust error handling and reporting to graph operations. 

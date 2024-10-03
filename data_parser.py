@@ -1,7 +1,9 @@
 from datetime import datetime
+#from clsVision import *
 import json
 import csv
 import re
+#import os
 
 
 #number of entries to include in the attack table
@@ -458,7 +460,43 @@ def get_top_n(syslog_details, top_n=10, threshold_gbps=0.02):
 
     return top_by_bps, top_by_pps, unique_protocols, count_above_threshold
 
-def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, top_n=10, threshold_gbps=0.02):
+def generate_sample_data_section(title, sample_data):
+    # Generate a sample data table (used for both BPS and PPS)
+    html_content = f"<h2>{title}</h2><table border='1' cellpadding='5' cellspacing='0'>"
+    html_content += """
+        <tr>
+            <th>Attack ID</th>
+            <th>Source Address</th>
+            <th>Source Port</th>
+            <th>Destination Address</th>
+            <th>Destination Port</th>
+        </tr>
+    """
+    if sample_data:
+        for entry in sample_data:
+            for attack_id, samples in entry.items():
+                for sample in samples:
+                    html_content += f"""
+                    <tr>
+                        <td>{attack_id}</td>
+                        <td>{sample.get('sourceAddress', 'N/A')}</td>
+                        <td>{sample.get('sourcePort', 'N/A')}</td>
+                        <td>{sample.get('destAddress', 'N/A')}</td>
+                        <td>{sample.get('destPort', 'N/A')}</td>
+                    </tr>
+                    """
+    else:
+        html_content += """
+        <tr>
+            <td colspan="5">No sample data available</td>
+        </tr>
+        """
+    
+    html_content += "</table>"
+    return html_content
+
+
+def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, top_n=10, threshold_gbps=0.02):
     # Generate HTML content for the report
     html_content = f"""
     <html>
@@ -484,7 +522,40 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             pre {{
                 white-space: pre-wrap; /* Wraps long text and preserves formatting */
             }}
+            .above-threshold {{
+                background-color: #ffcccc;
+            }}
+            .collapsible {{
+                background-color: #777;
+                color: white;
+                cursor: pointer;
+                padding: 10px;
+                width: 100%;
+                border: none;
+                text-align: left;
+                outline: none;
+                font-size: 15px;
+            }}
+            .active, .collapsible:hover {{
+                background-color: #555;
+            }}
+            .content {{
+                padding: 0 18px;
+                display: none;
+                overflow: hidden;
+                background-color: #f9f9f9;
+            }}
         </style>
+        <script>
+            function toggleContent(id) {{
+                var content = document.getElementById(id);
+                if (content.style.display === "table-row") {{
+                    content.style.display = "none";
+                }} else {{
+                    content.style.display = "table-row";
+                }}
+            }}
+        </script>
     </head>
     <body>
         <h2>Attack Report - Top {top_n} Sorted by Max Attack Rate (BPS)</h2>
@@ -492,13 +563,13 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         <p>Out of the top {top_n} attacks, {count_above_threshold} attacks were greater than {threshold_gbps} Gbps.</p>
         <table>
             <tr>
-                <th>Start Time(UTC)</th>    
-                <th>End Time(UTC)</th>
-                <th>Attack ID</th>    
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Attack ID</th>
                 <th>BDOS Lifecycle log attack ID</th>
                 <th>Device IP</th>
                 <th>Policy</th>
-                <th>Attack Category</th>          
+                <th>Attack Category</th>
                 <th>Attack Name</th>
                 <th>Threat Group</th>
                 <th>Protocol</th>
@@ -508,14 +579,27 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Max_Attack_Rate_PPS</th>
                 <th>Final Footprint</th>
                 <th>BDOS Life Cycle</th>
+                <th>Sample Data</th>
             </tr>
     """
 
-    # Use existing sorted data (already sorted by Max_Attack_Rate_BPS)
+    # Add top_by_bps data
     for syslog_id, details in top_by_bps:
         metrics_summary = details.get('metrics_summary', 'N/A')
+
+        # Safely convert Max_Attack_Rate_BPS to float
+        max_attack_rate_bps_str = details.get('Max_Attack_Rate_BPS', '0')
+        try:
+            max_attack_rate_bps = float(max_attack_rate_bps_str)
+        except (ValueError, TypeError):
+            max_attack_rate_bps = 0.0
+
+        # Row class based on threshold
+        row_class = 'above-threshold' if max_attack_rate_bps > threshold_gbps * 1e9 else ''
+
+        # Main row
         html_content += f"""
-            <tr>
+            <tr class="{row_class}">
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
                 <td>{details.get('Attack ID', 'N/A')}</td>
@@ -532,22 +616,63 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS', 'N/A')}</td>
                 <td>{details.get('Final Footprint', 'N/A')}</td>
                 <td><pre>{metrics_summary}</pre></td>
+                <td><button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Show Sample Data</button></td>
             </tr>
         """
 
-    html_content += f"""
-        </table>
+        # Collapsible row for sample data (initially hidden)
+        html_content += f"""
+            <tr id="bps_{details.get('Attack ID', 'N/A')}" style="display:none;">
+                <td colspan="17">
+                    <table>
+                        <tr>
+                            <th>Source Address</th>
+                            <th>Source Port</th>
+                            <th>Destination Address</th>
+                            <th>Destination Port</th>
+                        </tr>
+        """
+        # Check if there are sample data
+        sample_found = False
+        for entry in bps_data:
+            for attack_id, samples in entry.items():
+                if attack_id == details.get('Attack ID', 'N/A'):
+                    if samples:  # If samples exist
+                        sample_found = True
+                        for sample in samples:
+                            html_content += f"""
+                            <tr>
+                                <td>{sample.get('sourceAddress', 'N/A')}</td>
+                                <td>{sample.get('sourcePort', 'N/A')}</td>
+                                <td>{sample.get('destAddress', 'N/A')}</td>
+                                <td>{sample.get('destPort', 'N/A')}</td>
+                            </tr>
+                            """
+        
+        if not sample_found:
+            html_content += """
+                            <tr>
+                                <td colspan="4">No sample data available</td>
+                            </tr>
+            """
+        
+        html_content += "</table></td></tr>"
+    
+    # Close the attack report table for BPS
+    html_content += "</table>"
 
-        <h2>Attack Report - Top {top_n} Sorted by Max Attack Rate (PPS)</h2>
-        <table>
+    # Add PPS report header (corrected title)
+    html_content += f"<h2>Attack Report - Top {top_n} Sorted by Max Attack Rate (PPS)</h2>"
+    html_content += "<table>"
+    html_content += """
             <tr>
-                <th>Start Time(UTC)</th>    
-                <th>End Time(UTC)</th>
-                <th>Attack ID</th>    
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Attack ID</th>
                 <th>BDOS Lifecycle log attack ID</th>
                 <th>Device IP</th>
                 <th>Policy</th>
-                <th>Attack Category</th>          
+                <th>Attack Category</th>
                 <th>Attack Name</th>
                 <th>Threat Group</th>
                 <th>Protocol</th>
@@ -557,14 +682,27 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Max_Attack_Rate_PPS</th>
                 <th>Final Footprint</th>
                 <th>BDOS Life Cycle</th>
+                <th>Sample Data</th>
             </tr>
     """
 
-    # Use the sorted_by_pps data
+    # Add top_by_pps data
     for syslog_id, details in top_by_pps:
         metrics_summary = details.get('metrics_summary', 'N/A')
+
+        # Safely convert Max_Attack_Rate_PPS to float
+        max_attack_rate_pps_str = details.get('Max_Attack_Rate_PPS', '0')
+        try:
+            max_attack_rate_pps = float(max_attack_rate_pps_str)
+        except (ValueError, TypeError):
+            max_attack_rate_pps = 0.0
+
+        # Row class based on threshold (using BPS threshold for example)
+        row_class = 'above-threshold' if max_attack_rate_pps > threshold_gbps * 1e9 else ''
+
+        # Main row for PPS
         html_content += f"""
-            <tr>
+            <tr class="{row_class}">
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
                 <td>{details.get('Attack ID', 'N/A')}</td>
@@ -581,13 +719,52 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS', 'N/A')}</td>
                 <td>{details.get('Final Footprint', 'N/A')}</td>
                 <td><pre>{metrics_summary}</pre></td>
+                <td><button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')">Show Sample Data</button></td>
             </tr>
         """
 
-    html_content += """
-        </table>
-    </body>
-    </html>
-    """
-
+        # Collapsible row for sample data (initially hidden)
+        html_content += f"""
+            <tr id="pps_{details.get('Attack ID', 'N/A')}" style="display:none;">
+                <td colspan="17">
+                    <table>
+                        <tr>
+                            <th>Source Address</th>
+                            <th>Source Port</th>
+                            <th>Destination Address</th>
+                            <th>Destination Port</th>
+                        </tr>
+        """
+        # Check if there are sample data
+        sample_found = False
+        for entry in pps_data:
+            for attack_id, samples in entry.items():
+                if attack_id == details.get('Attack ID', 'N/A'):
+                    if samples:  # If samples exist
+                        sample_found = True
+                        for sample in samples:
+                            html_content += f"""
+                            <tr>
+                                <td>{sample.get('sourceAddress', 'N/A')}</td>
+                                <td>{sample.get('sourcePort', 'N/A')}</td>
+                                <td>{sample.get('destAddress', 'N/A')}</td>
+                                <td>{sample.get('destPort', 'N/A')}</td>
+                            </tr>
+                            """
+        
+        if not sample_found:
+            html_content += """
+                            <tr>
+                                <td colspan="4">No sample data available</td>
+                            </tr>
+            """
+        
+        html_content += "</table></td></tr>"
+    
+    # Close the attack report table for PPS
+    html_content += "</table>"
+    html_content += "</body></html>"
+    
     return html_content
+
+

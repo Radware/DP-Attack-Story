@@ -6,6 +6,7 @@ import data_parser
 import clsVision
 import graph_parser
 import sftp_module
+import html_header
 
 collect_data=True
 parse_data=True
@@ -85,7 +86,6 @@ if __name__ == '__main__':
                 syslog_details[syslog_id].update(metrics[syslog_id])
 
         #print(metrics)
-
         #for each attack in syslog_details, check if ['graph'] is set to true. Graph is set to true for top_n graphs in the data_parser module.
         attackGraphData = {}
         for syslogID, details in syslog_details.items():
@@ -115,25 +115,29 @@ if __name__ == '__main__':
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   </head>
   <body>"""
+        headerHTML += html_header.getHeader()
 
         #attack_log_info = attack_log_parser.parse_log_file(outputFolder + 'response.json', attack_ids)
         
         #Create the two graphs at the top of the HTML file
-        #with open(outputFolder + 'CombinedGraphData.json') as data_file:
-        #    rate_data = json.load(data_file)
+        with open(outputFolder + 'CombinedGraphData.json') as data_file:
+            rate_data = json.load(data_file)
         graphHTML = graph_parser.createGraphHTMLOverall(rate_data['bps'], rate_data['pps'])
 
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = data_parser.get_top_n(syslog_details, top_n=10, threshold_gbps=1)
-        attackdataHTML = data_parser.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, top_n=10, threshold_gbps=1)
+        bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps, outputFolder)
+        #print("BPS Data:" , bps_data)
+        #print("PPS Data:" , pps_data)
+        attackdataHTML = data_parser.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, top_n=10, threshold_gbps=1)
         
-        endHTML = "</body></html>"
+        
 
         finalHTML = headerHTML + graphHTML + attackdataHTML 
 
         #Create dynamic graph combining all attacks into one graph.
         try:
-            #with open(outputFolder + 'AttackGraphsData.json') as data_file:
-            #    attackGraphData = json.load(data_file)
+            with open(outputFolder + 'AttackGraphsData.json') as data_file:
+                attackGraphData = json.load(data_file)
             finalHTML += graph_parser.createCombinedChart("All Attacks", attackGraphData) 
         except:
             print("Unexpected createCombinedChart() error: ")
@@ -147,6 +151,7 @@ if __name__ == '__main__':
                 print(f"Error graphing attackID '{attackID}':")
                 traceback.print_exc()
 
+        endHTML = "</body></html>"
         finalHTML += endHTML
 
         with open(outputFolder + 'DP-Attack-Story_Report.html', 'w') as file:

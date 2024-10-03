@@ -33,6 +33,24 @@ def makeEmptyList(minTime, maxTime, entries):
     pass
     return out
 
+def TEMP_PopulateData():
+    return {'metaData': {'totalTime': '0.075 sec.'}, 'data': [{'row': {'timeStamp': '1720444500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720444800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445400000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445700000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446000000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446300000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446600000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446900000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447200000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448400000', 'excluded': '0.0', 'discards': '314.0', 'trafficValue': '689.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448700000', 'excluded': '0.0', 'discards': '7101.0', 'trafficValue': '7101.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449000000', 'excluded': '0.0', 'discards': '7015.0', 'trafficValue': '7015.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449300000', 'excluded': '0.0', 'discards': '7010.0', 'trafficValue': '7010.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449600000', 'excluded': '0.0', 'discards': '7162.0', 'trafficValue': '7162.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449900000', 'excluded': '0.0', 'discards': '7087.0', 'trafficValue': '7087.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450200000', 'excluded': '0.0', 'discards': '7032.0', 'trafficValue': '7032.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450500000', 'excluded': '0.0', 'discards': '7221.0', 'trafficValue': '7221.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450800000', 'excluded': '0.0', 'discards': '7047.0', 'trafficValue': '7047.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451100000', 'excluded': '0.0', 'discards': '7005.6', 'trafficValue': '7005.6', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451400000', 'excluded': '0.0', 'discards': '7020.6', 'trafficValue': '7020.6', 'challengeIng': '0.0'}}], 'dataMap': {'minValue': {'timeStamp': '1720444500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '0.0'}, 'maxValue': {'timeStamp': '1720450500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '7221.0'}}}
+
+def graphPrerequesites():
+    outStr = ""
+    #Workaround function to prevent google charts from auto-converting timezones to local time.
+    outStr += """
+<script type="text/javascript">
+    function correctedDate(inputTime) {
+    var date = new Date(inputTime);
+    var timezoneOffset = date.getTimezoneOffset();
+    var adjustedTime = new Date(inputTime + timezoneOffset * 60 * 1000);
+    return adjustedTime;
+    }
+</script>
+"""
+    return outStr
+
 def createGraphHTMLOverall(BPSjson,PPSjson):
     #if BPSjson is None:
         #print("Setting bps")
@@ -52,12 +70,11 @@ def createGraphHTMLOverall(BPSjson,PPSjson):
     for row in BPSjson['data']:
         #%d-%m-%Y 
         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
-            outStr += f",\n        [new Date({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+            outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
 
     outStr += "]);"
-    outStr += OptionsHTML("Combined BPS")
+    outStr += OptionsHTML("Full Time Range Max BPS (UTC)")
     outStr += """
-
         var chart = new google.visualization.AreaChart(document.getElementById('bpsChart'));
 
         chart.draw(data, options);
@@ -69,10 +86,10 @@ def createGraphHTMLOverall(BPSjson,PPSjson):
     for row in PPSjson['data']:
         #%d-%m-%Y 
         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
-            outStr += f",\n        [new Date({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+            outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
 
     outStr += "]);"
-    outStr += OptionsHTML("Combined PPS")
+    outStr += OptionsHTML("Full Time Range Max PPS (UTC)")
     outStr += """
         var chart = new google.visualization.AreaChart(document.getElementById('ppsChart'));
 
@@ -85,8 +102,6 @@ def createGraphHTMLOverall(BPSjson,PPSjson):
 """
     return outStr
 
-def TEMP_PopulateData():
-    return {'metaData': {'totalTime': '0.075 sec.'}, 'data': [{'row': {'timeStamp': '1720444500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720444800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445400000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445700000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446000000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446300000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446600000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446900000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447200000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448400000', 'excluded': '0.0', 'discards': '314.0', 'trafficValue': '689.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448700000', 'excluded': '0.0', 'discards': '7101.0', 'trafficValue': '7101.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449000000', 'excluded': '0.0', 'discards': '7015.0', 'trafficValue': '7015.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449300000', 'excluded': '0.0', 'discards': '7010.0', 'trafficValue': '7010.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449600000', 'excluded': '0.0', 'discards': '7162.0', 'trafficValue': '7162.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449900000', 'excluded': '0.0', 'discards': '7087.0', 'trafficValue': '7087.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450200000', 'excluded': '0.0', 'discards': '7032.0', 'trafficValue': '7032.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450500000', 'excluded': '0.0', 'discards': '7221.0', 'trafficValue': '7221.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450800000', 'excluded': '0.0', 'discards': '7047.0', 'trafficValue': '7047.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451100000', 'excluded': '0.0', 'discards': '7005.6', 'trafficValue': '7005.6', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451400000', 'excluded': '0.0', 'discards': '7020.6', 'trafficValue': '7020.6', 'challengeIng': '0.0'}}], 'dataMap': {'minValue': {'timeStamp': '1720444500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '0.0'}, 'maxValue': {'timeStamp': '1720450500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '7221.0'}}}
 
 def OptionsHTML(Title):
     output =  """
@@ -108,6 +123,10 @@ def OptionsHTML(Title):
                 2: { labelInLegend: 'Received', color: "#088eb1"},
                 3: { labelInLegend: 'Dropped', color: "#f41414"},
             },
+            tooltip: {
+                isHtml: true,
+                format: 'MMM d, y, HH:mm:ss'  // Ensure full date and time are shown in the tooltip
+            }
         };"""
     return output
     
@@ -131,7 +150,7 @@ def createGraphHTML(Title = "",JSONData = None):
     for row in JSONData['data']:
         #%d-%m-%Y 
         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
-            outStr += f",\n        [new Date({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+            outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
 
     outStr += "]);"
     outStr += OptionsHTML(Title)
@@ -147,103 +166,6 @@ def createGraphHTML(Title = "",JSONData = None):
 """
     return outStr
 
-def createGraphHTMLChartJS(Title, myData):
-    # Define title for the chart
-
-    # Generate a random ID for the chart name
-    rand_ID = random.randrange(100000000, 999999999)
-    name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
-
-    # Extracting timestamps
-    timestamps = [int(item["row"]["timeStamp"]) for item in myData["data"]]
-    labels = [datetime.fromtimestamp(ts / 1000).strftime('%Y-%m-%d %H:%M:%S') for ts in timestamps]
-
-    # Extracting dynamic y-axis data
-    datasets = []
-    for key in myData["data"][0]["row"].keys():
-        if key != "timeStamp" and key != "footprint":
-            data = [
-                float(item["row"][key]) if item["row"][key] is not None else None 
-                for item in myData["data"]
-            ]
-            datasets.append({
-                "label": key,
-                "data": data,
-                "borderColor": f'rgba({abs(hash(key)) % 256}, {(abs(hash(key) * 2)) % 256}, {(abs(hash(key) * 3)) % 256}, 1)',
-                "borderWidth": 2,
-                "fill": False
-            })
-
-    # Create annotations for the points where a footprint exists
-    annotations = []
-    for idx, item in enumerate(myData["data"]):
-        if "footprint" in item["row"] and item["row"]["footprint"] is not None:
-            annotations.append({
-                "type": "line",
-                "mode": "vertical",
-                "scaleID": "x",
-                "value": labels[idx],
-                "borderColor": "red",
-                "borderWidth": 2,
-                "label": {
-                    "content": "Footprint",
-                    "enabled": True,
-                    "position": "top"
-                }
-            })
-
-    # Generate HTML content dynamically
-    html_content = f"""
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chart.js Dynamic Graph</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.0"></script>
-    </head>
-    <body>
-        <div style="width: 80%; margin: auto;">
-            <canvas id="{name}"></canvas>
-        </div>
-
-        <script>
-            var ctx = document.getElementById('{name}').getContext('2d');
-            var myChart = new Chart(ctx, {{
-                type: 'line',
-                data: {{
-                    labels: {json.dumps(labels)},
-                    datasets: {json.dumps(datasets)}
-                }},
-                options: {{
-                    scales: {{
-                        x: {{
-                            title: {{
-                                display: true,
-                                text: 'Timestamp'
-                            }}
-                        }},
-                        y: {{
-                            beginAtZero: false,
-                            title: {{
-                                display: true,
-                                text: 'Values'
-                            }}
-                        }}
-                    }},
-                    plugins: {{
-                        annotation: {{
-                            annotations: {json.dumps(annotations)}
-                        }}
-                    }}
-                }}
-            }});
-        </script>
-    </body>
-    </html>
-    """
-    return html_content
-
-
 def createGraphHTMLGoogleCharts(Title, myData):
     # Generate a random ID for the chart name
     rand_ID = random.randrange(100000000, 999999999)
@@ -255,7 +177,7 @@ def createGraphHTMLGoogleCharts(Title, myData):
     # Extracting timestamps and formatting them as new Date objects in GMT
     timestamps = [int(item["row"]["timeStamp"]) for item in sorted_data]
     #labels = [f"new Date({ts} + (new Date().getTimezoneOffset() * 60000))" for ts in timestamps]
-    labels = [f"new Date({ts})" for ts in timestamps]
+    labels = [f"correctedDate({ts})" for ts in timestamps]
 
     # Prepare the data for Google Charts
     data_table = [["Timestamp"] + [key for key in sorted_data[0]["row"].keys() if key != "timeStamp" and key != "footprint"]]
@@ -274,7 +196,8 @@ def createGraphHTMLGoogleCharts(Title, myData):
 
     # Convert data_table to JSON and replace the quotes around Date objects
     json_data = json.dumps(data_table)
-    json_data = json_data.replace('"new Date(', 'new Date(').replace(')"', ')')
+    #json_data = json_data.replace('"new Date(', 'new Date(').replace(')"', ')')
+    json_data = json_data.replace('"correctedDate(', 'correctedDate(').replace(')"', ')')
 
     # Generate HTML content dynamically
     html_content = f"""
@@ -366,7 +289,7 @@ def createCombinedChart(Title, myData):
     # Populate data rows based on rounded timestamps
     for timestamp in timestamps:
         #date_object = f"new Date({timestamp} + (new Date().getTimezoneOffset() * 60000))"
-        date_object = f"new Date({timestamp})"
+        date_object = f"correctedDate({timestamp})"
         row = [date_object] + [None] * (len(data_table[0]) - 1)
         
         for dataset_name, dataset in myData.items():
@@ -387,7 +310,7 @@ def createCombinedChart(Title, myData):
 
     # Convert data_table to JSON and replace the quotes around Date objects
     json_data = json.dumps(data_table[1:])
-    json_data = json_data.replace('"new Date(', 'new Date(').replace(')"', ')')
+    json_data = json_data.replace('"correctedDate(', 'correctedDate(').replace(')"', ')')
 
     # Generate HTML content dynamically with checkboxes and Date objects for x-axis
     html_content = f"""

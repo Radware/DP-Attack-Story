@@ -29,6 +29,8 @@
 	7. View your report under .\Output\
 
 # Version Control
+	v0.10.3 - 3 October 2024 (prateek)
+		fixed color coding in table for above threshold attacks
 	v0.10.2 - 3 October 2024 (Steve)
 		Implemented a JavaScript function on the output html page to ensure that Google Charts displays times in UTC, compensating for automatic adjustments to the user's local time.
 		Improved header formatting

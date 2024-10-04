@@ -595,7 +595,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             max_attack_rate_bps = 0.0
 
         # Row class based on threshold
-        row_class = 'above-threshold' if max_attack_rate_bps > threshold_gbps * 1e9 else ''
+        row_class = ''
 
         # Main row
         html_content += f"""
@@ -698,7 +698,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             max_attack_rate_pps = 0.0
 
         # Row class based on threshold (using BPS threshold for example)
-        row_class = 'above-threshold' if max_attack_rate_pps > threshold_gbps * 1e9 else ''
+        row_class = ''
 
         # Main row for PPS
         html_content += f"""

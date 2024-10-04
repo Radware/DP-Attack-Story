@@ -1,69 +1,108 @@
-#Version 0.4.1
-#Updated 26 June 2024
-
 import time
+import json
+import os
+
 from clsVision import *
-from datetime import datetime
+from datetime import datetime, timezone
+
+from common import outputFolder
 
 
 #################### Helper functions ####################
+# def convert_to_epoch(human_readable_time, time_format='%d-%m-%Y %H:%M:%S'):
+#     # Parse the human-readable time to a datetime object
+#     dt = datetime.strptime(human_readable_time, time_format)
+#     # Convert the datetime object to epoch time
+#     epoch_time = int(time.mktime(dt.timetuple()) * 1000)
+#     return epoch_time, dt.month
 
-def convert_to_epoch(human_readable_time, time_format='%d-%m-%Y %H:%M:%S'):
-    # Parse the human-readable time to a datetime object
-    dt = datetime.strptime(human_readable_time, time_format)
-    # Convert the datetime object to epoch time
-    epoch_time = int(time.mktime(dt.timetuple()) * 1000)
-    return epoch_time, dt.month
 
 def prompt_user_time_period():
     """ Prompt user for time period, returns a list, [0] epoch start time, [1] epoch end time """
-
+    previousFromTime = config.get('PreviousRun','epoch_from_time')
+    previousToTime = config.get('PreviousRun','epoch_to_time')
     #Ask user for time period:
     print("Please select a time period:")
     print("1) The past x hours")
     print("2) The past 24 hours")
     print("3) The past 48 hours")
     print("4) Manually enter attack timeframe")
-    choice = input("Enter selection (1-4) or other to quit: ")
+    print("5) Manually enter timeframe in epoch time")
+    if previousFromTime and previousToTime:
+        longFromTime = datetime.datetime.fromtimestamp(int(previousFromTime)/1000).strftime('%d-%m-%Y %H:%M:%S')
+        longToTime = datetime.datetime.fromtimestamp(int(previousToTime)/1000).astimezone().strftime('%d-%m-%Y %H:%M:%S %Z')
+        longFromTimeUTC = datetime.datetime.fromtimestamp(int(previousFromTime)/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S')
+        longToTimeUTC = datetime.datetime.fromtimestamp(int(previousToTime)/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')
+        print(f"6) Time range from previous run - {longFromTime} to {longToTime} ({longFromTimeUTC} to {longToTimeUTC})")
+    else:
+        print("6) Time range from previous run (previous run not available)")
+    choice = input("Enter selection (1-6) or other to quit: ")
     if choice == '1':
         hours = int(input("Enter number of hours: "))
         epoch_from_time = (int(time.time()) - (60 * 60 * hours)) * 1000
         epoch_to_time = int(time.time()) * 1000
-        from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
-        to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
+        # from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
+        # to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
     elif choice == '2':
         epoch_from_time = (int(time.time()) - (60 * 60 * 24)) * 1000
         epoch_to_time = int(time.time()) * 1000
-        from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
-        to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
+        # from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
+        # to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
     elif choice == '3':
         epoch_from_time = (int(time.time()) - (60 * 60 * 48)) * 1000
         epoch_to_time = int(time.time()) * 1000
-        from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
-        to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
+        # from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
+        # to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
     elif choice == '4':
         success = False
         while not success:
             try:
-                from_time = input("Enter the closest time before the attack START (format: DD-MM-YYYY HH:MM:SS): ")
-                epoch_from_time,from_time_month = convert_to_epoch(from_time)
-                from_month = from_time_month
+                from_time = input("Enter the closest time before the attack START (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
+                if from_time == 'q':
+                    print("Quit")
+                    exit(0)
+                dt = datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                epoch_from_time = int(time.mktime(dt.timetuple()) * 1000)
+                # from_month = dt.month
                 success = True
             except:
                 print("Error parsing start time, please try again!")
         success = False
         while not success:
             try:
-                to_time = input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS): ")
-                epoch_to_time, to_time_month = convert_to_epoch(to_time)
-                to_month = to_time_month
+                to_time = input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
+                if from_time == 'q':
+                    print("Quit")
+                    exit(0)
+                dt = datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                epoch_to_time = int(time.mktime(dt.timetuple()) * 1000)
+                # to_month = dt.month
                 success = True
             except:
                 print("Error parsing end time, please try again.")
+    elif choice == '5':
+        from_time = input("Enter epoch from time")
+        to_time = input("Enter epoch to time")
+        if from_time.isnumeric() and to_time.isnumeric():
+            epoch_from_time = int(from_time)
+            epoch_to_time = int(to_time)
+        else:
+            print("Non-Numeric entry, quit")
+    elif choice == '6':
+        if previousFromTime and previousToTime:
+            epoch_from_time = int(previousFromTime)
+            epoch_to_time = int(previousToTime)
     else:
-        print("Other input, quit")
-        exit(1)
+        update_log("Other input, quit")
+        exit(0)
         
+    config.set('PreviousRun','epoch_from_time',epoch_from_time)
+    config.set('PreviousRun','epoch_to_time',epoch_to_time)
+    config.save()
+
+
+    from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
+    to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
     start_year = datetime.fromtimestamp(epoch_from_time / 1000).year
     end_year = datetime.fromtimestamp(epoch_to_time / 1000).year
 
@@ -77,13 +116,14 @@ def prompt_user_time_period():
     
     #return epoch_time_range
 
-def display_available_devices(v):
+
+def user_selects_defensePros(v):
     """
     Fetches the list of available DefensePro devices from Vision instance 'v',
     displays them to the user, and validates user input for device IPs.
     Returns:
-    - device_ips (list): A list of validated DefensePro device IPs entered by the user.
-    - dp_list_ip (dict): A dictionary mapping DefensePro device IPs to device information, fetched from the Vision instance 'v'.
+    - valid_ips (list): A list of validated DefensePro device IPs entered by the user.
+    - dp_list_ip (dict): A dictionary mapping of the DefensePro device IPs to device information, fetched from the Vision instance 'v'.
                          Keys are device IPs and values are the corresponding device information.
     """
     try:
@@ -92,50 +132,54 @@ def display_available_devices(v):
         dp_list_ip = {device['managementIp']: device for device in device_list if device['status'] != 'FAILED'}
         
         # Display list of available DefensePros
-        print("Available Defensepros: " + ' '.join(dp_list_ip.keys()))
+        #print("Available Defensepros: " + ', '.join(dp_list_ip.keys()))
+        print("Available DefensePros: " + ', '.join(f"{dp_list_ip[key]['name']} ({key})" for key in dp_list_ip))
         
         while True:
-            device_ips = input("Enter the device IPs separated by commas (or leave blank for All available devices): ").split(',')
-            if len(device_ips[0]) == 0 and len(device_ips) == 1:
-                device_ips = list(dp_list_ip.keys())
+            device_entries = input("Enter DefensePro Names or IPs separated by commas (or leave blank for All available devices): ").split(',')
+            if len(device_entries[0]) == 0 and len(device_entries) == 1:
+                valid_ips = list(dp_list_ip.keys())
                 break
             else:
-                # Validate IP addresses format and existence
+                # Validate all the user's entries are valid.
                 valid_ips = []
-                invalid_ips = []
-                for ip in device_ips:
-                    ip = ip.strip()
-                    if ip in dp_list_ip:
-                        valid_ips.append(ip)
+                invalid_entries = []
+                for entry in device_entries:
+                    entry = entry.strip()
+                    matched_entry = None
+                    #Check if the entry matches a valid DP name.
+                    for key, value in dp_list_ip.items():
+                        if value['name'] == entry:
+                            valid_ips.append(key)
+                            break
                     else:
-                        invalid_ips.append(ip)
+                        #No name was matched, check if the entry matches an IP
+                        if entry in dp_list_ip:
+                            valid_ips.append(entry)
+                        else:
+                            invalid_entries.append(entry)
 
-                if invalid_ips:
-                    print(f"The following IPs are invalid or not available: {', '.join(invalid_ips)}")
+                if invalid_entries:
+                    print(f"The following entries are invalid or not available: {', '.join(invalid_entries)}")
                 elif valid_ips:
-                    device_ips = valid_ips
+                    #device_entries = valid_ips
                     break
                 else:
                     print("Please enter valid IP addresses.")
-
-        return device_ips, dp_list_ip
+        return valid_ips, dp_list_ip
 
     except Exception as e:
-        print(f"An error occurred while fetching device list: {e}")
+        update_log(f"An error occurred while fetching device list: {e}")
         return [], {}
 
 
 def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips, policies, dp_list_ip):
-
-
     try:
-  
         attack_data = {}
-
         for device_ip in device_ips:
             device_ip = device_ip.strip()
             if device_ip not in dp_list_ip:
-                print(f"Device IP {device_ip} is not available or does not exist. Skipping.")
+                update_log(f"Device IP {device_ip} is not available or does not exist. Skipping.")
                 continue
             device_policies = policies.get(device_ip, [])
             filters = [
@@ -163,10 +207,10 @@ def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips, policies, dp_li
                     if total_hits == 0:
                         raise ValueError(f"No data present for the specified time period for {device_ip}")
             except KeyError:
-                    print(f"No 'metaData' key in response for {device_ip}")
+                    update_log(f"No 'metaData' key in response for {device_ip}")
                     continue
             except ValueError as ve:
-                    print(str(ve))
+                    update_log(str(ve))
                     continue   
 
             attack_data[device_ip] = response_data
@@ -175,12 +219,10 @@ def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips, policies, dp_li
         return attack_data
 
     except Exception as e:
-        print(f"An error occurred: {e}")             
+        update_log(f"An error occurred: {e}")             
     
-import json
-import os
 
-def get_all_sample_data(v, top_by_bps, top_by_pps, outputFolder):
+def get_all_sample_data(v, top_by_bps, top_by_pps):
     # Initialize lists to store the filtered data
     all_sample_data_bps = []
     all_sample_data_pps = []
@@ -208,9 +250,9 @@ def get_all_sample_data(v, top_by_bps, top_by_pps, outputFolder):
                     filtered_data = extract_fields(sample_data.get('data', []))
                     all_sample_data_bps.append({attack_id: filtered_data})
                 else:
-                    print(f"Unexpected data format for attack id {attack_id}: {sample_data}")
+                    update_log(f"Unexpected data format for attack id {attack_id}: {sample_data}")
             except Exception as e:
-                print(f"Failed to get sample data for attack id {attack_id}: {e}")
+                update_log(f"Failed to get sample data for attack id {attack_id}: {e}")
 
     for _, details in top_by_pps:
         attack_id = details.get('Attack ID')
@@ -221,9 +263,9 @@ def get_all_sample_data(v, top_by_bps, top_by_pps, outputFolder):
                     filtered_data = extract_fields(sample_data.get('data', []))
                     all_sample_data_pps.append({attack_id: filtered_data})
                 else:
-                    print(f"Unexpected data format for attack id {attack_id}: {sample_data}")
+                    update_log(f"Unexpected data format for attack id {attack_id}: {sample_data}")
             except Exception as e:
-                print(f"Failed to get sample data for attack id {attack_id}: {e}")
+                update_log(f"Failed to get sample data for attack id {attack_id}: {e}")
 
     # Ensure the output directory exists
     if not os.path.exists(outputFolder):

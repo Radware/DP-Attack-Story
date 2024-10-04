@@ -5,22 +5,23 @@ import time
 import math
 
 
-def get_outer_times(data):
-    min_start_time = float('inf')
-    max_end_time = float('0')
+# def get_outer_times(data):
+#     min_start_time = float('inf')
+#     max_end_time = float('0')
 
-    for key, value in data.items():
-        start_time = datetime.strptime(value['Start Time'], '%d-%m-%Y %H:%M:%S')
-        end_time = datetime.strptime(value['End Time'], '%d-%m-%Y %H:%M:%S')
+#     for key, value in data.items():
+#         start_time = datetime.strptime(value['Start Time'], '%d-%m-%Y %H:%M:%S')
+#         end_time = datetime.strptime(value['End Time'], '%d-%m-%Y %H:%M:%S')
 
-        start_epoch = time.mktime(start_time.timetuple())
-        end_epoch = time.mktime(end_time.timetuple())
+#         start_epoch = time.mktime(start_time.timetuple())
+#         end_epoch = time.mktime(end_time.timetuple())
 
-        if start_epoch < min_start_time:
-            min_start_time = start_epoch
-        if end_epoch > max_end_time:
-            max_end_time = end_epoch
-    return (min_start_time, max_end_time)
+#         if start_epoch < min_start_time:
+#             min_start_time = start_epoch
+#         if end_epoch > max_end_time:
+#             max_end_time = end_epoch
+#     return (min_start_time, max_end_time)
+
 
 def makeEmptyList(minTime, maxTime, entries):
     '''Initialize our table. First row will be headers. First entry will be "Timestamp". Each row will start with a timestamp value.'''
@@ -33,8 +34,10 @@ def makeEmptyList(minTime, maxTime, entries):
     pass
     return out
 
+
 def TEMP_PopulateData():
     return {'metaData': {'totalTime': '0.075 sec.'}, 'data': [{'row': {'timeStamp': '1720444500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720444800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445400000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720445700000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446000000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446300000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446600000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720446900000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447200000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447500000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720447800000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448100000', 'excluded': '0.0', 'discards': '0.0', 'trafficValue': '0.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448400000', 'excluded': '0.0', 'discards': '314.0', 'trafficValue': '689.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720448700000', 'excluded': '0.0', 'discards': '7101.0', 'trafficValue': '7101.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449000000', 'excluded': '0.0', 'discards': '7015.0', 'trafficValue': '7015.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449300000', 'excluded': '0.0', 'discards': '7010.0', 'trafficValue': '7010.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449600000', 'excluded': '0.0', 'discards': '7162.0', 'trafficValue': '7162.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720449900000', 'excluded': '0.0', 'discards': '7087.0', 'trafficValue': '7087.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450200000', 'excluded': '0.0', 'discards': '7032.0', 'trafficValue': '7032.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450500000', 'excluded': '0.0', 'discards': '7221.0', 'trafficValue': '7221.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720450800000', 'excluded': '0.0', 'discards': '7047.0', 'trafficValue': '7047.0', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451100000', 'excluded': '0.0', 'discards': '7005.6', 'trafficValue': '7005.6', 'challengeIng': '0.0'}}, {'row': {'timeStamp': '1720451400000', 'excluded': '0.0', 'discards': '7020.6', 'trafficValue': '7020.6', 'challengeIng': '0.0'}}], 'dataMap': {'minValue': {'timeStamp': '1720444500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '0.0'}, 'maxValue': {'timeStamp': '1720450500000', 'deviceIp': '155.1.1.7', 'policyName': 'All', 'trafficValue': '7221.0'}}}
+
 
 def graphPrerequesites():
     outStr = ""
@@ -51,15 +54,8 @@ def graphPrerequesites():
 """
     return outStr
 
-def createGraphHTMLOverall(BPSjson,PPSjson):
-    #if BPSjson is None:
-        #print("Setting bps")
-        #BPSjson = TEMP_PopulateData()
 
-    #if PPSjson is None:
-        #print("setting pps ")
-        #PPSjson = TEMP_PopulateData()
-    #Add HTML head and chart initialization info
+def createTopGraphsHTML(BPSjson,PPSjson):
     outStr = """
     <script type="text/javascript">
       google.charts.load('current', {'packages':['corechart']});
@@ -131,42 +127,42 @@ def OptionsHTML(Title):
     return output
     
 
-def createGraphHTML(Title = "",JSONData = None):
-    if JSONData is None:
-        print("Setting bps")
-        JSONData = TEMP_PopulateData()
+#def createGraphHTML(Title = "",JSONData = None):
+#    if JSONData is None:
+#        print("Setting bps")
+#        JSONData = TEMP_PopulateData()
+#
+#    rand_ID = random.randrange(100000000, 999999999)
+#    functionName = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
+#    #Add HTML head and chart initialization info
+#     outStr = f"""
+#     <script type="text/javascript">
+#       google.charts.load('current', {{'packages':['corechart']}});
+#       google.charts.setOnLoadCallback({functionName});
+#       function {functionName}() {{
+#         var data = google.visualization.arrayToDataTable([
+#         [ {{ label: 'Time', type: 'date'}}, {{ label: 'Challenged', type: 'number'}}, {{ label: 'Excluded', type: 'number'}}, {{ label: 'Received', type: 'number'}}, {{ label: 'Dropped', type: 'number'}}]"""
+#
+#     for row in JSONData['data']:
+#         #%d-%m-%Y 
+#         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
+#             outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
+#
+#     outStr += "]);"
+#     outStr += OptionsHTML(Title)
+#     outStr += f"""
+#
+#         var chart = new google.visualization.AreaChart(document.getElementById('{Title}_{str(rand_ID)}'));
+#
+#         chart.draw(data, options);
+#       }}
+#     </script>
+#
+#     <div id="{Title}_{str(rand_ID)}" style="width: 90%; height: 500px"></div>
+# """
+#     return outStr
 
-    rand_ID = random.randrange(100000000, 999999999)
-    functionName = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
-    #Add HTML head and chart initialization info
-    outStr = f"""
-    <script type="text/javascript">
-      google.charts.load('current', {{'packages':['corechart']}});
-      google.charts.setOnLoadCallback({functionName});
-      function {functionName}() {{
-        var data = google.visualization.arrayToDataTable([
-        [ {{ label: 'Time', type: 'date'}}, {{ label: 'Challenged', type: 'number'}}, {{ label: 'Excluded', type: 'number'}}, {{ label: 'Received', type: 'number'}}, {{ label: 'Dropped', type: 'number'}}]"""
-
-    for row in JSONData['data']:
-        #%d-%m-%Y 
-        if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
-            outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
-
-    outStr += "]);"
-    outStr += OptionsHTML(Title)
-    outStr += f"""
-
-        var chart = new google.visualization.AreaChart(document.getElementById('{Title}_{str(rand_ID)}'));
-
-        chart.draw(data, options);
-      }}
-    </script>
-
-    <div id="{Title}_{str(rand_ID)}" style="width: 90%; height: 500px"></div>
-"""
-    return outStr
-
-def createGraphHTMLGoogleCharts(Title, myData):
+def createSingleChart(Title, myData):
     # Generate a random ID for the chart name
     rand_ID = random.randrange(100000000, 999999999)
     name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
@@ -208,10 +204,8 @@ def createGraphHTMLGoogleCharts(Title, myData):
     <script type="text/javascript">
         google.charts.load('current', {{'packages':['corechart', 'annotationchart']}});
         google.charts.setOnLoadCallback(drawChart);
-
         function drawChart() {{
             var data = google.visualization.arrayToDataTable({json_data});
-
             var options = {{
                 title: '{Title}',
                 curveType: 'function',

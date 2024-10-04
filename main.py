@@ -34,9 +34,6 @@ if __name__ == '__main__':
             # Create the output folder if it doesn't exist
             os.makedirs(outputFolder)
 
-        #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
-        v = clsVision.clsVision()
-
         #Get start time and end time from the user input
         epoch_from_to_time_list = collector.prompt_user_time_period()
         epoch_from_time = epoch_from_to_time_list[0]
@@ -45,12 +42,16 @@ if __name__ == '__main__':
         start_year = epoch_from_to_time_list[3]
         to_month = epoch_from_to_time_list[4] if len(epoch_from_to_time_list) == 5 else None
 
+        #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
+        v = clsVision.clsVision()
+
+        #Prompt user for a list of DefensePros
         device_ips, dp_list_ip = collector.user_selects_defensePros(v)
 
         policies = {}
         for ip in device_ips:
             ip = ip.strip()
-            policy_input = input(f"Enter the policies for {ip} separated by commas (or leave blank for All Policies): ").strip()
+            policy_input = input(f"Enter the policies for {dp_list_ip[ip]['name']} ({ip}) separated by commas (or leave blank for All Policies): ").strip()
             if policy_input:
                 policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 
@@ -113,10 +114,8 @@ if __name__ == '__main__':
         #Save a file with the details of the current run.
             #altenate datetime format .strftime('%a, %d %b %Y %H:%M:%S %Z')
         executionStatistics=f"""\
-Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%a, %d %b %Y %H:%M:%S %Z')}
-End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%a, %d %b %Y %H:%M:%S %Z')}
-Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S')}
-End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S')}
+Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
+End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 Vision / Cyber Controller IP: {v.ip}
 DPs: {', '.join(device_ips)}
 Policies: {"All" if len(policies) == 0 else policies}"""

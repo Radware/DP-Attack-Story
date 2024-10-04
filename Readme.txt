@@ -34,7 +34,6 @@
 		Added ability to quit manual date entry.
 		Moved TopN definition to early in common.py.
 		The same topN variable is now used throughout the script.
-		The script will now connect to vision prior to prompting for a time range.
 		The script will now accept DefensePro names (case sensitive) in addition to IPs.
 		Added two time entry options. 'Manually enter epoch time' and 'Use time range from previous run'
 		Renamed run.sh to run.sh.example

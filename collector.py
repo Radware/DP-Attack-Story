@@ -1,11 +1,10 @@
 import time
 import json
 import os
+import datetime
 
 from clsVision import *
-from datetime import datetime, timezone
-
-from common import outputFolder
+from common import *
 
 
 #################### Helper functions ####################
@@ -61,7 +60,7 @@ def prompt_user_time_period():
                 if from_time == 'q':
                     print("Quit")
                     exit(0)
-                dt = datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
                 epoch_from_time = int(time.mktime(dt.timetuple()) * 1000)
                 # from_month = dt.month
                 success = True
@@ -74,7 +73,7 @@ def prompt_user_time_period():
                 if from_time == 'q':
                     print("Quit")
                     exit(0)
-                dt = datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
                 epoch_to_time = int(time.mktime(dt.timetuple()) * 1000)
                 # to_month = dt.month
                 success = True
@@ -101,10 +100,10 @@ def prompt_user_time_period():
     config.save()
 
 
-    from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
-    to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
-    start_year = datetime.fromtimestamp(epoch_from_time / 1000).year
-    end_year = datetime.fromtimestamp(epoch_to_time / 1000).year
+    from_month = datetime.datetime.fromtimestamp(epoch_from_time / 1000).month
+    to_month = datetime.datetime.fromtimestamp(epoch_to_time / 1000).month
+    start_year = datetime.datetime.fromtimestamp(epoch_from_time / 1000).year
+    end_year = datetime.datetime.fromtimestamp(epoch_to_time / 1000).year
 
     if from_month == to_month and start_year == end_year:
         epoch_time_range = [epoch_from_time,epoch_to_time, from_month, start_year]

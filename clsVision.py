@@ -1,10 +1,11 @@
-import configparser
 import getpass
 import sys
 import datetime
 import os
 import json
 import time
+
+from common import *
 
 try:
     import requests
@@ -18,51 +19,19 @@ except ImportError:
     print("The python module 'paramiko' is not installed. Please install it by running: pip install paramiko")
     exit()
 
-LogfileName = "./Output/P-Attack-Story.log"
 
-#We ignore if Vision has an invalid security certificate. The next 
-#lines prevent an error from being displayed every time we send 
-#a command or query to vision
-from urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-
-def update_log(message):
-    print(message)
-    with(open(LogfileName,"a")) as file:
-        timeStamp = datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')
-        log_entry = f"[{timeStamp}] {message}\n"
-        file.write(log_entry)
+#We ignore if Vision has an invalid security certificate. The next lines prevent an error from being displayed every time we send a command or query to vision
+requests.packages.urllib3.disable_warnings(category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 ##configuration 
-def load_config():
-    config = configparser.ConfigParser()
-    config.read("config.ini")
-    return config
-
-def save_config(config):
-    with open("config.ini", "w") as config_file:
-        config.write(config_file)
-
-def create_connection_section(config):
-    if not config.has_section('Vision'):
-        config.add_section('Vision')
-    if not config.has_option('Vision', 'ip'):
-        config.set('Vision', 'ip', '')
-    if not config.has_option('Vision', 'username'):
-        config.set('Vision', 'username', '')
-    if not config.has_option('Vision', 'password'):
-        config.set('Vision', 'password', '')
-    if not config.has_option('Vision', 'rootPassword'):
-        config.set('Vision', 'rootPassword', '')
-
-
 class clsVision:
     #Initialize and log in to vision instance
     def __init__(self):
         print("\nPlease enter Vision \\ Cyber Controller Information")
-        config = load_config()
-        create_connection_section(config)
-
+        #config = load_config()
+        #create_connection_section(config)
+        #config = clsConfig() #Imported from common.py
+        
         ip = input(f"Enter Management IP [{config.get('Vision', 'ip')}]: ") or config.get('Vision', 'ip') if len(sys.argv) == 1 else config.get('Vision', 'ip')
         username = input(f"Enter Username [{config.get('Vision', 'username')}]: ") or config.get('Vision', 'username') if len(sys.argv) == 1 else config.get('Vision', 'username')
 
@@ -96,7 +65,8 @@ class clsVision:
         config.set('Vision', 'username', username)
 
         # Save the configuration
-        save_config(config)
+        #save_config(config)
+        config.save()
 
         stars=""
         for char in password:
@@ -349,7 +319,6 @@ class clsVision:
                     all_data.extend(response_data["data"])  # Append the current page's data
                     if not metaData:
                         metaData = response_data.get("metaData", {})  # Get metaData only once
-
                     total_hits += len(response_data["data"])
 
                     # Stop if the current page has fewer results than the page size

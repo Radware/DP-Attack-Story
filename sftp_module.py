@@ -31,6 +31,7 @@ warnings.filterwarnings(action='ignore', module='pysftp', category=UserWarning)
 #    if not config.has_option('DefensePro', 'password'):
 #        config.set('DefensePro', 'password', '')
 
+
 def get_attack_log(v, device_ips, from_month, start_year, to_month=None):
     #Remove commented section when script confirmed to work in multiple environments
     #config = load_config()

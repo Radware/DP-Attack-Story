@@ -25,7 +25,7 @@ def prompt_user_time_period():
     print("1) The past x hours")
     print("2) The past 24 hours")
     print("3) The past 48 hours")
-    print("4) Manually enter attack timeframe")
+    print("4) Manually enter attack timeframe (In your PC's local timezone)")
     print("5) Manually enter timeframe in epoch time")
     if previousFromTime and previousToTime:
         longFromTime = datetime.datetime.fromtimestamp(int(previousFromTime)/1000).strftime('%d-%m-%Y %H:%M:%S')
@@ -73,7 +73,7 @@ def prompt_user_time_period():
                 if from_time == 'q':
                     print("Quit")
                     exit(0)
-                dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                dt = datetime.datetime.strptime(to_time, '%d-%m-%Y %H:%M:%S')
                 epoch_to_time = int(time.mktime(dt.timetuple()) * 1000)
                 # to_month = dt.month
                 success = True
@@ -106,11 +106,11 @@ def prompt_user_time_period():
     end_year = datetime.datetime.fromtimestamp(epoch_to_time / 1000).year
 
     if from_month == to_month and start_year == end_year:
-        epoch_time_range = [epoch_from_time,epoch_to_time, from_month, start_year]
+        epoch_time_range = [epoch_from_time, epoch_to_time, from_month, start_year]
         return epoch_time_range
         #return from_month
     else:
-        epoch_time_range = [epoch_from_time,epoch_to_time, from_month, start_year, to_month]
+        epoch_time_range = [epoch_from_time, epoch_to_time, from_month, start_year, to_month]
         return epoch_time_range
     
     #return epoch_time_range

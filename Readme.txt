@@ -18,7 +18,9 @@
 	DefensePro must have BDOS attack lifecycle logging enabled: 'system internal security bdos attack-log-status set enable'. 'Unknown command' means your DefensePro must be upgraded.
 
 # How to run
-
+	Optional:
+		Modify the topN variable in the common.py module to adjust the number of events that appear in the final report. Default: 10.
+		
 	1. Run the script 
 		python main.py
 	2. Enter start and end times
@@ -27,6 +29,7 @@
 	5. (optional - press enter to skip) Enter a comma separated list of policies
 	6. Input individual DefensePro username/password when prompted. 
 	7. View your report under .\Output\
+
 
 # Version Control
 	v0.11.0 - 4 October 2024 (Steve)

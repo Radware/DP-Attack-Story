@@ -148,7 +148,7 @@ def user_selects_defensePros(v):
                     matched_entry = None
                     #Check if the entry matches a valid DP name.
                     for key, value in dp_list_ip.items():
-                        if value['name'] == entry:
+                        if value['name'].lower() == entry.lower():
                             valid_ips.append(key)
                             break
                     else:

@@ -32,6 +32,10 @@
 
 
 # Version Control
+
+	v0.11.1 - 7 October 2024 (Egor)
+		Added run.sh to gitignore
+
 	v0.11.0 - 4 October 2024 (Steve)
 		Code cleanup and refactoring.
 		Added ability to quit manual date entry.

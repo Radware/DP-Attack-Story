@@ -167,3 +167,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# run.sh is used for containterized run and user configurable, therefore excluded from git repo sync
+run.sh

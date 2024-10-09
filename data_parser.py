@@ -21,6 +21,19 @@ def calculate_duration(start_time, end_time):
     duration = end_dt - start_dt
     return str(duration)
 
+def convert_bps_to_gbps(bps_value):
+    """
+    Convert a value from bits per second (BPS) to gigabits per second (Gbps).
+    """
+    if bps_value == 'N/A':
+        return 'N/A'
+    
+    try:
+        bps_value = float(bps_value)  # Convert to float for calculation
+        gbps_value = bps_value / 1_000_000_000  # Convert to Gbps
+        return gbps_value
+    except (ValueError, TypeError):
+        return 'N/A'  # Return 'N/A' if conversion fails
 
 def attackipsid_to_syslog_id(attackid):
     # Split the attackid into two parts
@@ -112,7 +125,7 @@ def parse_response_file(v):
     # Initialize lists and headers
     table_data = []
     syslog_ids = []
-    headers = ["Device IP", "Policy", "Attack ID", "Radware ID", "Syslog ID", "Attack Category", "Attack Name", "Threat Group", "Protocol", "Source Address", "Source Port", "Destination Address", "Destination Port", "Action", "Attack Status", "Latest Attack State", "Final Attack Footprint", "Average Attack Rate(PPS)", "Average Attack Rate(BPS)", "Max Attack Rate(BPS)", "Max Attack Rate(PPS)", "Packet Count", "Attack Duration", "Start Time", "End Time", "Direction", "Physical Port"]
+    headers = ["Device IP", "Policy", "Attack ID", "Radware ID", "Syslog ID", "Attack Category", "Attack Name", "Threat Group", "Protocol", "Source Address", "Source Port", "Destination Address", "Destination Port", "Action", "Attack Status", "Latest Attack State", "Final Attack Footprint", "Average Attack Rate(PPS)", "Average Attack Rate(BPS)", "Max Attack Rate(GBPS)", "Max Attack Rate(PPS)", "Packet Count", "Attack Duration", "Start Time", "End Time", "Direction", "Physical Port"]
 
     device_version_cache = {}
 
@@ -160,6 +173,7 @@ def parse_response_file(v):
             Direction = row.get('direction', 'N/A')
             Physical_Port = row.get('physicalPort', 'N/A')
 
+            Max_Attack_Rate_Gbps = convert_bps_to_gbps(Max_Attack_Rate_BPS)
             # Convert epoch times to datetime
             start_time = epoch_to_datetime(start_time_epoch) if start_time_epoch != 'N/A' else 'N/A'
             end_time = epoch_to_datetime(end_time_epoch) if end_time_epoch != 'N/A' else 'N/A'
@@ -175,28 +189,32 @@ def parse_response_file(v):
                 syslog_id = attackipsid_to_syslog_id_hex(attackid)
             
             # Append data to the table
-            table_data.append([device_ip, policy_id, attackid, radwareid, syslog_id, attack_category, attack_name, Threat_Group, Protocol, Source_Address, Source_Port, Destination_Address, Destination_Port, Action_Type, Attack_Status, Latest_State, final_footprint, Average_Attack_Rate_PPS, Average_Attack_Rate_BPS, Max_Attack_Rate_BPS, Max_Attack_Rate_PPS, Packet_Count, duration, start_time, end_time, Direction, Physical_Port])
+            table_data.append([device_ip, policy_id, attackid, radwareid, syslog_id, attack_category, attack_name, Threat_Group, Protocol, Source_Address, Source_Port, Destination_Address, Destination_Port, Action_Type, Attack_Status, Latest_State, final_footprint, Average_Attack_Rate_PPS, Average_Attack_Rate_BPS, Max_Attack_Rate_Gbps, Max_Attack_Rate_PPS, Packet_Count, duration, start_time, end_time, Direction, Physical_Port])
             syslog_ids.append(syslog_id)
 
     table_data.sort(key=lambda x: float(x[19]) if x[19] != 'N/A' else 0, reverse=True)
 
     syslog_details = {
-          row[4]: {
-               "Device IP": row[0],
-               "Policy": row[1],
-               "Attack ID": row[2],
-               "Attack Category": row[5],
-               "Attack Name": row[6],
-               "Threat Group": row[7],
-               "Protocol": row[8],
-               "Action": row[13],
-               "Attack Status": row[14],
-               "Max_Attack_Rate_BPS": row[19],
-               "Max_Attack_Rate_PPS": row[20],
-               "Final Footprint": row[16],
-               "Start Time": row[23],
-               "End Time": row[24]
-          }
+    row[4]: {
+        "Device IP": row[0],
+        "Policy": row[1],
+        "Attack ID": row[2],
+        "Attack Category": row[5],
+        "Attack Name": row[6],
+        "Threat Group": row[7],
+        "Protocol": row[8],
+        "Action": row[13],
+        "Attack Status": row[14],
+        "Max_Attack_Rate_Gbps": row[19],
+        # Unformatted value for calculations
+        "Max_Attack_Rate_PPS": row[20],
+        # Formatted value for display
+        "Max_Attack_Rate_PPS_formatted": "{:,}".format(int(row[20])) if row[20].isdigit() else 'N/A',
+
+        "Final Footprint": row[16],
+        "Start Time": row[23],
+        "End Time": row[24]
+    }
           for row in table_data    
     } 
     

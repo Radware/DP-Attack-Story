@@ -32,6 +32,8 @@
 
 
 # Version Control
+	v0.11.4 - 11 October 2024 (Steve)
+		Quitting from manual date entry is now possible.
 	v0.11.2 - 7 October 2024 (Steve)
 		DefensePro name prompt is now case insensitive.
 		Fixed error parsing manual date entries.

@@ -59,25 +59,26 @@ def prompt_user_time_period():
                 from_time = input("Enter the closest time before the attack START (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
                 if from_time == 'q':
                     print("Quit")
-                    exit(0)
+                    exit(1)
                 dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
                 epoch_from_time = int(time.mktime(dt.timetuple()) * 1000)
                 # from_month = dt.month
                 success = True
-            except:
+            except ValueError:
                 print("Error parsing start time, please try again!")
+            
         success = False
         while not success:
             try:
                 to_time = input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
                 if from_time == 'q':
                     print("Quit")
-                    exit(0)
+                    exit(1)
                 dt = datetime.datetime.strptime(to_time, '%d-%m-%Y %H:%M:%S')
                 epoch_to_time = int(time.mktime(dt.timetuple()) * 1000)
                 # to_month = dt.month
                 success = True
-            except:
+            except ValueError:
                 print("Error parsing end time, please try again.")
     elif choice == '5':
         from_time = input("Enter epoch from time")

@@ -34,6 +34,10 @@
 # Version Control
 	v0.11.4 - 11 October 2024 (Steve)
 		Quitting from manual date entry is now possible.
+	v0.11.3 - 9 October 2024 (Prateek)
+		Added functionality to copy contents of sample data by column (eg: all Src IP, all Src Port)
+		Attack Table Formatting: Removed underscores from "Max_Attack_Rate_BPS" and converted values to Gbps
+		Attack Table Formatting: Removed underscores from "Max_Attack_Rate_PPS" and added comma separation in values for better readability
 	v0.11.2 - 7 October 2024 (Steve)
 		DefensePro name prompt is now case insensitive.
 		Fixed error parsing manual date entries.

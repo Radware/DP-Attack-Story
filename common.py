@@ -7,12 +7,13 @@ outputFolder = './Output/'
 LogfileName = outputFolder + "P-Attack-Story.log"
 topN = 10 #number of entries to include in the attack table
 
-args = sys.argv
+args = sys.argv.copy()
 script_filename = args.pop(0)
 
 if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?')):
     print("  Script syntax:")
     print("  python main.py [--use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")
+    print("    ***Note: The order of arguments is important and must not deviate from the above template.***")
     print("    --use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password")
     print("    <time-range> options:")
     print("        --hours, -h <number_of_hours>                      Select data from the past X hours.")

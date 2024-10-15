@@ -32,10 +32,12 @@
 
 
 # Version Control
-	v0.11.4 - 11 October 2024 (Steve)
-		Changed order of operations. Script now logs into vision prior to date selection.
+	v0.12.0 - 15 October 2024 (Steve)
 		Quitting from manual date entry is now possible.
-		
+		The script can now be run using arguments. Arguments allow you to predefine input parameters to allow for scheduled execution. 
+			'python main.py -h' for details.
+			Please note: The order and format of arguments is likely to change. Do not set up recurring scheduled tasks until this feature is better tested.
+		Changed our order of operations. Script now logs into vision prior to date selection.
 	v0.11.3 - 9 October 2024 (Prateek)
 		Added functionality to copy contents of sample data by column (eg: all Src IP, all Src Port)
 		Attack Table Formatting: Removed underscores from "Max_Attack_Rate_BPS" and converted values to Gbps

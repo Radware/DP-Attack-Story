@@ -59,8 +59,8 @@ if __name__ == '__main__':
                 policy_input = args.pop(0)
                 args_used = True
             else:
-                
-                policy_input = input(f"Enter policy names for {dp_list_ip[ip]['name']} ({ip}) separated by commas (or leave blank for All Policies): ").strip()
+                if len(sys.argv) == 1: #If script is run with arguments, don't prompt. Length of 1 is 0 user arguments.
+                    policy_input = input(f"Enter policy names for {dp_list_ip[ip]['name']} ({ip}) separated by commas (or leave blank for All Policies): ").strip()
             if policy_input:
                 policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 

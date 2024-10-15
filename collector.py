@@ -20,6 +20,7 @@ def prompt_user_time_period():
     """ Prompt user for time period, returns a list, [0] epoch start time, [1] epoch end time """
     previousFromTime = config.get('PreviousRun','epoch_from_time')
     previousToTime = config.get('PreviousRun','epoch_to_time')
+    arg_choice = False
     if len(args) == 0:
         #Ask user for time period:
         print("Please select a time period:")
@@ -41,13 +42,13 @@ def prompt_user_time_period():
         #Script is run with arguments.
         arg_choice = args.pop(0)
         if arg_choice == '--hours' or arg_choice == '-h':
-            choice = 1
+            choice = '1'
         elif arg_choice == '--date-range' or arg_choice == '-dr':
-            choice = 4
+            choice = '4'
         elif arg_choice == '--epoch-range' or arg_choice == '-er':
-            choice = 5
+            choice = '5'
         elif arg_choice == '--previous-time-range' or arg_choice == '-p':
-            choice = 6
+            choice = '6'
 
     if choice == '1':#The past x hours
         hours = args.pop(0) if args else int(input("Enter number of hours: "))
@@ -157,13 +158,16 @@ def user_selects_defensePros(v):
         #print("Available Defensepros: " + ', '.join(dp_list_ip.keys()))
         print("Available DefensePros: " + ', '.join(f"{dp_list_ip[key]['name']} ({key})" for key in dp_list_ip))
         
+        used_args = False
         while True:
             if args:
                 device_entries = args.pop(0)
                 used_args = True
             else:
-                device_entries = input("Enter DefensePro Names or IPs separated by commas (or leave blank for All available devices): ").split(',')
-                used_args = False
+                if len(sys.argv) == 1:#If script is run with arguments, don't prompt. Length of 1 is 0 user arguments.
+                    device_entries = input("Enter DefensePro Names or IPs separated by commas (or leave blank for All available devices): ").split(',')
+                else:
+                    device_entries = ""
             if len(device_entries[0]) == 0 and len(device_entries) == 1:
                 valid_ips = list(dp_list_ip.keys())
                 break

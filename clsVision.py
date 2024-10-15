@@ -32,41 +32,60 @@ class clsVision:
         #create_connection_section(config)
         #config = clsConfig() #Imported from common.py
         
-        ip = input(f"Enter Management IP [{config.get('Vision', 'ip')}]: ") or config.get('Vision', 'ip') if len(sys.argv) == 1 else config.get('Vision', 'ip')
-        username = input(f"Enter Username [{config.get('Vision', 'username')}]: ") or config.get('Vision', 'username') if len(sys.argv) == 1 else config.get('Vision', 'username')
 
-        # Use getpass to securely handle password input
-        stored_password = config.get('Vision', 'password')
-        stars=''
-        for char in stored_password:
-            stars+='*'
-        password = getpass.getpass(prompt=f"Enter Password [{stars}]: ") or stored_password if len(sys.argv) == 1 else stored_password
 
-        # Check if entered password is different from the stored password
-        if password != stored_password:
-            if input("Password has changed. Do you want to save the new password? (yes/no): ").lower() in ['yes','y']:
-                config.set('Vision', 'password', password)
+        if len(args) >1:
+            if args[0] == "--use-cached" or args[0] == "-c":
+                args.pop(0)
+                ip = config.get('Vision', 'ip') 
+                username = config.get('Vision', 'username')
+                password = config.get('Vision', 'password')
+                rootpassword = config.get('Vision', 'rootpassword')
+            else:
+                if len(args) >=4:
+                    ip = args.pop(0)
+                    username = args.pop(0)
+                    password = args.pop(0)
+                    rootpassword = args.pop(0)
+                else:
+                    update_log(f"Incorrect number of arguments. Expected at least 4 (VisionIP Username Password RootPassword). Received {len(args)}. Run main.py -h for more info.")
+                    exit(1)
+        else:
+            ip = input(f"Enter Management IP [{config.get('Vision', 'ip')}]: ") or config.get('Vision', 'ip')
+            username = input(f"Enter Username [{config.get('Vision', 'username')}]: ") or config.get('Vision', 'username') 
 
-        #Do it again for the root password
-        stored_rootpassword = config.get('Vision', 'rootpassword')
-        stars=''
-        for char in stored_rootpassword:
-            stars+='*'
-        rootpassword = getpass.getpass(prompt=f"Enter root Password [{stars}]: ") or stored_rootpassword if len(sys.argv) == 1 else stored_rootpassword
+            # Use getpass to securely handle password input
+            stored_password = config.get('Vision', 'password')
+            stars=''
+            for char in stored_password:
+                stars+='*'
+            password = getpass.getpass(prompt=f"Enter Password [{stars}]: ") or stored_password if len(sys.argv) == 1 else stored_password
 
-        # Check if entered password is different from the stored password
-        if rootpassword != stored_rootpassword:
-            if input("Root password has changed. Do you want to save the new password? (yes/no): ").lower() in ['yes','y']:
-                config.set('Vision', 'rootpassword', rootpassword)
-        self.rootpassword = rootpassword
+            # Check if entered password is different from the stored password
+            if password != stored_password:
+                if input("Password has changed. Do you want to save the new password? (yes/no): ").lower() in ['yes','y']:
+                    config.set('Vision', 'password', password)
 
-        # Save the management IP and username in the configuration
-        config.set('Vision', 'ip', ip)
-        config.set('Vision', 'username', username)
+            #Do it again for the root password
+            stored_rootpassword = config.get('Vision', 'rootpassword')
+            stars=''
+            for char in stored_rootpassword:
+                stars+='*'
+            rootpassword = getpass.getpass(prompt=f"Enter root Password [{stars}]: ") or stored_rootpassword if len(sys.argv) == 1 else stored_rootpassword
 
-        # Save the configuration
-        #save_config(config)
-        config.save()
+            # Check if entered password is different from the stored password
+            if rootpassword != stored_rootpassword:
+                if input("Root password has changed. Do you want to save the new password? (yes/no): ").lower() in ['yes','y']:
+                    config.set('Vision', 'rootpassword', rootpassword)
+            self.rootpassword = rootpassword
+
+            # Save the management IP and username in the configuration
+            config.set('Vision', 'ip', ip)
+            config.set('Vision', 'username', username)
+
+            # Save the configuration
+            #save_config(config)
+            config.save()
 
         stars=""
         for char in password:

@@ -3,6 +3,7 @@ import traceback
 import json
 import datetime
 
+
 #internal modules
 import clsVision
 import collector
@@ -34,6 +35,9 @@ if __name__ == '__main__':
             # Create the output folder if it doesn't exist
             os.makedirs(outputFolder)
 
+        #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
+        v = clsVision.clsVision()
+
         #Get start time and end time from the user input
         epoch_from_to_time_list = collector.prompt_user_time_period()
         epoch_from_time = epoch_from_to_time_list[0]
@@ -42,16 +46,21 @@ if __name__ == '__main__':
         start_year = epoch_from_to_time_list[3]
         to_month = epoch_from_to_time_list[4] if len(epoch_from_to_time_list) == 5 else None
 
-        #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
-        v = clsVision.clsVision()
+        
 
         #Prompt user for a list of DefensePros
         device_ips, dp_list_ip = collector.user_selects_defensePros(v)
 
         policies = {}
+        args_used = False
         for ip in device_ips:
             ip = ip.strip()
-            policy_input = input(f"Enter the policies for {dp_list_ip[ip]['name']} ({ip}) separated by commas (or leave blank for All Policies): ").strip()
+            if args:
+                policy_input = args.pop(0)
+                args_used = True
+            else:
+                if len(sys.argv) == 1: #If script is run with arguments, don't prompt. Length of 1 is 0 user arguments.
+                    policy_input = input(f"Enter policy names for {dp_list_ip[ip]['name']} ({ip}) separated by commas (or leave blank for All Policies): ").strip()
             if policy_input:
                 policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 

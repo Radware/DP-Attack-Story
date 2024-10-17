@@ -32,21 +32,19 @@ class clsVision:
         #create_connection_section(config)
         #config = clsConfig() #Imported from common.py
         
-
-
         if len(args) >1:
             if args[0] == "--use-cached" or args[0] == "-c":
                 args.pop(0)
                 ip = config.get('Vision', 'ip') 
                 username = config.get('Vision', 'username')
                 password = config.get('Vision', 'password')
-                rootpassword = config.get('Vision', 'rootpassword')
+                self.rootpassword = config.get('Vision', 'rootpassword')
             else:
                 if len(args) >=4:
                     ip = args.pop(0)
                     username = args.pop(0)
                     password = args.pop(0)
-                    rootpassword = args.pop(0)
+                    self.rootpassword = args.pop(0)
                 else:
                     update_log(f"Incorrect number of arguments. Expected at least 4 (VisionIP Username Password RootPassword). Received {len(args)}. Run main.py -h for more info.")
                     exit(1)
@@ -443,8 +441,10 @@ class clsVision:
             exit(1)
         except paramiko.SSHException as sshException:
             update_log(f"Unable to establish SSH connection: {sshException}")
+            exit(1)
         except Exception as e:
             update_log(f"Exception in establishing SSH connection to the server: {e}")
+            exit(1)
 
     def getRawAttackSSH(self, AttackID):
         if not hasattr(self, "client"):

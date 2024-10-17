@@ -80,7 +80,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Max Attack Rate (PPS)</th>
                 <th>Final Footprint</th>
                 <th>BDOS Life Cycle</th>
-                <th>Sample Data</th>
+                <th>Resources</th>
             </tr>
     """
 
@@ -117,8 +117,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <td>{details.get('Final Footprint', 'N/A')}</td>
                 <td><pre>{metrics_summary}</pre></td>
-                <td><button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button><p>
-                <a href=#graph{details.get('Attack ID', 'N/A')}>Graph</a></td>
+                <td><button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button></td>
             </tr>
         """
 
@@ -183,7 +182,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Max Attack Rate (PPS)</th>
                 <th>Final Footprint</th>
                 <th>BDOS Life Cycle</th>
-                <th>Sample Data</th>
+                <th>Resources</th>
             </tr>
     """
 
@@ -220,7 +219,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <td>{details.get('Final Footprint', 'N/A')}</td>
                 <td><pre>{metrics_summary}</pre></td>
-                <td><button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')">Show Sample Data</button></td>
+                <td><button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')">Sample Data</button></td>
             </tr>
         """
 

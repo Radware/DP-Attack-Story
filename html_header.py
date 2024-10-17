@@ -47,12 +47,14 @@ def getCSS():
             background-color: #777;
             color: white;
             cursor: pointer;
-            padding: 10px;
+            padding: 5px;
             width: 100%;
             border: none;
             text-align: left;
             outline: none;
             font-size: 15px;
+            text-align: center;
+            transition: background-color 0.3s, transform 0.2s;
         }
         .active, .collapsible:hover {
             background-color: #555;

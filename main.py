@@ -56,7 +56,7 @@ if __name__ == '__main__':
         for ip in device_ips:
             ip = ip.strip()
             if args:
-                policy_input = args.pop(0)
+                policy_input = args.pop(0).strip()
                 args_used = True
             else:
                 if len(sys.argv) == 1: #Only prompt if script is run without arguments. Length of 1 is 0 user arguments.
@@ -66,6 +66,9 @@ if __name__ == '__main__':
                     print(f"    Available policies: ")
                     print(f"        {policy_names}")
                     policy_input = input(f"Policies (leave blank for All Policies): ").strip()
+                else:
+                    #Args have been used elsewhere but no args have been specified for policies. Default to no filter.
+                    policy_input = ""
             if policy_input:
                 policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 

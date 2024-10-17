@@ -33,7 +33,7 @@ def generate_sample_data_section(title, sample_data):
     html_content += "</table>"
     return html_content
 
-def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, top_n=10, threshold_gbps=0.02):
+def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, top_n=10, threshold_gbps=0.02):
     # Generate HTML content for the report
     html_content = f"""
         <script>
@@ -187,21 +187,21 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             </tr>
     """
 
-    # Add top_by_pps data (similar to top_by_bps logic)
+    # Add top_by_pps data
     for syslog_id, details in top_by_pps:
         metrics_summary = details.get('metrics_summary', 'N/A')
 
         # Safely convert Max_Attack_Rate_PPS to float
-        max_attack_rate_pps_str = details.get('Max_Attack_Rate_PPS_formatted', '0')
+        max_attack_rate_pps_str = details.get('Max_Attack_Rate_PPS', '0')
         try:
             max_attack_rate_pps = float(max_attack_rate_pps_str)
         except (ValueError, TypeError):
             max_attack_rate_pps = 0.0
 
-        # Row class based on threshold (can be expanded similarly)
+        # Row class based on threshold
         row_class = ''
 
-        # Main row for PPS
+        # Main row
         html_content += f"""
             <tr class="{row_class}">
                 <td>{details.get('Start Time', 'N/A')}</td>
@@ -224,7 +224,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             </tr>
         """
 
-        # Collapsible row for sample data (PPS)
+        # Collapsible row for sample data (initially hidden)
         html_content += f"""
             <tr id="pps_{details.get('Attack ID', 'N/A')}" style="display:none;">
                 <td colspan="17">
@@ -236,13 +236,12 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                             <th>Destination Port <button class="copy-button" onclick="copyColumnData('pps-dest-port-{details.get('Attack ID', 'N/A')}')">Copy</button></th>
                         </tr>
         """
-
         # Check if there are sample data
         sample_found = False
         for entry in pps_data:
             for attack_id, samples in entry.items():
                 if attack_id == details.get('Attack ID', 'N/A'):
-                    if samples:
+                    if samples:  # If samples exist
                         sample_found = True
                         for sample in samples:
                             html_content += f"""
@@ -265,9 +264,66 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
     # Close the attack report table for PPS
     html_content += "</table>"
+    
+    unique_ips_bps = [ip.strip() for ip in unique_ips_bps]
+    unique_ips_pps = [ip.strip() for ip in unique_ips_pps]
+    combined_unique_ips = list(set(unique_ips_bps + unique_ips_pps))
 
-    # Return the HTML content
+    # Generate HTML content for combined unique IPs as a table
+    html_content += """
+    <h2> Unique Sample Source IPs</h2>
+    <button onclick="copyIPs()">Copy IPs</button>
+    <button onclick="toggleTable()">Show Source IP Table</button>
+    <div id="ipTableContainer" style="display: none;">
+        <table border="1" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="height: 30px;">Unique IPs</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+
+    # Populate the table with the combined unique IPs
+    for ip in combined_unique_ips:
+        html_content += f"""
+        <tr style="height: 30px;">
+            <td>{ip}</td>
+        </tr>
+        """
+
+    html_content += """
+            </tbody>
+        </table>
+    </div>
+    <script>
+    function copyIPs() {
+        // Get all the IPs from the table
+        var ipList = "";
+        var table = document.querySelector('table');
+        for (var i = 1, row; row = table.rows[i]; i++) {
+            ipList += row.cells[0].innerText + '\\n'; // Get IP from the first cell
+        }
+        // Copy the list to clipboard
+        navigator.clipboard.writeText(ipList).then(function() {
+            alert('IP addresses copied to clipboard!');
+        }, function(err) {
+            alert('Failed to copy: ', err);
+        });
+    }
+    function toggleTable() {
+        var tableContainer = document.getElementById("ipTableContainer");
+        if (tableContainer.style.display === "block") {
+            tableContainer.style.display = "none";
+        } else {
+            tableContainer.style.display = "block";
+        }
+    }
+    </script>
+    """
+
     return html_content
+
 
 
 def get_top_n(syslog_details, top_n=10, threshold_gbps=0.02):

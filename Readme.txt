@@ -35,6 +35,9 @@
 		Changed multiple print() statements to update_log() statements for more verbose logging. .
 		The script will now output each DefensePro's policy list when prompting user for per DP policy filters.
 		Moved CSS out of html_data.py and into html_header.py
+	v0.12.1 - 17 October 2024 (Prateek)
+		Added a table to print all unique source IP addresses
+		Added functionality to copy contents of the source IP address table
 	v0.12.0 - 15 October 2024 (Steve)
 		Quitting from manual date entry is now possible.
 		The script can now be run using arguments. Arguments allow you to predefine input parameters to allow for scheduled execution. 

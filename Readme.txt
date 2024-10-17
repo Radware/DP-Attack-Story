@@ -26,12 +26,16 @@
 	2. Enter start and end times
 	3. Enter Vision/CC login credentials
 	4. (optional - press enter to skip) Select target DPs 
-	5. (optional - press enter to skip) Enter a comma separated list of policies
-	6. Input individual DefensePro username/password when prompted. 
-	7. View your report under .\Output\
+	5. (optional - press enter to skip) Enter a comma separated list of policies for each DP.
+	6. View your report under .\Output\
 
 
 # Version Control
+	v0.12.2 - 17 October 2024 (Steve)
+		Changed multiple print() statements to update_log() statements for more verbose logging.
+		The script will now output each DefensePro's policy list when prompting user for per DP policy filters.
+		Moved CSS out of html_data.py and into html_header.py
+		Fixed several issues with arg inputs.
 	v0.12.1 - 17 October 2024 (Prateek)
 		Added a table to print all unique source IP addresses
 		Added functionality to copy contents of the source IP address table

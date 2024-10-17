@@ -51,7 +51,7 @@ def prompt_user_time_period():
             choice = '6'
 
     if choice == '1':#The past x hours
-        hours = args.pop(0) if args else int(input("Enter number of hours: "))
+        hours = int(args.pop(0)) if args else int(input("Enter number of hours: "))
         epoch_from_time = (int(time.time()) - (60 * 60 * hours)) * 1000
         epoch_to_time = int(time.time()) * 1000
         # from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
@@ -161,7 +161,7 @@ def user_selects_defensePros(v):
         used_args = False
         while True:
             if args:
-                device_entries = args.pop(0)
+                device_entries = args.pop(0).split(',')
                 used_args = True
             else:
                 if len(sys.argv) == 1:#If script is run with arguments, don't prompt. Length of 1 is 0 user arguments.

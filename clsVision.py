@@ -27,26 +27,24 @@ requests.packages.urllib3.disable_warnings(category=requests.packages.urllib3.ex
 class clsVision:
     #Initialize and log in to vision instance
     def __init__(self):
-        print("\nPlease enter Vision \\ Cyber Controller Information")
+        print(f"\nPlease enter Vision \\ Cyber Controller Information")
         #config = load_config()
         #create_connection_section(config)
         #config = clsConfig() #Imported from common.py
         
-
-
         if len(args) >1:
             if args[0] == "--use-cached" or args[0] == "-c":
                 args.pop(0)
                 ip = config.get('Vision', 'ip') 
                 username = config.get('Vision', 'username')
                 password = config.get('Vision', 'password')
-                rootpassword = config.get('Vision', 'rootpassword')
+                self.rootpassword = config.get('Vision', 'rootpassword')
             else:
                 if len(args) >=4:
                     ip = args.pop(0)
                     username = args.pop(0)
                     password = args.pop(0)
-                    rootpassword = args.pop(0)
+                    self.rootpassword = args.pop(0)
                 else:
                     update_log(f"Incorrect number of arguments. Expected at least 4 (VisionIP Username Password RootPassword). Received {len(args)}. Run main.py -h for more info.")
                     exit(1)
@@ -251,7 +249,6 @@ class clsVision:
             raise Exception(f"Error getting device data for {DeviceIP} - {r}")
 
     def getActiveVersion(self, DeviceIP):
-        # Define the API URL with properties 
         APIUrl = f"https://{self.ip}/mgmt/device/byip/{DeviceIP}/config/rsFSapplList?props=rsFSapplVersion,rsFSapplActive"
         r = self._get(APIUrl)
         if r.status_code == 200:
@@ -263,6 +260,15 @@ class clsVision:
             # Log and raise an exception if the request failed
             update_log(f"Error getting application data for {DeviceIP}")
             raise Exception(f"Error getting application data for {DeviceIP} - {r.status_code}: {r.text}")
+    
+    def getDPPolicies(self, DeviceIP):
+        APIUrl = f"https://{self.ip}/mgmt/device/byip/{DeviceIP}/config/rsIDSNewRulesTable"
+        r = self._get(APIUrl)
+        if r.status_code == 200:
+            return r.json()
+        else:
+            update_log(f"Error getting device data for {DeviceIP}")
+            raise Exception(f"Error getting device data for {DeviceIP} - {r}")
 
     def getAttackReports(self, DeviceIP, StartTime, EndTime, filter_json=None):
         criteria = [
@@ -435,8 +441,10 @@ class clsVision:
             exit(1)
         except paramiko.SSHException as sshException:
             update_log(f"Unable to establish SSH connection: {sshException}")
+            exit(1)
         except Exception as e:
             update_log(f"Exception in establishing SSH connection to the server: {e}")
+            exit(1)
 
     def getRawAttackSSH(self, AttackID):
         if not hasattr(self, "client"):

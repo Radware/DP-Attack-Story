@@ -222,17 +222,23 @@ def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips, policies, dp_li
     
 
 def get_all_sample_data(v, top_by_bps, top_by_pps):
-    # Initialize lists to store the filtered data
+    # Initialize lists to store the filtered data and unique source IPs
     all_sample_data_bps = []
     all_sample_data_pps = []
+    unique_ips_bps = set()
+    unique_ips_pps = set()
 
     # Function to extract relevant fields from sample data
-    def extract_fields(sample_data):
+    def extract_fields(sample_data, unique_ips):
         extracted_data = []
         for item in sample_data:
             row = item.get('row', {})
+            source_ip = row.get('sourceAddress')
+            if source_ip:
+                unique_ips.add(source_ip)  # Collect unique source IPs
+
             extracted_data.append({
-                'sourceAddress': row.get('sourceAddress'),
+                'sourceAddress': source_ip,
                 'sourcePort': row.get('sourcePort'),
                 'destAddress': row.get('destAddress'),
                 'destPort': row.get('destPort')
@@ -246,7 +252,7 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
             try:
                 sample_data = v.get_sample_data(attack_id)
                 if isinstance(sample_data, dict):
-                    filtered_data = extract_fields(sample_data.get('data', []))
+                    filtered_data = extract_fields(sample_data.get('data', []), unique_ips_bps)
                     all_sample_data_bps.append({attack_id: filtered_data})
                 else:
                     update_log(f"Unexpected data format for attack id {attack_id}: {sample_data}")
@@ -259,7 +265,7 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
             try:
                 sample_data = v.get_sample_data(attack_id)
                 if isinstance(sample_data, dict):
-                    filtered_data = extract_fields(sample_data.get('data', []))
+                    filtered_data = extract_fields(sample_data.get('data', []), unique_ips_pps)
                     all_sample_data_pps.append({attack_id: filtered_data})
                 else:
                     update_log(f"Unexpected data format for attack id {attack_id}: {sample_data}")
@@ -282,5 +288,5 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
         json.dump(all_sample_data_pps, f, indent=4)
     print(f"Sample data for top_by_pps saved to {pps_file_path}")
 
-    # Return the processed sample data for further use
-    return all_sample_data_bps, all_sample_data_pps
+    # Return the processed sample data and unique IPs for further use
+    return all_sample_data_bps, all_sample_data_pps, list(unique_ips_bps), list(unique_ips_pps)

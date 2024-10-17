@@ -153,10 +153,13 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         graphHTML = html_graphs.createTopGraphsHTML(rate_data['bps'], rate_data['pps'])
 
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
-        bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
+        #bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
+        # Call the function to get all sample data and unique source IPs
+        bps_data, pps_data, unique_ips_bps, unique_ips_pps = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
+
         #print("BPS Data:", bps_data)
         #print("PPS Data:", pps_data)
-        attackdataHTML = html_data.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, topN, threshold_gbps=1)
+        attackdataHTML = html_data.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, topN, threshold_gbps=1)
         
         
 

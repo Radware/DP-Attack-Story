@@ -36,63 +36,6 @@ def generate_sample_data_section(title, sample_data):
 def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, top_n=10, threshold_gbps=0.02):
     # Generate HTML content for the report
     html_content = f"""
-    <html>
-    <head>
-        <title>Attack Report</title>
-        <style>
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 20px;
-            }}
-            th, td {{
-                border: 1px solid black;
-                padding: 8px;
-                text-align: left;
-            }}
-            th {{
-                background-color: #f2f2f2;
-            }}
-            h2 {{
-                text-align: center;
-            }}
-            pre {{
-                white-space: pre-wrap; /* Wraps long text and preserves formatting */
-            }}
-            .above-threshold {{
-                background-color: #ffcccc;
-            }}
-            .collapsible {{
-                background-color: #777;
-                color: white;
-                cursor: pointer;
-                padding: 10px;
-                width: 100%;
-                border: none;
-                text-align: left;
-                outline: none;
-                font-size: 15px;
-            }}
-            .active, .collapsible:hover {{
-                background-color: #555;
-            }}
-            .content {{
-                padding: 0 18px;
-                display: none;
-                overflow: hidden;
-                background-color: #f9f9f9;
-            }}
-            .copy-button {{
-                background-color: #f2f2f2;
-                color: black;
-                border: None;
-                padding: 5px;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: bold;
-                margin-left: 5px;
-            }}
-        </style>
         <script>
             function toggleContent(id) {{
                 var content = document.getElementById(id);
@@ -116,8 +59,6 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 }});
             }}
         </script>
-    </head>
-    <body>
         <h2>Attack Report - Top {top_n} Sorted by Max Attack Rate (BPS)</h2>
         <p>Attack Vectors for the top {top_n} attacks: {', '.join(unique_protocols)}</p>
         <p>Out of the top {top_n} attacks, {count_above_threshold} attacks were greater than {threshold_gbps} Gbps.</p>
@@ -176,7 +117,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <td>{details.get('Final Footprint', 'N/A')}</td>
                 <td><pre>{metrics_summary}</pre></td>
-                <td><button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Show Sample Data</button></td>
+                <td><button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button><p>
+                <a href=#graph{details.get('Attack ID', 'N/A')}>Graph</a></td>
             </tr>
         """
 
@@ -215,7 +157,6 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                                 <td colspan="4">No sample data available</td>
                             </tr>
             """
-
         html_content += "</table></td></tr>"
 
     # Close the attack report table for BPS
@@ -324,12 +265,6 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
     # Close the attack report table for PPS
     html_content += "</table>"
-
-    # Close the HTML document
-    html_content += """
-    </body>
-    </html>
-    """
 
     # Return the HTML content
     return html_content

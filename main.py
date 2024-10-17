@@ -30,7 +30,7 @@ if __name__ == '__main__':
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
                 except Exception as e:
-                    print(f"Failed to delete {file_path}. Reason: {e}")
+                    update_log(f"Failed to delete {file_path}. Reason: {e}")
         else:
             # Create the output folder if it doesn't exist
             os.makedirs(outputFolder)
@@ -59,8 +59,13 @@ if __name__ == '__main__':
                 policy_input = args.pop(0)
                 args_used = True
             else:
-                if len(sys.argv) == 1: #If script is run with arguments, don't prompt. Length of 1 is 0 user arguments.
-                    policy_input = input(f"Enter policy names for {dp_list_ip[ip]['name']} ({ip}) separated by commas (or leave blank for All Policies): ").strip()
+                if len(sys.argv) == 1: #Only prompt if script is run without arguments. Length of 1 is 0 user arguments.
+                    policy_data = v.getDPPolicies(ip)['rsIDSNewRulesTable']
+                    policy_names = ', '.join(policy['rsIDSNewRulesName'] for policy in policy_data)
+                    print(f"\nPlease enter the policy names for {dp_list_ip[ip]['name']} ({ip}), separated by commas")
+                    print(f"    Available policies: ")
+                    print(f"        {policy_names}")
+                    policy_input = input(f"Policies (leave blank for All Policies): ").strip()
             if policy_input:
                 policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 
@@ -71,11 +76,11 @@ if __name__ == '__main__':
         #Save the formatted JSON to a file
         with open(outputFolder + 'response.json', 'w') as file:
             json.dump(attack_data, file, indent=4)
-        print("Response saved to response.json")
+        update_log("Response saved to response.json")
 
         #get bdos attack log from Defensepros
         found_files = sftp_module.get_attack_log(v, device_ips, from_month, start_year, to_month)
-        print(f"Files found: {found_files}")
+        update_log(f"Files found: {found_files}")
        
         syslog_ids, syslog_details = data_parser.parse_response_file(v)
         #print(syslog_details)
@@ -83,7 +88,7 @@ if __name__ == '__main__':
 
         for file in found_files:
             file_path = os.path.join(outputFolder, file)
-            print(f"Processing file for BDoS attack logs: {file}")
+            update_log(f"Processing file for BDoS attack logs: {file}")
             result = data_parser.parse_log_file(file_path, syslog_ids)
             
             all_results.update(result)
@@ -148,27 +153,27 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         #attack_log_info = attack_log_parser.parse_log_file(outputFolder + 'response.json', attack_ids)
         
         #Create the two graphs at the top of the HTML file
+        finalHTML = headerHTML + "\n<h2>Traffic Bandwidth</h2>"
         with open(outputFolder + 'TopGraphsData.json') as data_file:
             rate_data = json.load(data_file)
         graphHTML = html_graphs.createTopGraphsHTML(rate_data['bps'], rate_data['pps'])
+        finalHTML += graphHTML
 
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
         bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
         #print("BPS Data:", bps_data)
         #print("PPS Data:", pps_data)
         attackdataHTML = html_data.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, topN, threshold_gbps=1)
-        
-        
-
-        finalHTML = headerHTML + graphHTML + attackdataHTML 
+        finalHTML += attackdataHTML 
 
         #Create dynamic graph combining all attacks into one graph.
+        finalHTML += "\n<h2>Charts per attack ID</h2>"
         try:
             with open(outputFolder + 'AttackGraphsData.json') as data_file:
                 attackGraphData = json.load(data_file)
             finalHTML += html_graphs.createCombinedChart("All Attacks", attackGraphData) 
         except:
-            print("Unexpected createCombinedChart() error: ")
+            update_log("Unexpected createCombinedChart() error: ")
             traceback.print_exc()
 
         #Add an individual graph for each attack
@@ -176,7 +181,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
             try:
                 finalHTML += html_graphs.createSingleChart(attackID, data)
             except:
-                print(f"Error graphing attackID '{attackID}':")
+                update_log(f"Error graphing attackID '{attackID}':")
                 traceback.print_exc()
 
         endHTML = "</body></html>"
@@ -184,6 +189,6 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
         with open(outputFolder + 'DP-Attack-Story_Report.html', 'w') as file:
             file.write(finalHTML)
-        print("Graphs and metrics saved to DP-Attack-Story_Report.html")
+        update_log("Graphs and metrics saved to DP-Attack-Story_Report.html")
 
         ##############################End of Parse_Data Section##############################

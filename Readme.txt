@@ -26,12 +26,15 @@
 	2. Enter start and end times
 	3. Enter Vision/CC login credentials
 	4. (optional - press enter to skip) Select target DPs 
-	5. (optional - press enter to skip) Enter a comma separated list of policies
-	6. Input individual DefensePro username/password when prompted. 
-	7. View your report under .\Output\
+	5. (optional - press enter to skip) Enter a comma separated list of policies for each DP.
+	6. View your report under .\Output\
 
 
 # Version Control
+	v0.12.2 - 17 October 2024 (Steve)
+		Changed multiple print() statements to update_log() statements for more verbose logging. .
+		The script will now output each DefensePro's policy list when prompting user for per DP policy filters.
+		Moved CSS out of html_data.py and into html_header.py
 	v0.12.0 - 15 October 2024 (Steve)
 		Quitting from manual date entry is now possible.
 		The script can now be run using arguments. Arguments allow you to predefine input parameters to allow for scheduled execution. 

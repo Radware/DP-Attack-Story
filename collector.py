@@ -20,73 +20,95 @@ def prompt_user_time_period():
     """ Prompt user for time period, returns a list, [0] epoch start time, [1] epoch end time """
     previousFromTime = config.get('PreviousRun','epoch_from_time')
     previousToTime = config.get('PreviousRun','epoch_to_time')
-    #Ask user for time period:
-    print("Please select a time period:")
-    print("1) The past x hours")
-    print("2) The past 24 hours")
-    print("3) The past 48 hours")
-    print("4) Manually enter attack timeframe (In your PC's local timezone)")
-    print("5) Manually enter timeframe in epoch time")
-    if previousFromTime and previousToTime:
-        longFromTime = datetime.datetime.fromtimestamp(int(previousFromTime)/1000).strftime('%d-%m-%Y %H:%M:%S')
-        longToTime = datetime.datetime.fromtimestamp(int(previousToTime)/1000).astimezone().strftime('%d-%m-%Y %H:%M:%S %Z')
-        longFromTimeUTC = datetime.datetime.fromtimestamp(int(previousFromTime)/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S')
-        longToTimeUTC = datetime.datetime.fromtimestamp(int(previousToTime)/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')
-        print(f"6) Time range from previous run - {longFromTime} to {longToTime} ({longFromTimeUTC} to {longToTimeUTC})")
+    arg_choice = False
+    if len(args) == 0:
+        #Ask user for time period:
+        print("Please select a time period:")
+        print("1) The past x hours")
+        print("2) The past 24 hours")
+        print("3) The past 48 hours")
+        print("4) Manually enter attack timeframe (In your PC's local timezone)")
+        print("5) Manually enter timeframe in epoch time")
+        if previousFromTime and previousToTime:
+            longFromTime = datetime.datetime.fromtimestamp(int(previousFromTime)/1000).strftime('%d-%m-%Y %H:%M:%S')
+            longToTime = datetime.datetime.fromtimestamp(int(previousToTime)/1000).astimezone().strftime('%d-%m-%Y %H:%M:%S %Z')
+            longFromTimeUTC = datetime.datetime.fromtimestamp(int(previousFromTime)/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S')
+            longToTimeUTC = datetime.datetime.fromtimestamp(int(previousToTime)/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')
+            print(f"6) Time range from previous run - {longFromTime} to {longToTime} ({longFromTimeUTC} to {longToTimeUTC})")
+        else:
+            print("6) Time range from previous run (previous run not available)")
+        choice = input("Enter selection (1-6) or other to quit: ")
     else:
-        print("6) Time range from previous run (previous run not available)")
-    choice = input("Enter selection (1-6) or other to quit: ")
-    if choice == '1':
-        hours = int(input("Enter number of hours: "))
+        #Script is run with arguments.
+        arg_choice = args.pop(0)
+        if arg_choice == '--hours' or arg_choice == '-h':
+            choice = '1'
+        elif arg_choice == '--date-range' or arg_choice == '-dr':
+            choice = '4'
+        elif arg_choice == '--epoch-range' or arg_choice == '-er':
+            choice = '5'
+        elif arg_choice == '--previous-time-range' or arg_choice == '-p':
+            choice = '6'
+
+    if choice == '1':#The past x hours
+        hours = args.pop(0) if args else int(input("Enter number of hours: "))
         epoch_from_time = (int(time.time()) - (60 * 60 * hours)) * 1000
         epoch_to_time = int(time.time()) * 1000
         # from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
         # to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
-    elif choice == '2':
+    elif choice == '2':#The past 24 hours
         epoch_from_time = (int(time.time()) - (60 * 60 * 24)) * 1000
         epoch_to_time = int(time.time()) * 1000
         # from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
         # to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
-    elif choice == '3':
+    elif choice == '3':#The past 48 hours
         epoch_from_time = (int(time.time()) - (60 * 60 * 48)) * 1000
         epoch_to_time = int(time.time()) * 1000
         # from_month = datetime.fromtimestamp(epoch_from_time / 1000).month
         # to_month = datetime.fromtimestamp(epoch_to_time / 1000).month
-    elif choice == '4':
+    elif choice == '4':#Manually enter attack timeframe
         success = False
         while not success:
             try:
-                from_time = input("Enter the closest time before the attack START (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
+                from_time = args.pop(0) if args else input("Enter the closest time before the attack START (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
                 if from_time == 'q':
                     print("Quit")
-                    exit(0)
+                    exit(1)
                 dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
                 epoch_from_time = int(time.mktime(dt.timetuple()) * 1000)
                 # from_month = dt.month
                 success = True
-            except:
+            except ValueError:
+                if arg_choice:
+                    update_log("Error parsing start time argument. Exiting.")
+                    exit(1)
                 print("Error parsing start time, please try again!")
+            
         success = False
         while not success:
             try:
-                to_time = input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
+                to_time = args.pop(0) if args else input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
                 if from_time == 'q':
                     print("Quit")
-                    exit(0)
+                    exit(1)
                 dt = datetime.datetime.strptime(to_time, '%d-%m-%Y %H:%M:%S')
                 epoch_to_time = int(time.mktime(dt.timetuple()) * 1000)
                 # to_month = dt.month
                 success = True
-            except:
+            except ValueError:
+                if arg_choice:
+                    update_log("Error parsing start time argument. Exiting.")
+                    exit(1)
                 print("Error parsing end time, please try again.")
     elif choice == '5':
-        from_time = input("Enter epoch from time")
-        to_time = input("Enter epoch to time")
+        from_time = args.pop(0) if args else input("Enter epoch from time")
+        to_time = args.pop(0) if args else input("Enter epoch to time")
         if from_time.isnumeric() and to_time.isnumeric():
             epoch_from_time = int(from_time)
             epoch_to_time = int(to_time)
         else:
             print("Non-Numeric entry, quit")
+            exit(1)
     elif choice == '6':
         if previousFromTime and previousToTime:
             epoch_from_time = int(previousFromTime)
@@ -94,10 +116,12 @@ def prompt_user_time_period():
     else:
         update_log("Other input, quit")
         exit(0)
-        
-    config.set('PreviousRun','epoch_from_time',epoch_from_time)
-    config.set('PreviousRun','epoch_to_time',epoch_to_time)
-    config.save()
+    
+    if not arg_choice:
+        #Update the config if it was not run with arguments.
+        config.set('PreviousRun','epoch_from_time',epoch_from_time)
+        config.set('PreviousRun','epoch_to_time',epoch_to_time)
+        config.save()
 
 
     from_month = datetime.datetime.fromtimestamp(epoch_from_time / 1000).month
@@ -134,8 +158,16 @@ def user_selects_defensePros(v):
         #print("Available Defensepros: " + ', '.join(dp_list_ip.keys()))
         print("Available DefensePros: " + ', '.join(f"{dp_list_ip[key]['name']} ({key})" for key in dp_list_ip))
         
+        used_args = False
         while True:
-            device_entries = input("Enter DefensePro Names or IPs separated by commas (or leave blank for All available devices): ").split(',')
+            if args:
+                device_entries = args.pop(0)
+                used_args = True
+            else:
+                if len(sys.argv) == 1:#If script is run with arguments, don't prompt. Length of 1 is 0 user arguments.
+                    device_entries = input("Enter DefensePro Names or IPs separated by commas (or leave blank for All available devices): ").split(',')
+                else:
+                    device_entries = ""
             if len(device_entries[0]) == 0 and len(device_entries) == 1:
                 valid_ips = list(dp_list_ip.keys())
                 break
@@ -159,7 +191,11 @@ def user_selects_defensePros(v):
                             invalid_entries.append(entry)
 
                 if invalid_entries:
-                    print(f"The following entries are invalid or not available: {', '.join(invalid_entries)}")
+                    if used_args:
+                        update_log(f"Error processing argument - <DefensePro list>. Received {device_entries}. The following entries are invalid or not available: {', '.join(invalid_entries)}")
+                        exit(1)
+                    else:
+                        print(f"The following entries are invalid or not available: {', '.join(invalid_entries)}")
                 elif valid_ips:
                     #device_entries = valid_ips
                     break

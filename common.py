@@ -3,8 +3,8 @@ import datetime
 import sys
 import re
 
-outputFolder = f"./Output/{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}/"
-#outputFolder = './Output/'
+#outputFolder = f"./Output/{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}/"
+outputFolder = './Output/'
 LogfileName = outputFolder + "P-Attack-Story.log"
 
 

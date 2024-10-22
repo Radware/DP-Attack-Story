@@ -206,25 +206,26 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         update_log(f"Graphs and metrics saved to {html_file_path}")
         
         #Script execution complete. Compress and delete the output folder
-        if config.get("General","Compress_Output","TRUE").upper() == "TRUE":
-            with tarfile.open(outputFolder[:-1] + ".tgz", "w:gz"):
-                tarfile.add(outputFolder, arcname='.') #Arcname='.' preserves the folder structure
-                print(f"{outputFolder} has been compressed to {outputFolder[:-1]}.tgz")
-            if os.path.exists(outputFolder):
-                # Remove all files in the output folder
-                for filename in os.listdir(outputFolder):
-                    file_path = os.path.join(outputFolder, filename)
+        if False:
+            if config.get("General","Compress_Output","TRUE").upper() == "TRUE":
+                with tarfile.open(outputFolder[:-1] + ".tgz", "w:gz"):
+                    tarfile.add(outputFolder, arcname='.') #Arcname='.' preserves the folder structure
+                    print(f"{outputFolder} has been compressed to {outputFolder[:-1]}.tgz")
+                if os.path.exists(outputFolder):
+                    # Remove all files in the output folder
+                    for filename in os.listdir(outputFolder):
+                        file_path = os.path.join(outputFolder, filename)
+                        try:
+                            if os.path.isfile(file_path):
+                                os.unlink(file_path)
+                        except Exception as e:
+                            update_log(f"Failed to delete {file_path}. Reason: {e}")
                     try:
-                        if os.path.isfile(file_path):
-                            os.unlink(file_path)
-                    except Exception as e:
-                        update_log(f"Failed to delete {file_path}. Reason: {e}")
-                try:
-                    os.rmdir(outputFolder)
-                    print(f"{outputFolder} has been deleted.")
-                except FileNotFoundError:
-                    print(f"{outputFolder} does not exist.")
-                except OSError:
-                    print(f"{outputFolder} is not empty or cannot be deleted.")
+                        os.rmdir(outputFolder)
+                        print(f"{outputFolder} has been deleted.")
+                    except FileNotFoundError:
+                        print(f"{outputFolder} does not exist.")
+                    except OSError:
+                        print(f"{outputFolder} is not empty or cannot be deleted.")
 
         ##############################End of Parse_Data Section##############################

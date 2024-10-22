@@ -35,6 +35,8 @@
 			python main.py -h
 
 # Version Control
+	v0.14.1 - 22 October 2024 (Steve)
+		Fixed a typo in common.py
 	v0.14.0 - 22 October 2024 (Steve)
 		Added support for running the script with predefined settings through launcher.json.
 			Vision IP, Username, Password, and RootPassword support using OS Environmental variables. 

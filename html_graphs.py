@@ -111,8 +111,10 @@ def OptionsHTML(Title):
             annotations: { style: 'line'},
             displayAnnotations: true,
             focusTarget: 'category',
-            vAxis: {viewWindow: {min:0} },
-            hAxis: {format: 'HH:mm:ss', slantedText:true, slantedTextAngle:45},
+            vAxis: {
+                viewWindow: {min:0}
+            },
+            hAxis: {format: 'HH:mm:ss', slantedText:true, slantedTextAngle:45, title: 'Time (UTC)',},
             series: {
                 0: { labelInLegend: 'Challenged', color: "#ff8f00"},
                 1: { labelInLegend: 'Excluded', color: "#807be0"},
@@ -127,45 +129,10 @@ def OptionsHTML(Title):
     return output
     
 
-#def createGraphHTML(Title = "",JSONData = None):
-#    if JSONData is None:
-#        print("Setting bps")
-#        JSONData = TEMP_PopulateData()
-#
-#    rand_ID = random.randrange(100000000, 999999999)
-#    functionName = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
-#    #Add HTML head and chart initialization info
-#     outStr = f"""
-#     <script type="text/javascript">
-#       google.charts.load('current', {{'packages':['corechart']}});
-#       google.charts.setOnLoadCallback({functionName});
-#       function {functionName}() {{
-#         var data = google.visualization.arrayToDataTable([
-#         [ {{ label: 'Time', type: 'date'}}, {{ label: 'Challenged', type: 'number'}}, {{ label: 'Excluded', type: 'number'}}, {{ label: 'Received', type: 'number'}}, {{ label: 'Dropped', type: 'number'}}]"""
-#
-#     for row in JSONData['data']:
-#         #%d-%m-%Y 
-#         if row['row']['challengeIng'] and row['row']['excluded'] and row['row']['trafficValue'] and {row['row']['discards']}:
-#             outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
-#
-#     outStr += "]);"
-#     outStr += OptionsHTML(Title)
-#     outStr += f"""
-#
-#         var chart = new google.visualization.AreaChart(document.getElementById('{Title}_{str(rand_ID)}'));
-#
-#         chart.draw(data, options);
-#       }}
-#     </script>
-#
-#     <div id="{Title}_{str(rand_ID)}" style="width: 90%; height: 500px"></div>
-# """
-#     return outStr
+def createChart(Title, myData, epoch_from, epoch_to):
+ 
 
-def createSingleChart(Title, myData):
-    # Generate a random ID for the chart name
-    rand_ID = random.randrange(100000000, 999999999)
-    name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
+    name = f'graph_{Title.replace(" ","_").replace("-","_")}'
 
     # Sort the data by the timestamp
     sorted_data = sorted(myData["data"], key=lambda item: item["row"]["timeStamp"])
@@ -197,15 +164,13 @@ def createSingleChart(Title, myData):
 
     # Generate HTML content dynamically
     html_content = f"""
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Charts Dynamic Graph</title>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-        google.charts.load('current', {{'packages':['corechart', 'annotationchart']}});
-        google.charts.setOnLoadCallback(drawChart);
-        function drawChart() {{
+        //google.charts.load('current', {{'packages':['corechart', 'annotationchart']}});
+        google.charts.setOnLoadCallback(drawChart_{name});
+        function drawChart_{name}() {{
             var data = google.visualization.arrayToDataTable({json_data});
+            var epoch_from = correctedDate({epoch_from});
+            var epoch_to = correctedDate({epoch_to});
             var options = {{
                 title: '{Title}',
                 curveType: 'function',
@@ -226,7 +191,7 @@ def createSingleChart(Title, myData):
                 displayAnnotations: true,
                 focusTarget: 'category',
                 vAxis: {{viewWindow: {{min:0}} }},
-                hAxis: {{format: 'HH:mm:ss', slantedText:true, slantedTextAngle:45}},
+                hAxis: {{format: 'HH:mm:ss', slantedText:true, slantedTextAngle:45, title: 'Time (UTC)'}},
                 series: {{
                     0: {{ color: '#ff8f00' }},
                     1: {{ color: '#807be0' }},
@@ -236,10 +201,49 @@ def createSingleChart(Title, myData):
                     5: {{ color: '#43459d' }},
                 }}
             }};
+            var miniOptions = {{
+                title: null,
+                width: 100,  
+                height: 50, 
+                chartArea: {{
+                    left: 0,
+                    top: 0,
+                    width: '100%',
+                    height: '100%'
+                }},
+                legend: {{ position: 'none' }}, // Hide the legend for the mini chart
+                focusTarget: null,
+                hAxis: {{ 
+                    textPosition: 'none', 
+                    gridlines: {{ count: 0 }}, 
+                    ticks: [],
+                    minValue: correctedDate({epoch_from}),
+                    maxValue: correctedDate({epoch_to})
+                }}, // Hide x-axis text for compactness
+                vAxis: {{ 
+                    textPosition: 'none', 
+                    gridlines: {{ count: 0 }}, 
+                    ticks: [], 
+                    viewWindow: {{min:0}} }}, // Hide y-axis text for compactness
+            }};
+            
+            function drawChart(containerId, data, options) {{
+                var container = document.getElementById(containerId);
+                if (container !== null) {{
+                    var chart = new google.visualization.LineChart(container);
+                    chart.draw(data, options);
+                }}
+            }}
 
-            var chart = new google.visualization.LineChart(document.getElementById('{name}'));
+            // Draw the main chart
+            drawChart('{name}-bottom', data, options);
 
-            chart.draw(data, options);
+            // Draw the top charts
+            drawChart('{name}-top_n_pps', data, options);
+            drawChart('{name}-top_n_bps', data, options);
+
+            drawChart('{name}-bpsmini', data, {{ ...options, ...miniOptions }});
+            drawChart('{name}-ppsmini', data, {{ ...options, ...miniOptions }});
 
             var chart_annotations = {json.dumps(annotations)};
             chart_annotations.forEach(function(annotation) {{
@@ -247,9 +251,10 @@ def createSingleChart(Title, myData):
             }});
         }}
     </script>
-    <div id="{name}" style="width: 100%; height: 500px;"></div>
+    <div id="{name}-bottom" style="width: 100%; height: 500px;"></div>
     """
     return html_content
+
 
 def createCombinedChart(Title, myData):
     # Generate a random ID for the chart name
@@ -306,34 +311,27 @@ def createCombinedChart(Title, myData):
     json_data = json.dumps(data_table[1:])
     json_data = json_data.replace('"correctedDate(', 'correctedDate(').replace(')"', ')')
 
+
     # Generate HTML content dynamically with checkboxes and Date objects for x-axis
     html_content = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Google Charts Dynamic Graph</title>
-        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
         <script type="text/javascript">
-            google.charts.load('current', {{'packages':['corechart']}});
+            //google.charts.load('current', {{'packages':['corechart']}});
             google.charts.setOnLoadCallback(drawChart);
 
             let data;
             let chart;
+            let bpsView;
+            let ppsView;
             let options = {{
                 title: '{Title}',
                 curveType: 'function',
                 legend: {{
                     position: 'top',
                     textStyle: {{ fontSize: 12 }},
-                    maxLines: 3
-                }},
-                series: {{
-                    {"".join([f"{i}: {{lineDashStyle: [0, 0]}}, " for i in range(len(data_table[0])-1)])}
+                    maxLines: 6
                 }},
                 hAxis: {{
-                    title: 'Time',
+                    title: 'Time (UTC)',
                     format: 'HH:mm:ss',
                     slantedText: true,
                     slantedTextAngle: 45
@@ -345,6 +343,42 @@ def createCombinedChart(Title, myData):
                 interpolateNulls: true,
                 tooltip: {{
                     isHtml: true
+                }},
+                series: {{
+                    {", ".join([f"{i}: {{ lineDashStyle: [0, 0] }}" for i in range(len(data_table[0]) - 1)])} 
+                }},
+                colors: [
+                    '#e2431e', // Red
+                    '#f1ca3a', // Yellow
+                    '#6f9654', // Green
+                    '#1c91c0', // Blue
+                    '#b2c2c8', // Light Gray
+                    '#c94c4d', // Dark Red
+                    '#e55b1b', // Orange
+                    '#4f81bd', // Light Blue
+                    '#b689c5', // Lavender
+                    '#9bcf0e', // Lime Green
+                    '#9b59b6', // Purple
+                    '#34495e', // Dark Blue Gray
+                    '#e67e22', // Carrot Orange
+                    '#d35400', // Pumpkin
+                    '#2980b9', // Bright Blue
+                    '#f39c12', // Bright Yellow
+                    '#16a085', // Turquoise
+                    '#2ecc71', // Emerald Green
+                    '#3498db', // Light Sky Blue
+                    '#9b59b6', // Amethyst
+                    '#34495e', // Dark Slate
+                    '#95a5a6', // Gray
+                    '#e74c3c', // Red
+                    '#ecf0f1', // Cloudy Gray
+                    '#8e44ad', // Purple
+                    '#f1c40f'  // Bright Yellow
+                ],
+                animation: {{
+                    duration: 1000,    // Time in milliseconds for the animation (1 second here)
+                    easing: 'inAndOut',     // Easing function for smooth animation ('in', 'out', 'inAndOut' are common options)
+                    startup: false      // Ensures that animation happens on chart load
                 }}
             }};
 
@@ -353,37 +387,75 @@ def createCombinedChart(Title, myData):
                 data.addColumn('datetime', 'Time');
                 {"".join([f"data.addColumn('number', '{col}');" for col in data_table[0][1:]])}
                 data.addRows({json_data});
+                data.setColumnProperty(1, 'color', '#e2431e'); 
+                data.setColumnProperty(2, 'color', '#f1ca3a'); 
+                data.setColumnProperty(3, 'color', '#e2431e'); 
+                data.setColumnProperty(4, 'color', '#f1ca3a'); 
 
-                chart = new google.visualization.LineChart(document.getElementById('{name}'));
-                chart.draw(data, options);
+                // Create a DataView for the BPS chart (odd columns)
+                bpsView = new google.visualization.DataView(data);
+                let bpsColumns = [0];  // Start with the timestamp column
+                for (let i = 2; i < data.getNumberOfColumns(); i += 2) {{
+                    bpsColumns.push(i);
+                }}
+                bpsView.setColumns(bpsColumns);
+
+                // Create a DataView for the PPS chart (even columns)
+                ppsView = new google.visualization.DataView(data);
+                let ppsColumns = [0];  // Start with the timestamp column
+                for (let i = 1; i < data.getNumberOfColumns(); i += 2) {{
+                    ppsColumns.push(i);
+                }}
+                ppsView.setColumns(ppsColumns);
+
+                chartbps = new google.visualization.LineChart(document.getElementById('{name}-bps'));
+                chartbps.draw(bpsView, {{...options, title: options.title + ' - BPS'}});
+                chartpps = new google.visualization.LineChart(document.getElementById('{name}-pps'));
+                chartpps.draw(ppsView, {{...options, title: options.title + ' - PPS'}});
             }}
 
             function updateChart() {{
-                let view = new google.visualization.DataView(data);
-                let columns = [0];
-                {"".join([f'if (document.getElementById("{name}_{header}").checked) {{ columns.push(data.getColumnIndex("{header}")); }}' for headers in dataset_headers.values() for header in headers])}
+                //let bpsView = new google.visualization.DataView(data);
+                //let ppsView = new google.visualization.DataView(data);
+                let columns = [];
+                {''.join(
+                    f'if (document.getElementById("{name}_{header}").checked) {{ columns.push({headerindex}); }}' for headerindex, header in enumerate(dataset_headers.keys())
+                )}
 
-                view.setColumns(columns);
-                chart.draw(view, options);
-            }}
+                evencolumns = [0, ...columns.map(x => (x+1)*2)];
+                oddcolumns  = [0, ...columns.map(x => x*2 + 1)];
 
-            function toggleCheckboxes(metric) {{
-                {"".join([f'document.getElementById("{name}_{header}").checked = (metric === "both" || "{header.split("__")[-1]}" === metric);' for headers in dataset_headers.values() for header in headers])}
-                updateChart();
+                bpsView.setColumns(evencolumns);
+                chartbps.draw(bpsView, {{...options, title: options.title + ' - BPS', colors: columns.map(index => options.colors[index])}});
+                ppsView.setColumns(oddcolumns);
+                chartpps.draw(ppsView, {{...options, title: options.title + ' - PPS', colors: columns.map(index => options.colors[index])}});
+                
             }}
         </script>
-    </head>
-    <body>
-        <div>
-            <label><input type="radio" name="{name}_metric" value="both" checked onclick="toggleCheckboxes('both')"> Both</label>
-            <label><input type="radio" name="{name}_metric" value="Bps" onclick="toggleCheckboxes('Bps')"> Bps</label>
-            <label><input type="radio" name="{name}_metric" value="Pps" onclick="toggleCheckboxes('Pps')"> Pps</label>
+"""
+    
+    checkboxes_html = ""
+    for header in dataset_headers.keys():
+        checkbox_html = (
+            f'<label>'
+            f'<input type="checkbox" id="{name}_{header}" checked onclick="updateChart()"> '
+            f'{header.replace("__", " ").replace("_", " ")}'
+            f'</label>'
+        )
+        checkboxes_html += checkbox_html
+    column_count = (
+        1 if len(dataset_headers) <= 4 else
+        2 if len(dataset_headers) <= 8 else
+        3 if len(dataset_headers) < 13 else
+        4
+    )
+    html_content += f"""
+        <div style="display: grid; grid-template-columns: repeat({column_count}, 1fr); gap: 10px; row-gap: 3px; width:50%;">
+            {checkboxes_html}
         </div>
-        <div>
-            {"".join([f'<label><input type="checkbox" id="{name}_{header}" checked onclick="updateChart()"> {header.replace("__", " ").replace("_", " ")}</label><br>' for headers in dataset_headers.values() for header in headers])}
-        </div>
-        <div id="{name}" style="width: 100%; height: 500px;"></div>
-    </body>
-    </html>
+        <div id="{name}-bps" style="width: 100%; height: 500px;"></div>
+        <div id="{name}-pps" style="width: 100%; height: 500px;"></div>
     """
     return html_content
+
+    

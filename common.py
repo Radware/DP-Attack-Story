@@ -3,6 +3,7 @@ import datetime
 import sys
 import re
 
+#outputFolder = f'./Output/{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}'
 outputFolder = './Output/'
 LogfileName = outputFolder + "P-Attack-Story.log"
 topN = 10 #number of entries to include in the attack table

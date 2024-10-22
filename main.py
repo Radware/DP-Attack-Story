@@ -2,7 +2,7 @@ import os
 import traceback
 import json
 import datetime
-
+import tarfile
 
 #internal modules
 import clsVision
@@ -31,6 +31,7 @@ if __name__ == '__main__':
                         os.unlink(file_path)
                 except Exception as e:
                     update_log(f"Failed to delete {file_path}. Reason: {e}")
+            pass
         else:
             # Create the output folder if it doesn't exist
             os.makedirs(outputFolder)
@@ -177,7 +178,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         try:
             with open(outputFolder + 'AttackGraphsData.json') as data_file:
                 attackGraphData = json.load(data_file)
-            finalHTML += html_graphs.createCombinedChart("All Attacks", attackGraphData) 
+            finalHTML += html_graphs.createCombinedChart("Custom", attackGraphData) 
         except:
             update_log("Unexpected createCombinedChart() error: ")
             traceback.print_exc()
@@ -185,7 +186,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         #Add an individual graph for each attack
         for attackID, data in attackGraphData.items():
             try:
-                finalHTML += html_graphs.createSingleChart(attackID, data)
+                finalHTML += html_graphs.createChart(attackID, data, epoch_from_time, epoch_to_time)
             except:
                 update_log(f"Error graphing attackID '{attackID}':")
                 traceback.print_exc()

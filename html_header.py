@@ -3,7 +3,9 @@ def getHeader(stats):
     header=f"""\
 <html>
   <head>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js">
+    google.charts.load('current', {{'packages':['corechart', 'annotationchart']}});
+    </script>
     <title>DP Attack Story</title>
     {getCSS()}
   </head>
@@ -20,6 +22,7 @@ def getHeader(stats):
 
 def getCSS():
     """Returns CSS to be included in the header."""
+
     return """<style>
         table {
             width: 100%;
@@ -33,6 +36,7 @@ def getCSS():
         }
         th {
             background-color: #f2f2f2;
+            text-align: center;
         }
         h2 {
             text-align: center;
@@ -50,7 +54,8 @@ def getCSS():
             padding: 5px;
             width: 100%;
             border: none;
-            text-align: left;
+            text-align: center;
+            margin: 4px 2px;
             outline: none;
             font-size: 15px;
             text-align: center;

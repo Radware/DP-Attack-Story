@@ -31,6 +31,17 @@
 
 
 # Version Control
+	v0.13.0 - 21 October 2024 (Steve)
+		Added graph button and collapsed graph to each row of the attack tables.
+		Added mini graph to attack tables. 
+			Min and max values are currently set to the full time range. Short attacks will appear as a vertical line. 
+			I might change this later. The current idea is you see at a glance where in the timeline each attack occurred.
+		Customizable graph overhaul.
+			Split into BPS and PPS graphs.
+			Checkboxes simplified to one per attack.
+			Checkboxes will display in multiple columns when there are many attacks.
+			Colors are maintained when checking and unchecking values.
+			Enabled animation.
 	v0.12.2 - 17 October 2024 (Steve)
 		Changed multiple print() statements to update_log() statements for more verbose logging.
 		The script will now output each DefensePro's policy list when prompting user for per DP policy filters.

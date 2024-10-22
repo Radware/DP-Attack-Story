@@ -72,7 +72,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Policy</th>
                 <th>Attack Category</th>
                 <th>Attack Name</th>
-                <th>Threat Group</th>
+                <th>Graph</th>
                 <th>Protocol</th>
                 <th>Action</th>
                 <th>Attack Status</th>
@@ -95,9 +95,9 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         except (ValueError, TypeError):
             max_attack_rate_bps = 0.0
 
-        # Row class based on threshold
         row_class = ''
-
+        graph_name = f"graph_{(details.get('Attack Name', 'N/A') + "_" + details.get('Attack ID', 'N/A')).replace(" ","_").replace("-","_")}"
+        
         # Main row
         html_content += f"""
             <tr class="{row_class}">
@@ -109,7 +109,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Policy', 'N/A')}</td>
                 <td>{details.get('Attack Category', 'N/A')}</td>
                 <td>{details.get('Attack Name', 'N/A')}</td>
-                <td>{details.get('Threat Group', 'N/A')}</td>
+                <!-- <td>{details.get('Threat Group', 'N/A')}</td> -->
+                <td><div id="{graph_name}-bpsmini" style="width: 100%; height: 100%;"></div></td>
                 <td>{details.get('Protocol', 'N/A')}</td>
                 <td>{details.get('Action', 'N/A')}</td>
                 <td>{details.get('Attack Status', 'N/A')}</td>
@@ -117,10 +118,19 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <td>{details.get('Final Footprint', 'N/A')}</td>
                 <td><pre>{metrics_summary}</pre></td>
-                <td><button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button></td>
+                <td><button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('tr_bps_{graph_name}');drawChart_{graph_name}();">Graph</button></td>
+                </td>
             </tr>
         """
-
+        # Collapsible row for graph (initially hidden)
+        html_content += f"""
+            <tr id="tr_bps_{graph_name}" style="display:none;">
+                <td colspan="17">
+                    <div id="{graph_name}-top_n_bps" style="width: 100%; height: 500px;"></div>
+                </td>
+            </tr>
+        """
         # Collapsible row for sample data (initially hidden)
         html_content += f"""
             <tr id="bps_{details.get('Attack ID', 'N/A')}" style="display:none;">
@@ -174,7 +184,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Policy</th>
                 <th>Attack Category</th>
                 <th>Attack Name</th>
-                <th>Threat Group</th>
+                <th>Graph</th>
                 <th>Protocol</th>
                 <th>Action</th>
                 <th>Attack Status</th>
@@ -197,8 +207,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         except (ValueError, TypeError):
             max_attack_rate_pps = 0.0
 
-        # Row class based on threshold
         row_class = ''
+        graph_name = f"graph_{(details.get('Attack Name', 'N/A') + "_" + details.get('Attack ID', 'N/A')).replace(" ","_").replace("-","_")}"
 
         # Main row
         html_content += f"""
@@ -211,7 +221,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Policy', 'N/A')}</td>
                 <td>{details.get('Attack Category', 'N/A')}</td>
                 <td>{details.get('Attack Name', 'N/A')}</td>
-                <td>{details.get('Threat Group', 'N/A')}</td>
+                <!-- <td>{details.get('Threat Group', 'N/A')}</td> -->
+                <td><div id="{graph_name}-ppsmini"></div></td>
                 <td>{details.get('Protocol', 'N/A')}</td>
                 <td>{details.get('Action', 'N/A')}</td>
                 <td>{details.get('Attack Status', 'N/A')}</td>
@@ -219,10 +230,21 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <td>{details.get('Final Footprint', 'N/A')}</td>
                 <td><pre>{metrics_summary}</pre></td>
-                <td><button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')">Sample Data</button></td>
+                <td>\
+                    <button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('tr_pps_{graph_name}');drawChart_{graph_name}();">Graph</button>
+                </td>
             </tr>
         """
-
+        # Collapsible row for graph
+        html_content += f"""
+            <tr id="tr_pps_{graph_name}" style="display:none;">
+                <td></td>
+                <td colspan="17">
+                    <div id="{graph_name}-top_n_pps" style="width: 100%; height: 500px;"></div>
+                </td>
+            </tr>
+        """
         # Collapsible row for sample data (initially hidden)
         html_content += f"""
             <tr id="pps_{details.get('Attack ID', 'N/A')}" style="display:none;">
@@ -270,7 +292,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
     # Generate HTML content for combined unique IPs as a table
     html_content += """
-    <h2> Unique Sample Source IPs</h2>
+    Sample data source IP functions: 
     <button onclick="copyIPs()">Copy IPs</button>
     <button onclick="toggleTable()">Show Source IP Table</button>
     <div id="ipTableContainer" style="display: none;">

@@ -34,8 +34,9 @@
 	v0.13.0 - 21 October 2024 (Steve)
 		Incorporated a 'Graph' button and a collapsible graph for every row of the attack tables.
 		Added mini graph to attack tables. 
-		    Min and max values are currently set to the full time range. Short attacks will appear as a vertical line. 
-		    I might change this later. The current idea is you see at a glance where in the timeline each attack occurred.
+		    hAxis min and max values are currently set to the full time range. I might change this later based on user feedback.
+		    Short attacks will appear as a vertical line. 
+		    This approach aims to give users a quick view of when each attack occurred within the specified time range.
 		Customizable graph overhaul.
 		    Split into BPS and PPS graphs.
 		    Checkboxes simplified to one per attack.

@@ -3,10 +3,10 @@ import datetime
 import sys
 import re
 
-#outputFolder = f'./Output/{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}'
-outputFolder = './Output/'
+outputFolder = f'./Output/{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}/'
+#outputFolder = './Output/'
 LogfileName = outputFolder + "P-Attack-Story.log"
-topN = 10 #number of entries to include in the attack table
+
 
 args = sys.argv.copy()
 script_filename = args.pop(0)
@@ -40,7 +40,11 @@ class clsConfig():
         for option in visionOptions:
             if not self.config.has_option('Vision', option):
                 self.config.set('Vision', option, '')
-    
+        if not self.config.has_option('General', 'Top_N'):
+            self.set("General","Top_N","10")
+        if not self.config.has_option('General', 'Compress_Output'):
+            self.set("General","Compress_Output","TRUE")
+
     def save(self):
         with open("config.ini", "w") as config_file:
             self.config.write(config_file)
@@ -56,9 +60,11 @@ class clsConfig():
         if isinstance(value, bool):
              value = 'true' if value else 'false'
         self.config.set(section, option, value)
+        self.save()
+
 
 config = clsConfig()
-
+topN = int(config.get("General","Top_N","10"))
 
 def update_log(message):
     print(message)

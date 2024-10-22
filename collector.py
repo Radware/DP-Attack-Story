@@ -208,7 +208,7 @@ def user_selects_defensePros(v):
         return [], {}
 
 
-def get_attack_data(epoch_from_time,epoch_to_time,v, device_ips, policies, dp_list_ip):
+def get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_list_ip):
     try:
         attack_data = {}
         for device_ip in device_ips:

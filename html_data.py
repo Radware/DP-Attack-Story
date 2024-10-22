@@ -96,8 +96,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             max_attack_rate_bps = 0.0
 
         row_class = ''
-        graph_name = f"graph_{(details.get('Attack Name', 'N/A') + "_" + details.get('Attack ID', 'N/A')).replace(" ","_").replace("-","_")}"
-        
+
+        graph_name = f"graph_{(details.get('Attack Name', 'N/A') + '_' + details.get('Attack ID', 'N/A')).replace(' ','_').replace('-','_')}"
         # Main row
         html_content += f"""
             <tr class="{row_class}">
@@ -208,7 +208,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             max_attack_rate_pps = 0.0
 
         row_class = ''
-        graph_name = f"graph_{(details.get('Attack Name', 'N/A') + "_" + details.get('Attack ID', 'N/A')).replace(" ","_").replace("-","_")}"
+        graph_name = f"graph_{(details.get('Attack Name', 'N/A') + '_' + details.get('Attack ID', 'N/A')).replace(' ','_').replace('-','_')}"
 
         # Main row
         html_content += f"""

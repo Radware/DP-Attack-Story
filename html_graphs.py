@@ -69,7 +69,7 @@ def createTopGraphsHTML(BPSjson,PPSjson):
             outStr += f",\n        [correctedDate({row['row']['timeStamp']}), {row['row']['challengeIng']}, {row['row']['excluded']}, {row['row']['trafficValue']}, {row['row']['discards']}]"
 
     outStr += "]);"
-    outStr += OptionsHTML("Full Time Range Max BPS (UTC)")
+    outStr += OptionsHTML("Full Time Range Max KBPS")
     outStr += """
         var chart = new google.visualization.AreaChart(document.getElementById('bpsChart'));
 
@@ -107,7 +107,11 @@ def OptionsHTML(Title):
     output +="""',
             curveType: 'function',
             width: '100%',
-            legend: { position: 'bottom' },
+            legend: {
+                position: 'top',
+                textStyle: { fontSize: 12 },
+                maxLines: 6
+            },
             annotations: { style: 'line'},
             displayAnnotations: true,
             focusTarget: 'category',
@@ -174,7 +178,11 @@ def createChart(Title, myData, epoch_from, epoch_to):
             var options = {{
                 title: '{Title}',
                 curveType: 'function',
-                legend: {{ position: 'bottom' }},
+                legend: {{
+                    position: 'top',
+                    textStyle: {{ fontSize: 12 }},
+                    maxLines: 6
+                }},
                 annotations: {{
                     style: 'line',
                     textStyle: {{
@@ -458,4 +466,73 @@ def createCombinedChart(Title, myData):
     """
     return html_content
 
+
+def createPieCharts(attack_data):
+    """Creates two 3D pie charts for total bandwidth and total packets, showing percentages on the chart and including a legend."""
+    # Aggregate the totals from all attacks
+    aggregate_data = {}
+    for dp, data in attack_data.items():
+        for attack in data['data']:
+            name = attack['row']['name']
+            total_bandwidth = attack['row'].get('packetBandwidth', 0)
+            total_packets = attack['row'].get('packetCount', 0)
+            existing_data = aggregate_data.get(name, {'total_bandwidth': 0, 'total_packets': 0})
+            aggregate_data[name] = {
+                'total_bandwidth': int(existing_data['total_bandwidth']) + int(total_bandwidth),
+                'total_packets': int(existing_data['total_packets']) + int(total_packets)
+            }
+
+    # Prepare the data for the charts
+    attack_names = list(aggregate_data.keys())
+    total_bandwidth_values = [aggregate_data[attack]['total_bandwidth'] for attack in attack_names]
+    total_packets_values = [aggregate_data[attack]['total_packets'] for attack in attack_names]
+
+    # Calculate the sums for total bandwidth and total packets
+    total_bandwidth_sum = sum(total_bandwidth_values)
+    total_packets_sum = sum(total_packets_values)
+
+    # Generate the JavaScript for drawing a single 3D pie chart
+    def create_pie_chart_js(chart_name, chart_data, title):
+        return f"""
+            var {chart_name}Data = google.visualization.arrayToDataTable([
+                ['Attack Name', 'Value'],
+                {', '.join([f"['{attack}', {chart_data[i]}]" for i, attack in enumerate(attack_names)])}
+            ]);
+
+            var {chart_name}Options = {{
+                title: '{title}',
+                is3D: true,  // Enable 3D chart
+                pieSliceText: 'percentage',  // Show percentages on the chart
+                legend: 'right',  // Include legend (key) on the right
+                slices: {{
+                    0: {{offset: 0}},  // Optional slight offset for callout effect
+                    1: {{offset: 0}},
+                    2: {{offset: 0}}
+                }},
+            }};
+
+            var {chart_name} = new google.visualization.PieChart(document.getElementById('{chart_name}'));
+            {chart_name}.draw({chart_name}Data, {chart_name}Options);
+        """
+
+    # Titles with sums
+    bandwidth_title = f"Total Bandwidth consumed by attacks: {total_bandwidth_sum:,} kb"
+    packets_title = f"Total Attack Packets: {total_packets_sum:,}"
+
+    # Output HTML for Google Charts and the two pie charts side by side
+    html_output = f"""
+    <script>
+        google.charts.setOnLoadCallback(drawPieCharts);
+        function drawPieCharts() {{
+            {create_pie_chart_js('bandwidthChart', total_bandwidth_values, bandwidth_title)}
+            {create_pie_chart_js('packetsChart', total_packets_values, packets_title)}
+        }}
+    </script>
+
+    <div style="display: flex; justify-content: center;">
+        <div id="bandwidthChart" style="width: 40%; height: 500px;"></div>
+        <div id="packetsChart" style="width: 40%; height: 500px;"></div>
+    </div>
+    """
     
+    return html_output

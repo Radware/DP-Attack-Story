@@ -2,7 +2,7 @@
 	// Use IntelliSense to learn about possible attributes.
 	// Hover to view descriptions of existing attributes.
 	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-	"version": "0.2.0",
+	"version": "0.14.0",
 	"configurations": [
 		{
 			"name": "Python Debugger: Main.py",
@@ -11,6 +11,18 @@
 			"program": "${workspaceFolder}/main.py",
 			"console": "integratedTerminal",
 			"justMyCode": true
+		},
+		{
+			"name": "Python Debugger: Main.py --use-cached --previous-time-range",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${workspaceFolder}/main.py",
+			"console": "integratedTerminal",
+			"justMyCode": true,
+			"args":[
+				"--use-cached",
+				"--previous-time-range"
+			]
 		},
 		{
 			"name": "Python Debugger: Current File",

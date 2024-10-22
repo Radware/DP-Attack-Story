@@ -19,18 +19,38 @@
 
 # How to run
 	Optional:
-		Modify the topN variable in the common.py module to adjust the number of events that appear in the final report. Default: 10.
+		Modify the Top_N variable in config.ini to adjust the number of events that appear in the final report. Default: 10.
 
-	1. Run the script 
-		python main.py
-	2. Enter start and end times
-	3. Enter Vision/CC login credentials
-	4. (optional - press enter to skip) Select target DPs 
-	5. (optional - press enter to skip) Enter a comma separated list of policies for each DP.
-	6. View your report under .\Output\
+	Without Arguments:
+		1. Run the script 
+			python main.py
+		2. Enter Vision/CC login credentials
+		3. Enter start and end times
+		4. (optional - press enter to skip) Select target DPs 
+		5. (optional - press enter to skip) Enter a comma separated list of policies for each DP.
+		6. View your report under .\Output\
 
+	With Arguments:
+		1. Run the script with the -h argument for details.
+			python main.py -h
 
 # Version Control
+	v0.14.0 - 22 October 2024 (Steve)
+		Added support for running the script with predefined settings through launcher.json.
+			Vision IP, Username, Password, and RootPassword support using OS Environmental variables. 
+			If the first character is a $, the subsequent text will be treated as an environmental variable name.
+		The script will now output to a unique temp folder each execution. 
+		    The folder name is ./Output/<Year>-<Month>-<Day>_<Hour>.<Minute>.<Second>/
+		    The script will then compress temp folder. 
+			The compressed file will be saved to ./Output/<Year>-<Month>-<Day>_<Hour>.<Minute>.<Second>.tgz
+			The temp folder will then be deleted.
+			Compressing and deleting the temp folder can be disabled by setting 'Compress_Output = FALSE' in config.ini
+		Config.ini now includes a Top_N value. Changing this number will change how many attacks are included in reported data.
+		Added 2 pie charts comparing attack types by total bandwidth and packets.
+		Moved Graph legends to top of graphs to accomodate hAxis label.
+		Corrected label on first graph from BPS to KBPS
+		Added Top_N label to top right of output html
+		Fixed a typo in html_data.py.
 	v0.13.0 - 21 October 2024 (Steve)
 		Incorporated a 'Graph' button and a collapsible graph for every row of the attack tables.
 		Added mini graph to attack tables. 

@@ -32,7 +32,7 @@
 
 # Version Control
 	v0.13.0 - 21 October 2024 (Steve)
-		Added graph button and collapsed graph to each row of the attack tables.
+		Incorporated a 'Graph' button and a collapsible graph for every row of the attack tables.
 		Added mini graph to attack tables. 
 			Min and max values are currently set to the full time range. Short attacks will appear as a vertical line. 
 			I might change this later. The current idea is you see at a glance where in the timeline each attack occurred.

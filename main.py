@@ -132,11 +132,13 @@ if __name__ == '__main__':
         #Save a file with the details of the current run.
             #altenate datetime format .strftime('%a, %d %b %Y %H:%M:%S %Z')
         executionStatistics=f"""\
+Top {topN} Attacks by BPS and CPS
 Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 Vision / Cyber Controller IP: {v.ip}
 DPs: {', '.join(device_ips)}
 Policies: {"All" if len(policies) == 0 else policies}"""
+        
         with open(outputFolder + 'ExecutionDetails.txt', 'w', encoding='utf-8') as file:
             file.write(executionStatistics)
 
@@ -162,6 +164,10 @@ Policies: {"All" if len(policies) == 0 else policies}"""
             rate_data = json.load(data_file)
         graphHTML = html_graphs.createTopGraphsHTML(rate_data['bps'], rate_data['pps'])
         finalHTML += graphHTML
+
+        #Create pie charts
+        finalHTML += html_graphs.createPieCharts(attack_data)
+
 
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
         #bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
@@ -194,8 +200,31 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         endHTML = "</body></html>"
         finalHTML += endHTML
 
-        with open(outputFolder + 'DP-Attack-Story_Report.html', 'w') as file:
+        html_file_path = os.path.join(outputFolder, 'DP-Attack-Story_Report.html')
+        with open(html_file_path, 'w') as file:
             file.write(finalHTML)
-        update_log("Graphs and metrics saved to DP-Attack-Story_Report.html")
+        update_log(f"Graphs and metrics saved to {html_file_path}")
+        
+        #Script execution complete. Compress and delete the output folder
+        if config.get("General","Compress_Output","TRUE").upper() == "TRUE":
+            with tarfile.open(outputFolder[:-1] + ".tgz", "w:gz"):
+                tarfile.add(outputFolder, arcname='.') #Arcname='.' preserves the folder structure
+                print(f"{outputFolder} has been compressed to {outputFolder[:-1]}.tgz")
+            if os.path.exists(outputFolder):
+                # Remove all files in the output folder
+                for filename in os.listdir(outputFolder):
+                    file_path = os.path.join(outputFolder, filename)
+                    try:
+                        if os.path.isfile(file_path):
+                            os.unlink(file_path)
+                    except Exception as e:
+                        update_log(f"Failed to delete {file_path}. Reason: {e}")
+                try:
+                    os.rmdir(outputFolder)
+                    print(f"{outputFolder} has been deleted.")
+                except FileNotFoundError:
+                    print(f"{outputFolder} does not exist.")
+                except OSError:
+                    print(f"{outputFolder} is not empty or cannot be deleted.")
 
         ##############################End of Parse_Data Section##############################

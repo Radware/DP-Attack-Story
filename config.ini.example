@@ -1,0 +1,13 @@
+[Vision]
+ip = 155.1.1.6
+username = radware
+password = radware
+rootpassword = radware
+
+[General]
+Top_N = 10
+Compress_Output = TRUE
+
+[PreviousRun]
+epoch_from_time = 1727907868000
+epoch_to_time = 1727907868000

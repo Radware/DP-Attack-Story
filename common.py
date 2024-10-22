@@ -49,8 +49,8 @@ class clsConfig():
         with open("config.ini", "w") as config_file:
             self.config.write(config_file)
 
-    def get(self, *args, fallback=None, **kwargs):
-        return self.config.get(*args, fallback=fallback, **kwargs)
+    def get(self, Section, Option, Fallback=None, **kwargs):
+        return self.config.get(Section, Option, fallback=Fallback, **kwargs)
 
     def set(self, section, option, value):
         if not self.config.has_section(section):

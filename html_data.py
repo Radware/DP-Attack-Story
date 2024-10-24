@@ -33,7 +33,7 @@ def generate_sample_data_section(title, sample_data):
     html_content += "</table>"
     return html_content
 
-def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, top_n=10, threshold_gbps=0.02):
+def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, top_n=10, threshold_gbps=0.02):
     # Generate HTML content for the report
     html_content = f"""
         <script>
@@ -292,17 +292,23 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
 
     # Generate HTML content for combined unique IPs as a table
     html_content += """
-    Sample data source IP functions: 
-    <button onclick="copyIPs()">Copy IPs</button>
+    Unique Sample data and Source IP functions: 
     <button onclick="toggleTable()">Show Source IP Table</button>
-    <div id="ipTableContainer" style="display: none;">
-        <table border="1" style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr>
-                    <th style="height: 30px;">Unique IPs</th>
-                </tr>
-            </thead>
-            <tbody>
+    <button onclick="toggleCombinedSamples()">Show Aggregated Sample Data</button>
+
+    <!-- Parent container for the two tables -->
+    <div style="display: flex; gap: 20px;">
+        <!-- Source IP Table -->
+        <div id="ipTableContainer" style="display: none;">
+            <table id="sourceIpTable" border="1" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="height: 30px;">Unique Source IPs
+                            <button onclick="copyColumn('sourceIpTable', 0)">Copy</button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
     """
 
     # Populate the table with the combined unique IPs
@@ -314,31 +320,77 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         """
 
     html_content += """
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Combined Unique Samples Table -->
+        <div id="combinedSampleContainer" style="display: none;">
+            <table id="combinedSampleTable" border="1" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="height: 30px;">Source Address
+                            <button onclick="copyColumn('combinedSampleTable', 0)">Copy</button>
+                        </th>
+                        <th style="height: 30px;">Source Port
+                            <button onclick="copyColumn('combinedSampleTable', 1)">Copy</button>
+                        </th>
+                        <th style="height: 30px;">Destination Address
+                            <button onclick="copyColumn('combinedSampleTable', 2)">Copy</button>
+                        </th>
+                        <th style="height: 30px;">Destination Port
+                            <button onclick="copyColumn('combinedSampleTable', 3)">Copy</button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+    """
+
+    # Populate the combined unique samples table
+    for sample in deduplicated_sample_data:
+        html_content += f"""
+        <tr style="height: 30px;">
+            <td>{sample['sourceAddress']}</td>
+            <td>{sample['sourcePort']}</td>
+            <td>{sample['destAddress']}</td>
+            <td>{sample['destPort']}</td>
+        </tr>
+        """
+
+    html_content += """
+                </tbody>
+            </table>
+        </div>
     </div>
+
     <script>
-    function copyIPs() {
-        // Get all the IPs from the table
-        var ipList = "";
-        var table = document.querySelector('table');
-        for (var i = 1, row; row = table.rows[i]; i++) {
-            ipList += row.cells[0].innerText + '\\n'; // Get IP from the first cell
+    function copyColumn(tableId, columnIndex) {
+        var columnData = "";
+        var table = document.getElementById(tableId);
+        for (var i = 1; i < table.rows.length; i++) { // Start from 1 to skip header row
+            columnData += table.rows[i].cells[columnIndex].innerText + '\\n';
         }
-        // Copy the list to clipboard
-        navigator.clipboard.writeText(ipList).then(function() {
-            alert('IP addresses copied to clipboard!');
+        // Ensure there is column data before copying
+        if (columnData.trim() === "") {
+            alert("No data to copy in this column.");
+            return;
+        }
+        
+        navigator.clipboard.writeText(columnData).then(function() {
+            alert('Column data copied to clipboard!');
         }, function(err) {
             alert('Failed to copy: ', err);
         });
     }
+
     function toggleTable() {
         var tableContainer = document.getElementById("ipTableContainer");
-        if (tableContainer.style.display === "block") {
-            tableContainer.style.display = "none";
-        } else {
-            tableContainer.style.display = "block";
-        }
+        tableContainer.style.display = (tableContainer.style.display === "block") ? "none" : "block";
+    }
+
+    function toggleCombinedSamples() {
+        var combinedSampleContainer = document.getElementById("combinedSampleContainer");
+        combinedSampleContainer.style.display = (combinedSampleContainer.style.display === "block") ? "none" : "block";
     }
     </script>
     """

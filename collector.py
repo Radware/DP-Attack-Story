@@ -263,6 +263,8 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
     all_sample_data_pps = []
     unique_ips_bps = set()
     unique_ips_pps = set()
+    deduplicated_sample_data = []
+    combined_unique_samples = set()  # To store unique combined samples
 
     # Function to extract relevant fields from sample data
     def extract_fields(sample_data, unique_ips):
@@ -270,14 +272,20 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
         for item in sample_data:
             row = item.get('row', {})
             source_ip = row.get('sourceAddress')
-            if source_ip:
-                unique_ips.add(source_ip)  # Collect unique source IPs
+            source_port = row.get('sourcePort')
+            dest_ip = row.get('destAddress')
+            dest_port = row.get('destPort')
 
+            # Collect unique source IPs
+            if source_ip:
+                unique_ips.add(source_ip)
+
+            # Add the extracted data as a tuple for deduplication
             extracted_data.append({
                 'sourceAddress': source_ip,
-                'sourcePort': row.get('sourcePort'),
-                'destAddress': row.get('destAddress'),
-                'destPort': row.get('destPort')
+                'sourcePort': source_port,
+                'destAddress': dest_ip,
+                'destPort': dest_port
             })
         return extracted_data
 
@@ -308,6 +316,30 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
             except Exception as e:
                 update_log(f"Failed to get sample data for attack id {attack_id}: {e}")
 
+    # Deduplicate sample data by combining BPS and PPS sample data based on all fields
+    def deduplicate_sample_data(sample_data_list):
+        seen_samples = set()  # To keep track of unique sample entries
+        deduplicated = []
+        for sample_data in sample_data_list:
+            for attack_id, data in sample_data.items():
+                for entry in data:
+                    # Create a tuple of all fields for deduplication
+                    sample_tuple = (
+                        entry['sourceAddress'],
+                        entry['sourcePort'],
+                        entry['destAddress'],
+                        entry['destPort']
+                    )
+                    # Only add if the tuple is unique
+                    if sample_tuple not in seen_samples:
+                        seen_samples.add(sample_tuple)
+                        deduplicated.append(entry)
+                        combined_unique_samples.add(sample_tuple)  # Collect unique samples across BPS and PPS
+        return deduplicated
+
+    # Combine BPS and PPS sample data, deduplicating them
+    deduplicated_sample_data = deduplicate_sample_data(all_sample_data_bps + all_sample_data_pps)
+
     # Ensure the output directory exists
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
@@ -324,5 +356,6 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
         json.dump(all_sample_data_pps, f, indent=4)
     print(f"Sample data for top_by_pps saved to {pps_file_path}")
 
-    # Return the processed sample data and unique IPs for further use
-    return all_sample_data_bps, all_sample_data_pps, list(unique_ips_bps), list(unique_ips_pps)
+    # Return the processed sample data, unique IPs for BPS/PPS, and combined deduplicated sample data
+    return all_sample_data_bps, all_sample_data_pps, list(unique_ips_bps), list(unique_ips_pps), deduplicated_sample_data, list(combined_unique_samples)
+

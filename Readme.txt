@@ -35,6 +35,9 @@
 			python main.py -h
 
 # Version Control
+	v0.14.3 - 24 October (Prateek)
+		Source IP list table fix.
+		Added a table of aggregated sample data. 
 	v0.14.2 - 22 October (Steve)
 		Rolled back compressed file change.
 	v0.14.1 - 22 October 2024 (Steve)

@@ -67,7 +67,6 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Attack ID</th>
-                <th>BDOS Lifecycle log attack ID</th>
                 <th>Device IP</th>
                 <th>Policy</th>
                 <th>Attack Category</th>
@@ -78,15 +77,17 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Attack Status</th>
                 <th>Max Attack Rate (Gbps)</th>
                 <th>Max Attack Rate (PPS)</th>
-                <th>Final Footprint</th>
-                <th>BDOS Life Cycle</th>
                 <th>Resources</th>
             </tr>
     """
 
     # Add top_by_bps data
     for syslog_id, details in top_by_bps:
+        bdos_lifecycle_log_id = syslog_id
+        final_fp = details.get('Final Footprint', 'N/A')
         metrics_summary = details.get('metrics_summary', 'N/A')
+        metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n{metrics_summary}\n Final Attack Footprint: {final_fp}"
+        formatted_metrics_summary_bps = "<br>".join(metrics_summary.split('\n'))
 
         # Safely convert Max_Attack_Rate_BPS to float
         max_attack_rate_bps_str = details.get('Max_Attack_Rate_BPS', '0')
@@ -104,7 +105,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
                 <td>{details.get('Attack ID', 'N/A')}</td>
-                <td>{syslog_id}</td>
+                <!-- <td>{syslog_id}</td> -->
                 <td>{details.get('Device IP', 'N/A')}</td>
                 <td>{details.get('Policy', 'N/A')}</td>
                 <td>{details.get('Attack Category', 'N/A')}</td>
@@ -116,14 +117,29 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Attack Status', 'N/A')}</td>
                 <td>{details.get('Max_Attack_Rate_Gbps', 'N/A')}</td>
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
-                <td>{details.get('Final Footprint', 'N/A')}</td>
-                <td><pre>{metrics_summary}</pre></td>
-                <td><button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
+                <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
+                <td>
+                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_bps_{details.get('Attack ID', 'N/A')}')">BDOS Life Cycle</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
                     <button type="button" class="collapsible" onclick="toggleContent('tr_bps_{graph_name}');drawChart_{graph_name}();">Graph</button></td>
                 </td>
             </tr>
         """
         # Collapsible row for graph (initially hidden)
+        html_content += f"""
+        <tr id="bdos_lifecycle_bps_{syslog_id}" style="display:none;">
+            <td colspan="17">
+                <table>
+                    <tr>
+                        <th>BDOS Metric Summary</th>
+                    </tr>
+                    <tr>
+                        <td>{formatted_metrics_summary_bps if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        """
         html_content += f"""
             <tr id="tr_bps_{graph_name}" style="display:none;">
                 <td colspan="17">
@@ -179,7 +195,6 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Attack ID</th>
-                <th>BDOS Lifecycle log attack ID</th>
                 <th>Device IP</th>
                 <th>Policy</th>
                 <th>Attack Category</th>
@@ -190,15 +205,20 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <th>Attack Status</th>
                 <th>Max Attack Rate (Gbps)</th>
                 <th>Max Attack Rate (PPS)</th>
-                <th>Final Footprint</th>
-                <th>BDOS Life Cycle</th>
                 <th>Resources</th>
             </tr>
     """
 
     # Add top_by_pps data
     for syslog_id, details in top_by_pps:
+        bdos_lifecycle_log_id = syslog_id
+        final_fp = details.get('Final Footprint', 'N/A')
         metrics_summary = details.get('metrics_summary', 'N/A')
+        if isinstance(metrics_summary, str) and f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}" not in metrics_summary:
+            metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n{metrics_summary}"
+        metrics_summary = f"\n{metrics_summary}\n Final Attack Footprint: {final_fp}"
+        formatted_metrics_summary_pps = "<br>".join(metrics_summary.split('\n'))
+
 
         # Safely convert Max_Attack_Rate_PPS to float
         max_attack_rate_pps_str = details.get('Max_Attack_Rate_PPS', '0')
@@ -216,7 +236,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Start Time', 'N/A')}</td>
                 <td>{details.get('End Time', 'N/A')}</td>
                 <td>{details.get('Attack ID', 'N/A')}</td>
-                <td>{syslog_id}</td>
+                <!-- <td>{syslog_id}</td> -->
                 <td>{details.get('Device IP', 'N/A')}</td>
                 <td>{details.get('Policy', 'N/A')}</td>
                 <td>{details.get('Attack Category', 'N/A')}</td>
@@ -228,13 +248,27 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Attack Status', 'N/A')}</td>
                 <td>{details.get('Max_Attack_Rate_Gbps', 'N/A')}</td>
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
-                <td>{details.get('Final Footprint', 'N/A')}</td>
-                <td><pre>{metrics_summary}</pre></td>
-                <td>\
+                <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
+                <td>
+                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_pps_{details.get('Attack ID', 'N/A')}')">BDOS Life Cycle</button>
                     <button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
                     <button type="button" class="collapsible" onclick="toggleContent('tr_pps_{graph_name}');drawChart_{graph_name}();">Graph</button>
                 </td>
             </tr>
+        """
+        html_content += f"""
+        <tr id="bdos_lifecycle_pps_{syslog_id}" style="display:none;">
+            <td colspan="17">
+                <table>
+                    <tr>
+                        <th>BDOS Metric Summary</th>
+                    </tr>
+                    <tr>
+                        <td>{formatted_metrics_summary_pps if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
         """
         # Collapsible row for graph
         html_content += f"""

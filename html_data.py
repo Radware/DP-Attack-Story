@@ -460,6 +460,6 @@ def get_top_n(syslog_details, top_n=10, threshold_gbps=0.02):
     )
 
     # Collect unique protocols from top_by_bps
-    unique_protocols = {details.get('Protocol', 'N/A') for syslog_id, details in top_by_bps}
+    unique_protocols = list({details.get('Protocol', 'N/A') for syslog_id, details in top_by_bps})
 
     return top_by_bps, top_by_pps, unique_protocols, count_above_threshold

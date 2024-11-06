@@ -35,6 +35,8 @@
 			python main.py -h
 
 # Version Control
+	v0.14.4.1 - 05 November (Prateek)
+		Bug fix for JSON serializing.
 	v0.14.4 - 05 November (Prateek)
 		Restructred code for offline running.
 		Modified BPS and PPS table to collect all BDoS data and display it in the collapsible 'BDOS Life Cycle' button

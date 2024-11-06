@@ -17,7 +17,7 @@ import sftp_module
 from common import *
 
 
-collect_data=True
+collect_data=False
 parse_data=True
 if __name__ == '__main__':
     if collect_data:
@@ -146,7 +146,6 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
 
 
-
     if parse_data:
         #Open executionStatistics.txt and include the contained information in the header
         statsForHeader = ""
@@ -166,6 +165,8 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         finalHTML += graphHTML
 
         #Create pie charts
+        with open(outputFolder + 'response.json') as data_file:
+            attack_data = json.load(data_file)
         finalHTML += html_graphs.createPieCharts(attack_data)
 
 

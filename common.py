@@ -2,9 +2,10 @@ import configparser
 import datetime
 import sys
 import re
+import os
 
 #outputFolder = f"./Output/{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}/"
-outputFolder = './Output/'
+outputFolder = './Output/' 
 LogfileName = outputFolder + "P-Attack-Story.log"
 
 
@@ -50,8 +51,12 @@ class clsConfig():
             self.config.write(config_file)
 
     def get(self, Section, Option, Fallback=None, **kwargs):
-        return self.config.get(Section, Option, fallback=Fallback, **kwargs)
-
+        value = self.config.get(Section, Option, fallback=Fallback, **kwargs)
+        if isinstance(value, str) and value.startswith('$'):
+            env_var = value[1:]
+            return os.getenv(env_var, value)  # Use the environment variable, fallback to original if not found
+        return value
+        
     def set(self, section, option, value):
         if not self.config.has_section(section):
             self.config.add_section(section)
@@ -61,6 +66,10 @@ class clsConfig():
              value = 'true' if value else 'false'
         self.config.set(section, option, value)
         self.save()
+
+    def substitute_env_vars(value):
+        """Replace placeholders with actual environment variables."""
+        
 
 
 config = clsConfig()

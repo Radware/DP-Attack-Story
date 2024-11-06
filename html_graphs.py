@@ -333,6 +333,7 @@ def createCombinedChart(Title, myData):
             let options = {{
                 title: '{Title}',
                 curveType: 'function',
+                isStacked, true,
                 legend: {{
                     position: 'top',
                     textStyle: {{ fontSize: 12 }},
@@ -516,7 +517,7 @@ def createPieCharts(attack_data):
         """
 
     # Titles with sums
-    bandwidth_title = f"Total Bandwidth consumed by attacks: {total_bandwidth_sum:,} kb"
+    bandwidth_title = f"Cumulative Attack Bandwidth: {total_bandwidth_sum:,} kb"
     packets_title = f"Total Attack Packets: {total_packets_sum:,}"
 
     # Output HTML for Google Charts and the two pie charts side by side

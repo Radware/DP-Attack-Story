@@ -17,7 +17,7 @@ import sftp_module
 from common import *
 
 
-collect_data=False
+collect_data=True
 parse_data=True
 if __name__ == '__main__':
     if collect_data:

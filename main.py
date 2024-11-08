@@ -16,10 +16,10 @@ import sftp_module
 #Default options such as topN and output folder are now stored in common.py. 
 from common import *
 
-epoch_from_time = 1729479600000
-epoch_to_time = 1729486800000
+#epoch_from_time = 1729479600000
+#epoch_to_time = 1729486800000
 
-collect_data=False
+collect_data=True
 parse_data=True
 if __name__ == '__main__':
     if collect_data:

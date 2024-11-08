@@ -35,7 +35,9 @@
 			python main.py -h
 
 # Version Control
-	v0.14.4.1 - 05 November (Prateek)
+	v0.14.6 - 07 November (Prateek)
+		Bug Fix related to BDoS lifecycle button
+	v0.14.5 - 05 November (Prateek)
 		Bug fix for JSON serializing.
 	v0.14.4 - 05 November (Prateek)
 		Restructred code for offline running.

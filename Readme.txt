@@ -57,8 +57,9 @@
 	v0.15.0 - 11 November 2024 (Steve)
 		Config.ini now also supports using environmental variables. ini entries prefixed with a $ will be treated as environmental variables.
 		Added Attack Summary section to the final attack report.
-		Pie charts now only include topN attacks.
-		Added --offline argument to use offline data from a previous run.
+		Pie charts now only include data from topN attacks.
+		Added '--offline' argument to run the script in offline mode and use data pulled during a previous run. 
+			Only DP-Attack-Story_Report.html will be modified during an --offline run.
 	v0.14.6 - 7 November 2024 (Prateek)
 		Bug Fix related to BDoS lifecycle button
 	v0.14.5 - 5 November 2024 (Prateek)

@@ -133,9 +133,9 @@ def OptionsHTML(Title):
     return output
     
 
-def createChart(Title, myData, epoch_from, epoch_to):
- 
-
+#def createChart(Title, myData, epoch_from, epoch_to):
+def createChart(Title, myData):
+    """Creates an individual attack graph"""
     name = f'graph_{Title.replace(" ","_").replace("-","_")}'
 
     # Sort the data by the timestamp
@@ -173,8 +173,8 @@ def createChart(Title, myData, epoch_from, epoch_to):
         google.charts.setOnLoadCallback(drawChart_{name});
         function drawChart_{name}() {{
             var data = google.visualization.arrayToDataTable({json_data});
-            var epoch_from = correctedDate({epoch_from});
-            var epoch_to = correctedDate({epoch_to});
+            //var epoch_from = correctedDate({{epoch_from}});
+            //var epoch_to = correctedDate({{epoch_to}});
             var options = {{
                 title: '{Title}',
                 curveType: 'function',
@@ -224,9 +224,9 @@ def createChart(Title, myData, epoch_from, epoch_to):
                 hAxis: {{ 
                     textPosition: 'none', 
                     gridlines: {{ count: 0 }}, 
-                    ticks: [],
-                    minValue: correctedDate({epoch_from}),
-                    maxValue: correctedDate({epoch_to})
+                    ticks: []
+                    //minValue: correctedDate({{epoch_from}}),
+                    //maxValue: correctedDate({{epoch_to}})
                 }}, // Hide x-axis text for compactness
                 vAxis: {{ 
                     textPosition: 'none', 
@@ -356,32 +356,29 @@ def createCombinedChart(Title, myData):
                     {", ".join([f"{i}: {{ lineDashStyle: [0, 0] }}" for i in range(len(data_table[0]) - 1)])} 
                 }},
                 colors: [
-                    '#e2431e', // Red
-                    '#f1ca3a', // Yellow
-                    '#6f9654', // Green
-                    '#1c91c0', // Blue
-                    '#b2c2c8', // Light Gray
-                    '#c94c4d', // Dark Red
+                    '#e74c3c', // Red
+                    '#3498db', // Blue
+                    '#2ecc71', // Emerald Green
+                    '#f39c12', // Yellow
+                    '#8e44ad', // Purple
+                    '#1abc9c', // Turquoise
+                    '#f1c40f', // Bright Yellow
                     '#e55b1b', // Orange
-                    '#4f81bd', // Light Blue
-                    '#b689c5', // Lavender
-                    '#9bcf0e', // Lime Green
-                    '#9b59b6', // Purple
+                    '#9b59b6', // Amethyst
+                    '#16a085', // Sea Green
                     '#34495e', // Dark Blue Gray
-                    '#e67e22', // Carrot Orange
+                    '#c0392b', // Strong Red
+                    '#9bcf0e', // Lime Green
                     '#d35400', // Pumpkin
                     '#2980b9', // Bright Blue
-                    '#f39c12', // Bright Yellow
-                    '#16a085', // Turquoise
-                    '#2ecc71', // Emerald Green
-                    '#3498db', // Light Sky Blue
-                    '#9b59b6', // Amethyst
-                    '#34495e', // Dark Slate
+                    '#f5b041', // Gold
+                    '#4f81bd', // Light Blue
                     '#95a5a6', // Gray
-                    '#e74c3c', // Red
-                    '#ecf0f1', // Cloudy Gray
-                    '#8e44ad', // Purple
-                    '#f1c40f'  // Bright Yellow
+                    '#7f8c8d', // Medium Gray
+                    '#f1ca3a', // Light Yellow
+                    '#e2431e', // Dark Red
+                    '#b2c2c8', // Light Gray
+                    '#34495e', // Dark Slate
                 ],
                 animation: {{
                     duration: 1000,    // Time in milliseconds for the animation (1 second here)
@@ -467,20 +464,21 @@ def createCombinedChart(Title, myData):
     return html_content
 
 
-def createPieCharts(attack_data):
+def createPieCharts(attack_data, top_n_attack_ids):
     """Creates two 3D pie charts for total bandwidth and total packets, showing percentages on the chart and including a legend."""
     # Aggregate the totals from all attacks
     aggregate_data = {}
     for dp, data in attack_data.items():
         for attack in data['data']:
-            name = attack['row']['name']
-            total_bandwidth = attack['row'].get('packetBandwidth', 0)
-            total_packets = attack['row'].get('packetCount', 0)
-            existing_data = aggregate_data.get(name, {'total_bandwidth': 0, 'total_packets': 0})
-            aggregate_data[name] = {
-                'total_bandwidth': int(existing_data['total_bandwidth']) + int(total_bandwidth),
-                'total_packets': int(existing_data['total_packets']) + int(total_packets)
-            }
+            if attack['row']['attackIpsId'] in top_n_attack_ids:
+                name = attack['row']['name']
+                total_bandwidth = attack['row'].get('packetBandwidth', 0)
+                total_packets = attack['row'].get('packetCount', 0)
+                existing_data = aggregate_data.get(name, {'total_bandwidth': 0, 'total_packets': 0})
+                aggregate_data[name] = {
+                    'total_bandwidth': int(existing_data['total_bandwidth']) + int(total_bandwidth),
+                    'total_packets': int(existing_data['total_packets']) + int(total_packets)
+                }
 
     # Prepare the data for the charts
     attack_names = list(aggregate_data.keys())
@@ -516,7 +514,7 @@ def createPieCharts(attack_data):
         """
 
     # Titles with sums
-    bandwidth_title = f"Total Bandwidth consumed by attacks: {total_bandwidth_sum:,} kb"
+    bandwidth_title = f"Cumulative Attack Bandwidth: {total_bandwidth_sum:,} kb"
     packets_title = f"Total Attack Packets: {total_packets_sum:,}"
 
     # Output HTML for Google Charts and the two pie charts side by side

@@ -8,6 +8,7 @@ import tarfile
 import clsVision
 import collector
 import data_parser
+import html_attack_summary
 import html_data
 import html_graphs
 import html_header
@@ -17,20 +18,22 @@ import sftp_module
 from common import *
 
 
-collect_data=False
+collect_data=True
 parse_data=True
 if __name__ == '__main__':
-    if collect_data:
+    if collect_data and (not args or (args[0].lower() != '--offline' and args[0] != '-o')):
+    #if collect_data:
         #Make sure outputFolder exists and that it is empty
         if os.path.exists(outputFolder):
             # Remove all files in the output folder
             for filename in os.listdir(outputFolder):
                 file_path = os.path.join(outputFolder, filename)
-                try:
-                    if os.path.isfile(file_path):
-                        os.unlink(file_path)
-                except Exception as e:
-                    update_log(f"Failed to delete {file_path}. Reason: {e}")
+                if LogfileName not in file_path:
+                    try:
+                        if os.path.isfile(file_path):
+                            os.unlink(file_path)
+                    except Exception as e:
+                        update_log(f"Failed to delete {file_path}. Reason: {e}")
             pass
         else:
             # Create the output folder if it doesn't exist
@@ -105,16 +108,39 @@ if __name__ == '__main__':
             if syslog_id in metrics:
                 syslog_details[syslog_id].update(metrics[syslog_id])
 
+        # Calculate top BPS and PPS using html_data.get_top_n
+        top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
+        with open(outputFolder + 'TopMetrics.json', 'w') as file:
+            json.dump({
+                'top_by_bps': top_by_bps,
+                'top_by_pps': top_by_pps,
+                'unique_protocols': unique_protocols,
+                'count_above_threshold': count_above_threshold
+            }, file, ensure_ascii=False, indent=4)
+
+        bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
+        print(combined_unique_samples)
+
+        with open(outputFolder + 'SampleData.json', 'w') as file:
+            json.dump({
+                'bps_data': bps_data,
+                'pps_data': pps_data,
+                'unique_ips_bps': unique_ips_bps,
+                'unique_ips_pps': unique_ips_pps,
+                'deduplicated_sample_data': deduplicated_sample_data,
+                'combined_unique_samples': combined_unique_samples
+            }, file, ensure_ascii=False, indent=4)
+
         #print(metrics)
         #for each attack in syslog_details, check if ['graph'] is set to true. Graph is set to true for top_n graphs in the data_parser module.
-        attackGraphData = {}
+        attack_graph_data = {}
         for syslogID, details in syslog_details.items():
             if details.get('graph', False):
                 attackData = v.getRawAttackSSH(details['Attack ID'])
                 if len(attackData.get('data',"")) > 2:
-                    attackGraphData.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
+                    attack_graph_data.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
         with open(outputFolder + 'AttackGraphsData.json', 'w', encoding='utf-8') as file:
-            json.dump(attackGraphData, file, ensure_ascii=False, indent=4)
+            json.dump(attack_graph_data, file, ensure_ascii=False, indent=4)
 
         #Get the overall attack rate graph data for the specified time period
         selectedDevices = []
@@ -147,54 +173,84 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
 
     if parse_data:
+        # Load saved metrics if collect_data is False
+        with open(outputFolder + 'TopMetrics.json') as file:
+            top_metrics = json.load(file)
+        top_by_bps = top_metrics['top_by_bps']
+        top_by_pps = top_metrics['top_by_pps']
+        unique_protocols = top_metrics['unique_protocols']
+        count_above_threshold = top_metrics['count_above_threshold']
+
+        # Read sample data from JSON file
+        with open(outputFolder + 'SampleData.json') as file:
+            sample_data = json.load(file)
+        bps_data = sample_data['bps_data']
+        pps_data = sample_data['pps_data']
+        unique_ips_bps = sample_data['unique_ips_bps']
+        unique_ips_pps = sample_data['unique_ips_pps']
+        deduplicated_sample_data = sample_data['deduplicated_sample_data']
+        combined_unique_samples = sample_data['combined_unique_samples']
+
+        #Create a set of the topN attack IDs
+        top_n_attack_ids = set()
+        for attack in top_metrics['top_by_bps']:
+            top_n_attack_ids.add(attack[1]['Attack ID'])
+        for attack in top_metrics['top_by_pps']:
+            top_n_attack_ids.add(attack[1]['Attack ID'])
+
+        #Load graph data from JSON file
+        with open(outputFolder + 'AttackGraphsData.json') as data_file:
+            attack_graph_data = json.load(data_file)
+        with open(outputFolder + 'TopGraphsData.json') as data_file:
+            rate_data = json.load(data_file)
+        with open(outputFolder + 'response.json') as data_file:
+            attack_data = json.load(data_file)
+
         #Open executionStatistics.txt and include the contained information in the header
         statsForHeader = ""
         with open(outputFolder + 'ExecutionDetails.txt', "r") as file:
             for line in file:
                 statsForHeader += f"<p>{line.strip()}</p>\n"
 
-        headerHTML = html_header.getHeader(statsForHeader) + html_graphs.graphPrerequesites()
+        finalHTML = html_header.getHeader(statsForHeader) + html_graphs.graphPrerequesites()
 
-        #attack_log_info = attack_log_parser.parse_log_file(outputFolder + 'response.json', attack_ids)
-        
+        finalHTML += "\n<h2>Attack Summary</h2>"
+        finalHTML += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids)
+
         #Create the two graphs at the top of the HTML file
-        finalHTML = headerHTML + "\n<h2>Traffic Bandwidth</h2>"
-        with open(outputFolder + 'TopGraphsData.json') as data_file:
-            rate_data = json.load(data_file)
+        finalHTML += "\n<h2>Traffic Bandwidth</h2>"
         graphHTML = html_graphs.createTopGraphsHTML(rate_data['bps'], rate_data['pps'])
         finalHTML += graphHTML
 
         #Create pie charts
-        with open(outputFolder + 'response.json') as data_file:
-            attack_data = json.load(data_file)
-        finalHTML += html_graphs.createPieCharts(attack_data)
+        finalHTML += html_graphs.createPieCharts(attack_data, top_n_attack_ids)
 
 
-        top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
+        #top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
         #bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
         # Call the function to get all sample data and unique source IPs
         #bps_data, pps_data, unique_ips_bps, unique_ips_pps = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
-        bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
-        print(combined_unique_samples)
+        #bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
+        #print(combined_unique_samples)
         #print("BPS Data:", bps_data)
         #print("PPS Data:", pps_data)
         attackdataHTML = html_data.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, topN, threshold_gbps=1)
         finalHTML += attackdataHTML 
 
         #Create dynamic graph combining all attacks into one graph.
-        finalHTML += "\n<h2>Charts per attack ID</h2>"
+        finalHTML += "\n<h2>Combined Chart</h2>"
         try:
-            with open(outputFolder + 'AttackGraphsData.json') as data_file:
-                attackGraphData = json.load(data_file)
-            finalHTML += html_graphs.createCombinedChart("Custom", attackGraphData) 
+            finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data) 
         except:
             update_log("Unexpected createCombinedChart() error: ")
             traceback.print_exc()
 
+        finalHTML += "\n<h2>Charts per attack ID</h2>"
         #Add an individual graph for each attack
-        for attackID, data in attackGraphData.items():
+        for attackID, data in attack_graph_data.items():
             try:
-                finalHTML += html_graphs.createChart(attackID, data, epoch_from_time, epoch_to_time)
+                #inalHTML += html_graphs.createChart(attackID, data, epoch_from_time, epoch_to_time)
+                finalHTML += html_graphs.createChart(attackID, data)
             except:
                 update_log(f"Error graphing attackID '{attackID}':")
                 traceback.print_exc()

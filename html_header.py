@@ -24,6 +24,9 @@ def getCSS():
     """Returns CSS to be included in the header."""
 
     return """<style>
+        * {
+            font-family: Arial, sans-serif;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -39,6 +42,7 @@ def getCSS():
             text-align: center;
         }
         h2 {
+            line-height: 1.5; 
             text-align: center;
         }
         pre {

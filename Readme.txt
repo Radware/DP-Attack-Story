@@ -50,12 +50,20 @@
 				python main.py -c --hours 3 DefensePro1,DefensePro2,192.168.1.20 DefensePro1_BdosProfile,DefensePro1_SynFloodProtection DP2_BdosProfile,DP2_SynFloodProtection DP3_Policy1
 				python main.py 192.168.1.1 admin radware radware1 --epoch-range 859885200 859971600 '' ''
 				python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
-		
+
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
 
 # Version Control
-	v0.14.? - 30 October 2024 (Steve)
+	v0.15.0 - 11 November 2024 (Steve)
 		Config.ini now also supports using environmental variables. ini entries prefixed with a $ will be treated as environmental variables.
+		Added Attack Summary section to the final attack report.
+		Pie charts now only include topN attacks.
+		Added --offline argument to use offline data from a previous run.
+	v0.14.5 - 5 November 2024 (Prateek)
+		Bug fix for JSON serializing.
+	v0.14.4 - 5 November 2024 (Prateek)
+		Restructred code for offline running.
+		Modified BPS and PPS table to collect all BDoS data and display it in the collapsible 'BDOS Life Cycle' button
 	v0.14.3 - 24 October 2024 (Prateek)
 		Source IP list table fix.
 		Added a table of aggregated sample data. 

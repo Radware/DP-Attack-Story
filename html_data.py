@@ -86,7 +86,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         bdos_lifecycle_log_id = syslog_id
         final_fp = details.get('Final Footprint', 'N/A')
         metrics_summary = details.get('metrics_summary', 'N/A')
-        metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n{metrics_summary}\n Final Attack Footprint: {final_fp}"
+        metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n\n{metrics_summary}\n\n Final Attack Footprint: {final_fp}"
         formatted_metrics_summary_bps = "<br>".join(metrics_summary.split('\n'))
 
         # Safely convert Max_Attack_Rate_BPS to float
@@ -119,7 +119,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
                 <td>
-                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_bps_{details.get('Attack ID', 'N/A')}')">BDOS Life Cycle</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_bps_{syslog_id}')">BDOS Life Cycle</button>
                     <button type="button" class="collapsible" onclick="toggleContent('bps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
                     <button type="button" class="collapsible" onclick="toggleContent('tr_bps_{graph_name}');drawChart_{graph_name}();">Graph</button></td>
                 </td>
@@ -131,7 +131,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             <td colspan="17">
                 <table>
                     <tr>
-                        <th>BDOS Metric Summary</th>
+                        <th>BDOS Metric Summary {syslog_id}</th>
                     </tr>
                     <tr>
                         <td>{formatted_metrics_summary_bps if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>
@@ -215,8 +215,8 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
         final_fp = details.get('Final Footprint', 'N/A')
         metrics_summary = details.get('metrics_summary', 'N/A')
         if isinstance(metrics_summary, str) and f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}" not in metrics_summary:
-            metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n{metrics_summary}"
-        metrics_summary = f"\n{metrics_summary}\n Final Attack Footprint: {final_fp}"
+            metrics_summary = f"BDOS Lifecycle Log ID: {bdos_lifecycle_log_id}\n\n{metrics_summary}"
+        metrics_summary = f"{metrics_summary}\n\n Final Attack Footprint: {final_fp}"
         formatted_metrics_summary_pps = "<br>".join(metrics_summary.split('\n'))
 
 
@@ -250,7 +250,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
                 <td>{details.get('Max_Attack_Rate_PPS_formatted', 'N/A')}</td>
                 <!-- <td>{details.get('Final Footprint', 'N/A')}</td> -->
                 <td>
-                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_pps_{details.get('Attack ID', 'N/A')}')">BDOS Life Cycle</button>
+                    <button type="button" class="collapsible" onclick="toggleContent('bdos_lifecycle_pps_{syslog_id}')">BDOS Life Cycle</button>
                     <button type="button" class="collapsible" onclick="toggleContent('pps_{details.get('Attack ID', 'N/A')}')">Sample Data</button>
                     <button type="button" class="collapsible" onclick="toggleContent('tr_pps_{graph_name}');drawChart_{graph_name}();">Graph</button>
                 </td>
@@ -261,7 +261,7 @@ def generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_t
             <td colspan="17">
                 <table>
                     <tr>
-                        <th>BDOS Metric Summary</th>
+                        <th>BDOS Metric Summary {syslog_id}</th>
                     </tr>
                     <tr>
                         <td>{formatted_metrics_summary_pps if metrics_summary != 'N/A' else 'No BDOS lifecycle data available'}</td>

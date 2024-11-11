@@ -59,7 +59,9 @@
 		Added Attack Summary section to the final attack report.
 		Pie charts now only include topN attacks.
 		Added --offline argument to use offline data from a previous run.
-	v0.14.5 - 5 November 2024 (Prateek)
+	v0.14.6 - 7 November 2024 (Prateek)
+		Bug Fix related to BDoS lifecycle button
+	v0.14.5 - 5 November (Prateek)
 		Bug fix for JSON serializing.
 	v0.14.4 - 5 November 2024 (Prateek)
 		Restructred code for offline running.

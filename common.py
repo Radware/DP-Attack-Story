@@ -68,8 +68,6 @@ class clsConfig():
         self.config.set(section, option, value)
         self.save()
 
-    def substitute_env_vars(value):
-        """Replace placeholders with actual environment variables."""
         
 
 

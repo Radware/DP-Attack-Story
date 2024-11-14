@@ -27,7 +27,7 @@ def prompt_user_time_period():
         print("1) The past x hours")
         print("2) The past 24 hours")
         print("3) The past 48 hours")
-        print("4) Manually enter attack timeframe (In your PC's local timezone)")
+        print("4) Manually enter attack timeframe (Assumes your PC's local time zone unless UTC is specified)")
         print("5) Manually enter timeframe in epoch time")
         if previousFromTime and previousToTime:
             longFromTime = datetime.datetime.fromtimestamp(int(previousFromTime)/1000).strftime('%d-%m-%Y %H:%M:%S')
@@ -70,12 +70,22 @@ def prompt_user_time_period():
         success = False
         while not success:
             try:
-                from_time = args.pop(0) if args else input("Enter the closest time before the attack START (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
+                from_time = args.pop(0) if args else input("Enter the closest time before the attack START (format: DD-MM-YYYY HH:MM:SS [optional:UTC]) or q to quit: ")
                 if from_time == 'q':
                     print("Quit")
                     exit(1)
+
+                utc=False
+                if "utc" in from_time.lower():
+                    utc=True
+                    from_time = from_time.lower().replace("utc", "").strip()
+
                 dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
-                epoch_from_time = int(time.mktime(dt.timetuple()) * 1000)
+                if utc: 
+                    dt = dt.replace(tzinfo=datetime.timezone.utc)
+
+                #epoch_from_time = int(time.mktime(dt.timetuple()) * 1000)
+                epoch_from_time = int(dt.timestamp() * 1000)
                 # from_month = dt.month
                 success = True
             except ValueError:
@@ -87,13 +97,23 @@ def prompt_user_time_period():
         success = False
         while not success:
             try:
-                to_time = args.pop(0) if args else input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS) or q to quit: ")
+                to_time = args.pop(0) if args else input("Enter the closest time after the attack END (format: DD-MM-YYYY HH:MM:SS [optional: UTC]) or q to quit: ")
                 if from_time == 'q':
                     print("Quit")
                     exit(1)
-                dt = datetime.datetime.strptime(to_time, '%d-%m-%Y %H:%M:%S')
-                epoch_to_time = int(time.mktime(dt.timetuple()) * 1000)
-                # to_month = dt.month
+
+                utc=False
+                if "utc" in from_time.lower():
+                    utc=True
+                    from_time = from_time.lower().replace("utc", "").strip()
+
+                dt = datetime.datetime.strptime(from_time, '%d-%m-%Y %H:%M:%S')
+                if utc: 
+                    dt = dt.replace(tzinfo=datetime.timezone.utc)
+
+                #epoch_from_time = int(time.mktime(dt.timetuple()) * 1000)
+                epoch_from_time = int(dt.timestamp() * 1000)
+                # from_month = dt.month
                 success = True
             except ValueError:
                 if arg_choice:

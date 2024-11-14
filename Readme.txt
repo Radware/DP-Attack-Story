@@ -49,11 +49,16 @@
 			Examples:
 				python main.py -c --hours 3 DefensePro1,DefensePro2,192.168.1.20 DefensePro1_BdosProfile,DefensePro1_SynFloodProtection DP2_BdosProfile,DP2_SynFloodProtection DP3_Policy1
 				python main.py 192.168.1.1 admin radware radware1 --epoch-range 859885200 859971600 '' ''
-				python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
+				python main.py --use-cached --date-range "11 Oct 2024 09:00:00 UTC" "11 Oct 2024 18:00:00 UTC" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
 
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
 
 # Version Control
+	v0.15.1 - 14 November 2024 (Steve)
+		Time range input now accepts UTC as an optional parameter to specify non-local timezone.
+		Improved Vision/CC login error handling
+		The 'Packet Anomalies' attack policy will be excluded from the Attack Summary attack timeframe.
+		Misc minor Attack Summary improvements.
 	v0.15.0 - 11 November 2024 (Steve)
 		Config.ini now also supports using environmental variables. ini entries prefixed with a $ will be treated as environmental variables.
 		Added Attack Summary section to the final attack report.

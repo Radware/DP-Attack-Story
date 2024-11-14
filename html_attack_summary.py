@@ -25,16 +25,17 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
     #   Radware successfully mitigated x out y of the total attack volume or 60% of the attack volume(be careful with this)
     #   There was/was not impact during the incident
     #   The impact happened due to…
+
     first_attack_start = None
     last_attack_end = None
     vectors = set()
-    
     for topkey in ['top_by_bps', 'top_by_pps']:
         for attack in top_metrics[topkey]:
-            start_time = datetime.datetime.strptime(attack[1]["Start Time"], '%d-%m-%Y %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
-            end_time = datetime.datetime.strptime(attack[1]["End Time"], '%d-%m-%Y %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
-            first_attack_start = min(first_attack_start, start_time) if first_attack_start else start_time
-            last_attack_end = max(last_attack_end, end_time) if last_attack_end else end_time
+            if attack[1]['Policy'] != 'Packet Anomalies':
+                start_time = datetime.datetime.strptime(attack[1]["Start Time"], '%d-%m-%Y %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
+                end_time = datetime.datetime.strptime(attack[1]["End Time"], '%d-%m-%Y %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
+                first_attack_start = min(first_attack_start, start_time) if first_attack_start else start_time
+                last_attack_end = max(last_attack_end, end_time) if last_attack_end else end_time                
             vectors.add(attack[1]["Attack Name"])
     elapsed_time = last_attack_end - first_attack_start
     elapsed_days = elapsed_time.days
@@ -111,7 +112,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         <!-- Attack Vectors -->
         <tr style="border: none;">
             <td style="border: none; text-align: right;"><strong>Attack Vectors:</strong></td>
-            <td style="border: none; text-align: left;">{', '.join(vectors)}</td>
+            <td style="border: none; text-align: left;">The following attack vectors were observed (highest bandwidth is listed first): <strong>{', '.join(vectors)}</strong></td>
         </tr>
 
         <!-- Peak Attack Rate -->

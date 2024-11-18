@@ -13,6 +13,7 @@ import html_data
 import html_graphs
 import html_header
 import sftp_module
+import send_email_module
 
 #Default options such as topN and output folder are now stored in common.py. 
 from common import *
@@ -268,6 +269,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         #Script execution complete. Compress and delete the output folder
         if False:
             if config.get("General","Compress_Output","TRUE").upper() == "TRUE":
+                compressed_output=outputFolder[:-1] + ".tgz"
                 with tarfile.open(outputFolder[:-1] + ".tgz", "w:gz"):
                     tarfile.add(outputFolder, arcname='.') #Arcname='.' preserves the folder structure
                     print(f"{outputFolder} has been compressed to {outputFolder[:-1]}.tgz")
@@ -289,3 +291,10 @@ Policies: {"All" if len(policies) == 0 else policies}"""
                         print(f"{outputFolder} is not empty or cannot be deleted.")
 
         ##############################End of Parse_Data Section##############################
+
+        ##############################Send email ############################################
+
+    compressed_output = "./Output/2024-11-18_16.24.54.tgz" # !!! this is temp for testing only, to be cleaned up
+    if config.get("Email","send_email","val").upper() == "TRUE":
+        print('Sending Email')
+        send_email_module.send_email(compressed_output)

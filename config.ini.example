@@ -11,3 +11,12 @@ Compress_Output = TRUE
 [PreviousRun]
 epoch_from_time = 1727907868000
 epoch_to_time = 1727907868000
+
+[Email]
+send_email = TRUE
+smtp_auth = TRUE
+smtp_server = email.server.com
+smtp_server_port = 587
+smtp_sender = sender@gmail.com
+smtp_password = password
+smtp_list = recepient1@gmail.com,recepient2@radware.com

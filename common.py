@@ -46,6 +46,21 @@ class clsConfig():
             self.set("General","Top_N","10")
         if not self.config.has_option('General', 'Compress_Output'):
             self.set("General","Compress_Output","TRUE")
+        #################Email settings####################
+        if not self.config.has_option('Email', 'send_email'):
+            self.set("Email","send_email","FALSE")
+        if not self.config.has_option('Email', 'smtp_auth'):
+            self.set("Email","smtp_auth","FALSE")
+        if not self.config.has_option('Email', 'smtp_password'):
+            self.set("Email","smtp_password","$SMTP_PASSWD")
+        if not self.config.has_option('Email', 'smtp_server'):
+            self.set("Email","smtp_server","smtp.server.com")
+        if not self.config.has_option('Email', 'smtp_server_port'):
+            self.set("Email","smtp_server_port","25")
+        if not self.config.has_option('Email', 'smtp_sender'):
+            self.set("Email","smtp_sender","sender@gmail.com")
+        if not self.config.has_option('Email', 'smtp_list'):
+            self.set("Email","smtp_list","emailrecepient1,emailrecepient2")
 
     def save(self):
         with open("config.ini", "w") as config_file:

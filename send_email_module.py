@@ -64,7 +64,7 @@ def send_email(compressed_output):
 	msg.attach(MIMEText(msg_body, 'html'))
 	mailserver = smtplib.SMTP(host=smtp_server,port=smtp_server_port)
 	
-	if smtp_auth:
+	if smtp_auth.upper() == "TRUE":
 		mailserver.starttls()
 		mailserver.ehlo()
 		mailserver.login(smtp_sender, smtp_password)

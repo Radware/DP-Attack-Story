@@ -70,5 +70,5 @@ def send_email(compressed_output):
 		mailserver.login(smtp_sender, smtp_password)
 	else:
 		mailserver.ehlo()
-	mailserver.sendmail(from_addr=smtp_sender,to_addrs=smtp_list, msg=msg.as_string())
+	mailserver.sendmail(from_addr=smtp_sender,to_addrs=smtp_list.split(","), msg=msg.as_string())
 	mailserver.quit()

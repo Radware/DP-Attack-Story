@@ -361,12 +361,12 @@ def get_all_sample_data(v, top_by_bps, top_by_pps):
     deduplicated_sample_data = deduplicate_sample_data(all_sample_data_bps + all_sample_data_pps)
 
     # Ensure the output directory exists
-    if not os.path.exists(outputFolder):
-        os.makedirs(outputFolder)
+    if not os.path.exists(temp_folder):
+        os.makedirs(temp_folder)
 
     # Save results to JSON files
-    bps_file_path = os.path.join(outputFolder, 'top_by_bps_sample_data.json')
-    pps_file_path = os.path.join(outputFolder, 'top_by_pps_sample_data.json')
+    bps_file_path = os.path.join(temp_folder, 'top_by_bps_sample_data.json')
+    pps_file_path = os.path.join(temp_folder, 'top_by_pps_sample_data.json')
 
     with open(bps_file_path, 'w') as f:
         json.dump(all_sample_data_bps, f, indent=4)

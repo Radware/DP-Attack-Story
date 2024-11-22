@@ -5,8 +5,11 @@ import re
 import os
 
 #outputFolder = f"./Output/{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}/"
-outputFolder = './Output/' 
-LogfileName = outputFolder + "P-Attack-Story.log"
+environment_name = "Default"
+temp_folder = "./Temp/"
+log_file = temp_folder + "Attack-Story.log"
+output_folder = f"./Reports/{environment_name}/"
+output_file = f"{output_folder}{environment_name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}.tgz"
 
 
 args = sys.argv.copy()
@@ -16,7 +19,7 @@ if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?')):
     print("  Script syntax:")
     print("  python main.py [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")
     print("    ***Note: The order of arguments is important and must not deviate from the above template.***")
-    print(f"    --offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in {outputFolder} for generating DP-Attack-Story_Report.html")
+    print(f"    --offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in {temp_folder} for generating DP-Attack-Story_Report.html")
     print("    --use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password")
     print("    <time-range> options:")
     print("        --hours, -h <number_of_hours>                      Select data from the past X hours.")
@@ -44,8 +47,8 @@ class clsConfig():
                 self.config.set('Vision', option, '')
         if not self.config.has_option('General', 'Top_N'):
             self.set("General","Top_N","10")
-        if not self.config.has_option('General', 'Compress_Output'):
-            self.set("General","Compress_Output","TRUE")
+        #if not self.config.has_option('General', 'Compress_Output'):
+        #    self.set("General","Compress_Output","TRUE")
         #################Email settings####################
         if not self.config.has_option('Email', 'send_email'):
             self.set("Email","send_email","FALSE")
@@ -91,7 +94,7 @@ topN = int(config.get("General","Top_N","10"))
 
 def update_log(message):
     print(message)
-    with(open(LogfileName,"a")) as file:
+    with(open(log_file,"a")) as file:
         timeStamp = datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')
         log_entry = f"[{timeStamp}] {message}\n"
         file.write(log_entry)

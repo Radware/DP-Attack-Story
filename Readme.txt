@@ -54,6 +54,10 @@
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
 
 # Version Control
+	v0.15.3 - 22 November 2024 (Steve)
+		The script now temporarily outputs to './Temp/'. The temp folder will be deleted at the beginning of each execution when the script is not run in offline mode.
+		The contents of './Temp/' will be compressed to './Reports/Default/Default_%Y-%m-%d_%H.%M.%S.tgz'
+		A future update will allow you to replace 'Default' with a custom environment name.
 	v0.15.2 - 18 November 2024 (Egor)
 		Added sending email option (user configurable).
 	v0.15.1 - 14 November 2024 (Steve)

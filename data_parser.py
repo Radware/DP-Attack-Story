@@ -3,7 +3,7 @@ import json
 import csv
 import re
 
-from common import outputFolder
+from common import temp_folder
 from common import topN
 
 
@@ -119,7 +119,7 @@ def attackipsid_to_syslog_id_hex(attackid):
 
 def parse_response_file(v):
     # Open and read the JSON response file
-    with open(outputFolder + 'response.json', 'r') as file:
+    with open(temp_folder + 'response.json', 'r') as file:
         data = json.load(file)
 
     # Initialize lists and headers
@@ -236,7 +236,7 @@ def parse_response_file(v):
     #with open(outputFolder + 'output_table.txt', 'w') as f:
     #    f.write(table)
 
-    output_csv_file = outputFolder + "output_table.csv"
+    output_csv_file = temp_folder + "output_table.csv"
     with open(output_csv_file, mode='w', newline='') as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow(headers)  # Write headers to CSV

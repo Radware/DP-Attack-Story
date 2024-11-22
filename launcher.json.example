@@ -18,8 +18,8 @@
         "vision_password": "radware",
         "vision_root_password": "$ENVIRONMENTAL_VARIABLE_ROOT_PASSWORD",
         "time_range": {
-            "type": "--epoch-range",
-            "value": [859885200, 859971600]
+            "type": "--date-range",
+            "value": ["22-11-2024 9:00:00 UTC", "22-11-2024 18:00:00 UTC"]
         },
         "defensepros_policies": {
             "1.2.3.4": "Policies,policy2",

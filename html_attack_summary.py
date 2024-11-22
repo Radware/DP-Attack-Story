@@ -37,22 +37,24 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 first_attack_start = min(first_attack_start, start_time) if first_attack_start else start_time
                 last_attack_end = max(last_attack_end, end_time) if last_attack_end else end_time                
             vectors.add(attack[1]["Attack Name"])
-    elapsed_time = last_attack_end - first_attack_start
-    elapsed_days = elapsed_time.days
-    elapsed_hours = elapsed_time.seconds // 3600
-    elapsed_minutes = (elapsed_time.seconds % 3600) // 60
-    elapsed_seconds = elapsed_time.seconds % 60
-    elapsed_parts = []
-    if elapsed_days > 0:
-        elapsed_parts.append(f"{elapsed_days} day{'s' if elapsed_days > 1 else ''}")
-    if elapsed_hours > 0:
-        elapsed_parts.append(f"{elapsed_hours} hour{'s' if elapsed_hours > 1 else ''}")
-    if elapsed_minutes > 0:
-        elapsed_parts.append(f"{elapsed_minutes} minute{'s' if elapsed_minutes > 1 else ''}")
-    if elapsed_seconds > 0:
-        elapsed_parts.append(f"{elapsed_seconds} second{'s' if elapsed_seconds > 1 else ''}")
-    elapsed_time = ", ".join(elapsed_parts)
-
+    if last_attack_end and first_attack_start:
+        elapsed_time = last_attack_end - first_attack_start
+        elapsed_days = elapsed_time.days
+        elapsed_hours = elapsed_time.seconds // 3600
+        elapsed_minutes = (elapsed_time.seconds % 3600) // 60
+        elapsed_seconds = elapsed_time.seconds % 60
+        elapsed_parts = []
+        if elapsed_days > 0:
+            elapsed_parts.append(f"{elapsed_days} day{'s' if elapsed_days > 1 else ''}")
+        if elapsed_hours > 0:
+            elapsed_parts.append(f"{elapsed_hours} hour{'s' if elapsed_hours > 1 else ''}")
+        if elapsed_minutes > 0:
+            elapsed_parts.append(f"{elapsed_minutes} minute{'s' if elapsed_minutes > 1 else ''}")
+        if elapsed_seconds > 0:
+            elapsed_parts.append(f"{elapsed_seconds} second{'s' if elapsed_seconds > 1 else ''}")
+        elapsed_time = ", ".join(elapsed_parts)
+    else:
+        elapsed_time = "N/A"
     peak_traffic = highest_aggregate_15_seconds(combined_graph_data)
     peak_traffic['bps'] = "{:,}".format(int(float(graph_data['bps']['dataMap']['maxValue']['trafficValue'])))
     peak_traffic['pps'] = "{:,}".format(int(float(graph_data['pps']['dataMap']['maxValue']['trafficValue'])))
@@ -106,7 +108,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         <!-- Attack timeframe -->
         <tr style="border: none;">
             <td style="border: none; text-align: right;"><strong>Attack Timeframe:</strong></td>
-            <td style="border: none; text-align: left;">Top {topN} attacks were observed over a <strong>{elapsed_time}</strong> time period from <strong>{first_attack_start.strftime('%d-%m-%Y %H:%M:%S %Z')}</strong> to <strong>{last_attack_end.strftime('%d-%m-%Y %H:%M:%S %Z')}</strong></td>
+            <td style="border: none; text-align: left;">Top {topN} attacks were observed over a <strong>{elapsed_time}</strong> time period from <strong>{first_attack_start.strftime('%d-%m-%Y %H:%M:%S %Z') if first_attack_start else "N/A"}</strong> to <strong>{last_attack_end.strftime('%d-%m-%Y %H:%M:%S %Z') if last_attack_end else "N/A"}</strong></td>
         </tr>
 
         <!-- Attack Vectors -->
@@ -119,8 +121,8 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         <tr style="border: none;">
             <td style="border: none; text-align: right;"><strong>Peak Attack Rate:</strong></td>
             <td style="border: none; text-align: left;">
-                Throughput per second peaked at <strong>{peak_traffic['bps']} kbps</strong>. This occurred at <strong>{datetime.datetime.fromtimestamp(peak_traffic['bps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong><br>
-                Packets per second peaked at <strong>{peak_traffic['pps']} pps</strong>. This occurred at <strong>{datetime.datetime.fromtimestamp(peak_traffic['pps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}</strong>
+                Throughput per second peaked at <strong>{peak_traffic['bps']} kbps</strong>. This occurred at <strong>{datetime.datetime.fromtimestamp(peak_traffic['bps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z') if peak_traffic['bps_time'] else "N/A"}</strong><br>
+                Packets per second peaked at <strong>{peak_traffic['pps']} pps</strong>. This occurred at <strong>{datetime.datetime.fromtimestamp(peak_traffic['pps_time']/1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z') if peak_traffic['pps_time'] else "N/A"}</strong>
             </td>
         </tr>
 
@@ -157,8 +159,8 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             <td style="border: none; text-align: right;"><strong>TopN Coverage:</strong></td>
             <td style="border: none; text-align: left;">
                 Of the <strong>{total_attacks} total attacks</strong> observed over the specified time period, this report is filtered based on the <strong>{included_attacks} unique attacks</strong> included in the <strong>Top {topN} bps</strong> and <strong>Top {topN} pps</strong> tables.<br>
-                These <strong>{included_attacks} attacks</strong> represent <strong>{included_bw / total_bw:.2%}</strong> of the total attack bandwidth and <strong>{included_packets / total_packets:.2%}</strong> of the total attack packet count.<br>
-                The <strong>remaining {total_attacks - included_attacks} attacks</strong> represent <strong>{(total_bw - included_bw) / total_bw:.2%}</strong> of the observed attack bandwidth and <strong>{(total_packets - included_packets) / total_packets:.2%}</strong> if the observed attack packets.
+                These <strong>{included_attacks} attacks</strong> represent <strong>{(included_bw / total_bw):.2% if total_bw > 0 else "0%"}</strong> of the total attack bandwidth and <strong>{(included_packets / total_packets):.2% if total_packets > 0 else "0%"}</strong> of the total attack packet count.<br>
+                The <strong>remaining {total_attacks - included_attacks} attacks</strong> represent <strong>{((total_bw - included_bw) / total_bw):.2% if total_bw > 0 else "0%"}</strong> of the observed attack bandwidth and <strong>{((total_packets - included_packets) / total_packets):.2% if total_packets > 0 else "0%"}</strong> if the observed attack packets.
             </td>
         </tr>
     </table>

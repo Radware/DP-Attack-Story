@@ -244,7 +244,7 @@ def createChart(Title, myData):
             }}
 
             // Draw the main chart
-            drawChart('{name}-bottom', data, options);
+            //drawChart('{name}-bottom', data, options);
 
             // Draw the top charts
             drawChart('{name}-top_n_pps', data, options);
@@ -259,7 +259,7 @@ def createChart(Title, myData):
             }});
         }}
     </script>
-    <div id="{name}-bottom" style="width: 100%; height: 500px;"></div>
+    <!--Uncomment this for individual graphs. Also need to uncomment "//drawChart('{name}-bottom', data, options);"<div id="{name}-bottom" style="width: 100%; height: 500px;"></div>-->
     """
     return html_content
 
@@ -534,3 +534,209 @@ def createPieCharts(attack_data, top_n_attack_ids):
     """
     
     return html_output
+
+
+def createCombinedChart2(Title, myData):
+    name = Title.replace(" ","_").replace("-","_")
+    dataBPS = {}
+    #Round myData datapoints to nearest 15 seconds.
+    #for attack_name, attack_data in myData.items():
+    #    dataBPS[attack_name] = 
+
+    #####Old
+    # Generate a random ID for the chart name
+    rand_ID = random.randrange(100000000, 999999999)
+    name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'
+
+    # Function to round timestamp to the nearest 15 seconds
+    def round_to_nearest_15_seconds(timestamp):
+        return round(timestamp / 15000) * 15000
+
+    # Collect all timestamps from all datasets, rounding them to the nearest 15 seconds
+    timestamps = sorted(set(round_to_nearest_15_seconds(item["row"]["timeStamp"]) for dataset in myData.values() for item in dataset["data"]))
+
+    # Initialize data structure for Google Charts
+    data_table = [["Timestamp"]]
+    dataset_headers = {}
+
+    # Add headers for each dataset and metric
+    for dataset_name, dataset in myData.items():
+        dataset_headers[dataset_name] = []
+        try:
+            for key in dataset["data"][0]["row"].keys():
+                if key != "timeStamp":
+                    column_name = f"{dataset_name.replace('_', '__')}__{key}"
+                    data_table[0].append(column_name)
+                    dataset_headers[dataset_name].append(column_name)
+        except:
+            print(f"Unexpected error processing {dataset_name}")
+            raise
+
+    # Populate data rows based on rounded timestamps
+    for timestamp in timestamps:
+        #date_object = f"new Date({timestamp} + (new Date().getTimezoneOffset() * 60000))"
+        date_object = f"correctedDate({timestamp})"
+        row = [date_object] + [None] * (len(data_table[0]) - 1)
+        
+        for dataset_name, dataset in myData.items():
+            for item in dataset["data"]:
+                rounded_time = round_to_nearest_15_seconds(item["row"]["timeStamp"])
+                if rounded_time == timestamp:
+                    for key, value in item["row"].items():
+                        if key != "timeStamp" and value is not None:
+                            try:
+                                numeric_value = float(value)
+                                col_index = data_table[0].index(f"{dataset_name.replace('_', '__')}__{key}")
+                                row[col_index] = numeric_value
+                            except ValueError:
+                                continue
+                    break
+        
+        data_table.append(row)
+
+    # Convert data_table to JSON and replace the quotes around Date objects
+    json_data = json.dumps(data_table[1:])
+    json_data = json_data.replace('"correctedDate(', 'correctedDate(').replace(')"', ')')
+
+
+    # Generate HTML content dynamically with checkboxes and Date objects for x-axis
+    html_content = f"""
+        <script type="text/javascript">
+            //google.charts.load('current', {{'packages':['corechart']}});
+            google.charts.setOnLoadCallback(drawChart);
+
+            let data;
+            let chart;
+            let bpsView;
+            let ppsView;
+            let options = {{
+                title: '{Title}',
+                curveType: 'function',
+                legend: {{
+                    position: 'top',
+                    textStyle: {{ fontSize: 12 }},
+                    maxLines: 6
+                }},
+                hAxis: {{
+                    title: 'Time (UTC)',
+                    format: 'HH:mm:ss',
+                    slantedText: true,
+                    slantedTextAngle: 45
+                }},
+                vAxis: {{
+                    viewWindow: {{min: 0}}  // Ensure the y-axis includes 0
+                }},
+                focusTarget: 'category',
+                interpolateNulls: true,
+                tooltip: {{
+                    isHtml: true
+                }},
+                series: {{
+                    {", ".join([f"{i}: {{ lineDashStyle: [0, 0] }}" for i in range(len(data_table[0]) - 1)])} 
+                }},
+                colors: [
+                    '#e74c3c', // Red
+                    '#3498db', // Blue
+                    '#2ecc71', // Emerald Green
+                    '#f39c12', // Yellow
+                    '#8e44ad', // Purple
+                    '#1abc9c', // Turquoise
+                    '#f1c40f', // Bright Yellow
+                    '#e55b1b', // Orange
+                    '#9b59b6', // Amethyst
+                    '#16a085', // Sea Green
+                    '#34495e', // Dark Blue Gray
+                    '#c0392b', // Strong Red
+                    '#9bcf0e', // Lime Green
+                    '#d35400', // Pumpkin
+                    '#2980b9', // Bright Blue
+                    '#f5b041', // Gold
+                    '#4f81bd', // Light Blue
+                    '#95a5a6', // Gray
+                    '#7f8c8d', // Medium Gray
+                    '#f1ca3a', // Light Yellow
+                    '#e2431e', // Dark Red
+                    '#b2c2c8', // Light Gray
+                    '#34495e', // Dark Slate
+                ],
+                animation: {{
+                    duration: 1000,    // Time in milliseconds for the animation (1 second here)
+                    easing: 'inAndOut',     // Easing function for smooth animation ('in', 'out', 'inAndOut' are common options)
+                    startup: false      // Ensures that animation happens on chart load
+                }}
+            }};
+
+            function drawChart() {{
+                data = new google.visualization.DataTable();
+                data.addColumn('datetime', 'Time');
+                {"".join([f"data.addColumn('number', '{col}');" for col in data_table[0][1:]])}
+                data.addRows({json_data});
+
+                // Create a DataView for the BPS chart (odd columns)
+                bpsView = new google.visualization.DataView(data);
+                let bpsColumns = [0];  // Start with the timestamp column
+                for (let i = 2; i < data.getNumberOfColumns(); i += 2) {{
+                    bpsColumns.push(i);
+                }}
+                bpsView.setColumns(bpsColumns);
+
+                // Create a DataView for the PPS chart (even columns)
+                ppsView = new google.visualization.DataView(data);
+                let ppsColumns = [0];  // Start with the timestamp column
+                for (let i = 1; i < data.getNumberOfColumns(); i += 2) {{
+                    ppsColumns.push(i);
+                }}
+                ppsView.setColumns(ppsColumns);
+
+                console.log("Start draw1");
+                chartbps = new google.visualization.LineChart(document.getElementById('{name}-bps'));
+                chartbps.draw(bpsView, {{...options, title: options.title + ' - BPS'}});
+                chartpps = new google.visualization.LineChart(document.getElementById('{name}-pps'));
+                chartpps.draw(ppsView, {{...options, title: options.title + ' - PPS'}});
+                console.log("Finish draw1");
+            }}
+
+            function updateChart() {{
+                console.log("UpdateChart");
+                //let bpsView = new google.visualization.DataView(data);
+                //let ppsView = new google.visualization.DataView(data);
+                let columns = [];
+                {''.join(
+                    f'if (document.getElementById("{name}_{header}").checked) {{ columns.push({headerindex}); }}' for headerindex, header in enumerate(dataset_headers.keys())
+                )}
+
+                evencolumns = [0, ...columns.map(x => (x+1)*2)];
+                oddcolumns  = [0, ...columns.map(x => x*2 + 1)];
+                console.log("UpdateChart2");
+                bpsView.setColumns(evencolumns);
+                chartbps.draw(bpsView, {{...options, title: options.title + ' - BPS', colors: columns.map(index => options.colors[index])}});
+                ppsView.setColumns(oddcolumns);
+                chartpps.draw(ppsView, {{...options, title: options.title + ' - PPS', colors: columns.map(index => options.colors[index])}});
+                console.log("UpdateChart3");
+            }}
+        </script>
+"""
+    
+    checkboxes_html = ""
+    for header in dataset_headers.keys():
+        checkbox_html = (
+            f'<label>'
+            f'<input type="checkbox" id="{name}_{header}" checked onclick="updateChart()"> '
+            f'{header.replace("__", " ").replace("_", " ")}'
+            f'</label>'
+        )
+        checkboxes_html += checkbox_html
+    column_count = (
+        1 if len(dataset_headers) <= 4 else
+        2 if len(dataset_headers) <= 8 else
+        3 if len(dataset_headers) < 13 else
+        4
+    )
+    html_content += f"""
+        <div style="display: grid; grid-template-columns: repeat({column_count}, 1fr); gap: 10px; row-gap: 3px; width:50%;">
+            {checkboxes_html}
+        </div>
+        <div id="{name}-bps" style="width: 100%; height: 500px;"></div>
+        <div id="{name}-pps" style="width: 100%; height: 500px;"></div>
+    """
+    return html_content

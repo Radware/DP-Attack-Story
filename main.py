@@ -200,7 +200,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         for attack in top_metrics['top_by_pps']:
             top_n_attack_ids.add(attack[1]['Attack ID'])
 
-        #Load graph data from JSON file
+        #Load data from JSON file
         with open(outputFolder + 'AttackGraphsData.json') as data_file:
             attack_graph_data = json.load(data_file)
         with open(outputFolder + 'TopGraphsData.json') as data_file:
@@ -242,13 +242,36 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         #Create dynamic graph combining all attacks into one graph.
         finalHTML += "\n<h2>Combined Chart</h2>"
         try:
-            finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data) 
+            attack_graph_by_device = {}
+            for key,data in attack_graph_data.items():
+                for attack in top_by_bps:
+                    #details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']
+                    oldname = attack[1]['Attack Name'].replace(' ','_') + '_' + attack[1]['Attack ID']
+                    if oldname == key:
+                        new_name = attack[1]['Device IP'] + "_" + attack[1]['Policy'].replace(' ','_')
+                        if True:#not new_name in attack_graph_by_device:
+                            attack_graph_by_device[new_name] = data
+                            break
+                        else:
+                            #attack_graph_by_device[new_name]['data'].extend(data['data'])
+                            break
+                else:
+                    print("Not found:" + key)
+                    attack_graph_by_device[key] = data
+
+                
+            finalHTML += html_graphs.createCombinedChart2("BySite", attack_graph_by_device) 
         except:
             update_log("Unexpected createCombinedChart() error: ")
             traceback.print_exc()
+        
+        #try:
+        #    finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data) 
+        #except:
+        #    update_log("Unexpected createCombinedChart() error: ")
+        #    traceback.print_exc()
 
-        finalHTML += "\n<h2>Charts per attack ID</h2>"
-        #Add an individual graph for each attack
+        #Build individual graphs for each attack
         for attackID, data in attack_graph_data.items():
             try:
                 #inalHTML += html_graphs.createChart(attackID, data, epoch_from_time, epoch_to_time)
@@ -267,8 +290,9 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         
         #Script execution complete. Compress and delete the output folder
         if False:
+            output_file = outputFolder[:-1] + ".tgz"
             if config.get("General","Compress_Output","TRUE").upper() == "TRUE":
-                with tarfile.open(outputFolder[:-1] + ".tgz", "w:gz"):
+                with tarfile.open(output_file, "w:gz"):
                     tarfile.add(outputFolder, arcname='.') #Arcname='.' preserves the folder structure
                     print(f"{outputFolder} has been compressed to {outputFolder[:-1]}.tgz")
                 if os.path.exists(outputFolder):
@@ -289,3 +313,6 @@ Policies: {"All" if len(policies) == 0 else policies}"""
                         print(f"{outputFolder} is not empty or cannot be deleted.")
 
         ##############################End of Parse_Data Section##############################
+    if config.get("Email","Send_Email","TRUE").upper() == "TRUE":
+        output_file = "/Output/archive_name.tgz" #Temp - remove for prod.
+

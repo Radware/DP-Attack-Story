@@ -178,8 +178,13 @@ Policies: {"All" if len(policies) == 0 else policies}"""
     if parse_data:
         update_log("Generating output:")
         # Load saved metrics
-        with open(temp_folder + 'TopMetrics.json') as file:
-            top_metrics = json.load(file)
+        
+        try:
+            with open(temp_folder + 'TopMetrics.json') as file:
+                top_metrics = json.load(file)
+        except FileNotFoundError:
+            update_log(f"{temp_folder + 'TopMetrics.json'} not found! Unable to continue.")
+            exit(0)
         top_by_bps = top_metrics['top_by_bps']
         top_by_pps = top_metrics['top_by_pps']
         unique_protocols = top_metrics['unique_protocols']

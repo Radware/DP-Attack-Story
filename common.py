@@ -4,21 +4,43 @@ import sys
 import re
 import os
 
-#outputFolder = f"./Output/{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}/"
-environment_name = "Default"
+args = sys.argv.copy()
+script_filename = args.pop(0)
+
 temp_folder = "./Temp/"
 log_file = temp_folder + "Attack-Story.log"
+
+print(args)
+if '-e' in args:
+    index = args.index('-e')
+elif '--environment' in args:
+    index = args.index('--environment')
+else:
+    index = 0
+
+if index:
+    if index + 1 < len(args):
+        environment_name = args.pop(index + 1)
+        args.pop(index)
+        print(f"Using environment {environment_name}")
+    else:
+        print("--environment used without specifying environment.")
+        exit(1)
+else:
+    environment_name = "Default"
+    print(f"--environment <environment name> not specified, output will use 'Default'.")
+
 output_folder = f"./Reports/{environment_name}/"
 output_file = f"{output_folder}{environment_name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}.tgz"
 
 
-args = sys.argv.copy()
-script_filename = args.pop(0)
+
 
 if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?')):
     print("  Script syntax:")
-    print("  python main.py [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")
+    print("  python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")
     print("    ***Note: The order of arguments is important and must not deviate from the above template.***")
+    print("    --environment, -e      Optional: Specify an environment. This is used for output naming. Script will use 'Default' if not specified.")
     print(f"    --offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in {temp_folder} for generating DP-Attack-Story_Report.html")
     print("    --use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password")
     print("    <time-range> options:")

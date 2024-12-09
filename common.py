@@ -68,7 +68,10 @@ class clsConfig():
             if not self.config.has_option('Vision', option):
                 self.config.set('Vision', option, '')
         if not self.config.has_option('General', 'Top_N'):
-            self.set("General","Top_N","10")
+            self.set('General','Top_N','10')
+        if not self.config.has_option('General', 'minimum_minutes_between_waves'):
+            self.set('General','minimum_minutes_between_waves','5')
+            
         #if not self.config.has_option('General', 'Compress_Output'):
         #    self.set("General","Compress_Output","TRUE")
         #################Email settings####################
@@ -85,7 +88,7 @@ class clsConfig():
         if not self.config.has_option('Email', 'smtp_sender'):
             self.set("Email","smtp_sender","sender@gmail.com")
         if not self.config.has_option('Email', 'smtp_list'):
-            self.set("Email","smtp_list","emailrecepient1,emailrecepient2")
+            self.set("Email","smtp_list","emailrecepient1@domain.com,emailrecepient2@domain.com")
 
     def save(self):
         with open("config.ini", "w") as config_file:

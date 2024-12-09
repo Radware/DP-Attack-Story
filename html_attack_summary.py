@@ -88,6 +88,8 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
     waves = merged_waves
 
     peak_traffic = highest_aggregate_15_seconds(combined_graph_data)
+    peak_traffic['bps_time'] = int(graph_data['bps']['dataMap']['maxValue']['timeStamp'])
+    peak_traffic['pps_time'] = int(graph_data['pps']['dataMap']['maxValue']['timeStamp'])
     peak_traffic['bps'] = "{:,}".format(int(float(graph_data['bps']['dataMap']['maxValue']['trafficValue'])))
     peak_traffic['pps'] = "{:,}".format(int(float(graph_data['pps']['dataMap']['maxValue']['trafficValue'])))
     #peak_traffic = {

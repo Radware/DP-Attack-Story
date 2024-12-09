@@ -41,7 +41,6 @@ if __name__ == '__main__':
         else:
             # Create the temp folder if it doesn't exist
             os.makedirs(temp_folder)
-
         #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
         v = clsVision.clsVision()
 

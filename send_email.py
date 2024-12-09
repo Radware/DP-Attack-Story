@@ -45,15 +45,16 @@ def email_body():
 
 def send_email(compressed_output):
 	
-	########## Extract date and time from file name to use in Subject line #########
-	file_name = os.path.basename(compressed_output)  # "2024-11-18_16.24.54.tgz"
-	# Extract the date and time part from the file path
-	datetime_part = file_name.rsplit('.', 1)[0] # "2024-11-18_16.24.54"
-	# Parse the date and time into a datetime object
-	parsed_datetime = datetime.datetime.strptime(datetime_part, "%Y-%m-%d_%H.%M.%S")
-	# Format the datetime object into the desired format
-	formatted_datetime = parsed_datetime.strftime("%B %d, %Y %H:%M")
-	##########################################################
+    ########## Extract date and time from file name to use in Subject line #########
+    file_name = os.path.basename(compressed_output)  # "2024-11-18_16.24.54.tgz"
+    # Extract the date and time part from the file path
+    datetime_part = file_name.split('_', 1)[1] # "2024-11-18_16.24.54"
+    datetime_part = datetime_part.rsplit('.',1)[0]
+    # Parse the date and time into a datetime object
+    parsed_datetime = datetime.datetime.strptime(datetime_part, "%Y-%m-%d_%H.%M.%S")
+    # Format the datetime object into the desired format
+    formatted_datetime = parsed_datetime.strftime("%B %d, %Y %H:%M")
+    ##########################################################
 
 	msg = MIMEMultipart()
 	msg["From"] = smtp_sender

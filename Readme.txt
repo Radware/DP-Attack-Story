@@ -36,8 +36,10 @@
 
 		At the time of updating this section of the readme (30 October 2024), the output of python main.py -h is:
 			Script syntax:
-				python main.py [--use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
+			python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
 				***Note: The order of arguments is important and must not deviate from the above template.***
+				--environment, -e      Optional: Specify an environment. This is used for output naming. Script will use 'Default' if not specified.
+				--offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in ./Temp/ for generating DP-Attack-Story_Report.html
 				--use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password
 				<time-range> options:
 					--hours, -h <number_of_hours>                      Select data from the past X hours.
@@ -49,11 +51,13 @@
 			Examples:
 				python main.py -c --hours 3 DefensePro1,DefensePro2,192.168.1.20 DefensePro1_BdosProfile,DefensePro1_SynFloodProtection DP2_BdosProfile,DP2_SynFloodProtection DP3_Policy1
 				python main.py 192.168.1.1 admin radware radware1 --epoch-range 859885200 859971600 '' ''
-				python main.py --use-cached --date-range "11 Oct 2024 09:00:00 UTC" "11 Oct 2024 18:00:00 UTC" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
+				python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
 
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
 
 # Version Control
+	v0.15.8 - 9 December 2024 (Steve)
+		Resolved issue with parsing datetime in send_email module.
 	v0.15.7 - 9 December 2024 (Steve)
 		Bugfix
 	v0.15.76 - 9 December 2024 (Steve)

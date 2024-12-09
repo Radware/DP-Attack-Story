@@ -35,7 +35,6 @@ output_file = f"{output_folder}{environment_name}_{datetime.datetime.now().strft
 
 
 
-
 if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?')):
     print("  Script syntax:")
     print("  python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")

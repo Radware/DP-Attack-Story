@@ -13,7 +13,7 @@ import html_data
 import html_graphs
 import html_header
 import sftp_module
-import email
+import send_email
 
 #Default options such as topN and output folder are now stored in common.py. 
 from common import *
@@ -312,5 +312,5 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
     if config.get("Email","send_email","val").upper() == "TRUE":
         update_log("Sending Email")
-        email.send_email(output_file)
+        send_email.send_email(output_file)
     update_log("Execution completed")

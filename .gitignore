@@ -5,6 +5,8 @@ config.ini
 DP-Attack-Story.log
 launcher.json
 run.sh
+Temp/
+Reports/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

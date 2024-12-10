@@ -35,7 +35,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 start_time = datetime.datetime.strptime(attack[1]["Start Time"], '%d-%m-%Y %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
                 end_time = datetime.datetime.strptime(attack[1]["End Time"], '%d-%m-%Y %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
                 first_attack_start = min(first_attack_start, start_time) if first_attack_start else start_time
-                last_attack_end = max(last_attack_end, end_time) if last_attack_end else end_time                
+                last_attack_end = max(last_attack_end, end_time) if last_attack_end else end_time
             vectors.add(attack[1]["Attack Name"])
     elapsed_time = last_attack_end - first_attack_start
     elapsed_days = elapsed_time.days
@@ -53,7 +53,43 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         elapsed_parts.append(f"{elapsed_seconds} second{'s' if elapsed_seconds > 1 else ''}")
     elapsed_time = ", ".join(elapsed_parts)
 
+    #Identify attack segments with a minimum gap of x minutes
+    waves = []
+    for topkey in ['top_by_bps', 'top_by_pps']:
+        for attack in top_metrics[topkey]:
+            if attack[1]['Policy'] != 'Packet Anomalies':
+                start_time = datetime.datetime.strptime(attack[1]["Start Time"], '%d-%m-%Y %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
+                end_time = datetime.datetime.strptime(attack[1]["End Time"], '%d-%m-%Y %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
+                for wave in waves:
+                    if start_time <= wave['end'] and end_time >= wave['start']:
+                        # Merge overlapping event into the wave segment
+                        wave['start'] = min(wave['start'], start_time)
+                        wave['end'] = max(wave['end'], end_time)
+                        wave['attacks'].append(attack)
+                        break
+                else:
+                    waves.append({'start': start_time, 'end': end_time, 'attacks': [attack]})
+    #Merge overlapping waves
+    minimum_minutes_between_waves = int(config.get("General","minimum_minutes_between_waves","5")) # Max allowed gap in minutes between waves to merge
+    merged_waves = []
+    for wave in sorted(waves, key=lambda x: x['start']):  # Sort by start time
+        if not merged_waves:
+            merged_waves.append(wave)
+        else:
+            last_wave = merged_waves[-1]
+            # Check if the gap between waves is less than max_segment_gap_minutes
+            gap = (wave['start'] - last_wave['end']).total_seconds() / 60 
+            if gap <= minimum_minutes_between_waves:
+                last_wave['start'] = min(last_wave['start'], wave['start'])
+                last_wave['end'] = max(last_wave['end'], wave['end'])
+                last_wave['attacks'].extend(wave['attacks'])
+            else:
+                merged_waves.append(wave)
+    waves = merged_waves
+
     peak_traffic = highest_aggregate_15_seconds(combined_graph_data)
+    peak_traffic['bps_time'] = int(graph_data['bps']['dataMap']['maxValue']['timeStamp'])
+    peak_traffic['pps_time'] = int(graph_data['pps']['dataMap']['maxValue']['timeStamp'])
     peak_traffic['bps'] = "{:,}".format(int(float(graph_data['bps']['dataMap']['maxValue']['trafficValue'])))
     peak_traffic['pps'] = "{:,}".format(int(float(graph_data['pps']['dataMap']['maxValue']['trafficValue'])))
     #peak_traffic = {
@@ -107,6 +143,20 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         <tr style="border: none;">
             <td style="border: none; text-align: right;"><strong>Attack Timeframe:</strong></td>
             <td style="border: none; text-align: left;">Top {topN} attacks were observed over a <strong>{elapsed_time}</strong> time period from <strong>{first_attack_start.strftime('%d-%m-%Y %H:%M:%S %Z')}</strong> to <strong>{last_attack_end.strftime('%d-%m-%Y %H:%M:%S %Z')}</strong></td>
+        </tr>"""
+
+    if len(waves) > 1:
+        output += f"""
+        <tr style="border: none;">
+            <td style="border: none; text-align: right;"><strong>Attack Waves:</strong></td>
+            <td style="border: none; text-align: left;">The attacks can be broken into <strong>{len(waves)} non-overlapping attack waves</strong> with a minimum gap of <strong>{minimum_minutes_between_waves} minutes</strong> between attack waves.
+        """
+        
+        for wave in waves:
+            output += f"""<br><strong>{wave['start'].strftime('%d-%m-%Y %H:%M:%S %Z')}</strong> to <strong>{wave['end'].strftime('%d-%m-%Y %H:%M:%S %Z')}</strong> - <strong>{len(wave['attacks'])} attacks</strong>"""
+
+    output += f"""
+            </td>
         </tr>
 
         <!-- Attack Vectors -->

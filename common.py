@@ -4,19 +4,43 @@ import sys
 import re
 import os
 
-#outputFolder = f"./Output/{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}/"
-outputFolder = './Output/' 
-LogfileName = outputFolder + "P-Attack-Story.log"
-
-
 args = sys.argv.copy()
 script_filename = args.pop(0)
 
+temp_folder = "./Temp/"
+log_file = temp_folder + "Attack-Story.log"
+
+print(args)
+if '-e' in args:
+    index = args.index('-e')
+elif '--environment' in args:
+    index = args.index('--environment')
+else:
+    index = 0
+
+if index:
+    if index + 1 < len(args):
+        environment_name = args.pop(index + 1)
+        args.pop(index)
+        print(f"Using environment {environment_name}")
+    else:
+        print("--environment used without specifying environment.")
+        exit(1)
+else:
+    environment_name = "Default"
+    print(f"--environment <environment name> not specified, output will use 'Default'.")
+
+output_folder = f"./Reports/{environment_name}/"
+output_file = f"{output_folder}{environment_name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}.tgz"
+
+
+
 if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?')):
     print("  Script syntax:")
-    print("  python main.py [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")
+    print("  python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")
     print("    ***Note: The order of arguments is important and must not deviate from the above template.***")
-    print(f"    --offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in {outputFolder} for generating DP-Attack-Story_Report.html")
+    print("    --environment, -e      Optional: Specify an environment. This is used for output naming. Script will use 'Default' if not specified.")
+    print(f"    --offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in {temp_folder} for generating DP-Attack-Story_Report.html")
     print("    --use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password")
     print("    <time-range> options:")
     print("        --hours, -h <number_of_hours>                      Select data from the past X hours.")
@@ -43,9 +67,27 @@ class clsConfig():
             if not self.config.has_option('Vision', option):
                 self.config.set('Vision', option, '')
         if not self.config.has_option('General', 'Top_N'):
-            self.set("General","Top_N","10")
-        if not self.config.has_option('General', 'Compress_Output'):
-            self.set("General","Compress_Output","TRUE")
+            self.set('General','Top_N','10')
+        if not self.config.has_option('General', 'minimum_minutes_between_waves'):
+            self.set('General','minimum_minutes_between_waves','5')
+            
+        #if not self.config.has_option('General', 'Compress_Output'):
+        #    self.set("General","Compress_Output","TRUE")
+        #################Email settings####################
+        if not self.config.has_option('Email', 'send_email'):
+            self.set("Email","send_email","FALSE")
+        if not self.config.has_option('Email', 'smtp_auth'):
+            self.set("Email","smtp_auth","FALSE")
+        if not self.config.has_option('Email', 'smtp_password'):
+            self.set("Email","smtp_password","$SMTP_PASSWD")
+        if not self.config.has_option('Email', 'smtp_server'):
+            self.set("Email","smtp_server","smtp.server.com")
+        if not self.config.has_option('Email', 'smtp_server_port'):
+            self.set("Email","smtp_server_port","25")
+        if not self.config.has_option('Email', 'smtp_sender'):
+            self.set("Email","smtp_sender","sender@gmail.com")
+        if not self.config.has_option('Email', 'smtp_list'):
+            self.set("Email","smtp_list","emailrecepient1@domain.com,emailrecepient2@domain.com")
 
     def save(self):
         with open("config.ini", "w") as config_file:
@@ -76,7 +118,7 @@ topN = int(config.get("General","Top_N","10"))
 
 def update_log(message):
     print(message)
-    with(open(LogfileName,"a")) as file:
+    with(open(log_file,"a")) as file:
         timeStamp = datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')
         log_entry = f"[{timeStamp}] {message}\n"
         file.write(log_entry)

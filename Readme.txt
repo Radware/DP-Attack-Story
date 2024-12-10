@@ -56,6 +56,8 @@
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
 
 # Version Control
+	v0.15.9 - 9 December 2024 (Steve)
+		Fixed send_email.py - Spaces to indent, not tabs!
 	v0.15.8 - 9 December 2024 (Steve)
 		Resolved issue with parsing datetime in send_email module.
 	v0.15.7 - 9 December 2024 (Steve)

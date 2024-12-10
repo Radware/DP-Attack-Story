@@ -40,11 +40,11 @@ def attach_files(msg, compressed_output):
 
 
 def email_body():
-	email_body = f'\r\n\r\nAttack Story'                     
-	return email_body
+    email_body = f'\r\n\r\nAttack Story'                     
+    return email_body
 
 def send_email(compressed_output):
-	
+
     ########## Extract date and time from file name to use in Subject line #########
     file_name = os.path.basename(compressed_output)  # "2024-11-18_16.24.54.tgz"
     # Extract the date and time part from the file path
@@ -56,20 +56,20 @@ def send_email(compressed_output):
     formatted_datetime = parsed_datetime.strftime("%B %d, %Y %H:%M")
     ##########################################################
 
-	msg = MIMEMultipart()
-	msg["From"] = smtp_sender
-	msg["To"] = smtp_list
-	msg["Subject"] = f"Attack Story - {formatted_datetime}"
-	attach_files(msg,compressed_output)
-	msg_body=email_body()
-	msg.attach(MIMEText(msg_body, 'html'))
-	mailserver = smtplib.SMTP(host=smtp_server,port=smtp_server_port)
-	
-	if smtp_auth.upper() == "TRUE":
-		mailserver.starttls()
-		mailserver.ehlo()
-		mailserver.login(smtp_sender, smtp_password)
-	else:
-		mailserver.ehlo()
-	mailserver.sendmail(from_addr=smtp_sender,to_addrs=smtp_list.split(","), msg=msg.as_string())
-	mailserver.quit()
+    msg = MIMEMultipart()
+    msg["From"] = smtp_sender
+    msg["To"] = smtp_list
+    msg["Subject"] = f"Attack Story - {formatted_datetime}"
+    attach_files(msg,compressed_output)
+    msg_body=email_body()
+    msg.attach(MIMEText(msg_body, 'html'))
+    mailserver = smtplib.SMTP(host=smtp_server,port=smtp_server_port)
+
+    if smtp_auth.upper() == "TRUE":
+        mailserver.starttls()
+        mailserver.ehlo()
+        mailserver.login(smtp_sender, smtp_password)
+    else:
+        mailserver.ehlo()
+    mailserver.sendmail(from_addr=smtp_sender,to_addrs=smtp_list.split(","), msg=msg.as_string())
+    mailserver.quit()

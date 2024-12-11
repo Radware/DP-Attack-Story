@@ -2,7 +2,8 @@ import os
 import traceback
 import json
 import datetime
-import tarfile
+#import tarfile
+import zipfile
 
 #internal modules
 import clsVision
@@ -50,9 +51,7 @@ if __name__ == '__main__':
         epoch_to_time = epoch_from_to_time_list[1]
         from_month = epoch_from_to_time_list[2]
         start_year = epoch_from_to_time_list[3]
-        to_month = epoch_from_to_time_list[4] if len(epoch_from_to_time_list) == 5 else None
-
-        
+        to_month = epoch_from_to_time_list[4] if len(epoch_from_to_time_list) == 5 else None        
 
         #Prompt user for a list of DefensePros
         device_ips, dp_list_ip = collector.user_selects_defensePros(v)
@@ -79,7 +78,6 @@ if __name__ == '__main__':
                 policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 
         #Get attack data
-
         attack_data = collector.get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_list_ip)
 
         #Save the formatted JSON to a file
@@ -173,7 +171,6 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         ##############################End of Collect_Data section##############################
 
 
-
     if parse_data:
         update_log("Generating output:")
         # Load saved metrics
@@ -237,7 +234,6 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         update_log("Generating pie charts")
         finalHTML += html_graphs.createPieCharts(attack_data, top_n_attack_ids)
 
-
         #top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
         #bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
         # Call the function to get all sample data and unique source IPs
@@ -283,10 +279,15 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         update_log("Compressing Output")
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-        with tarfile.open(output_file, "w:gz") as tar:
-            for item in os.listdir(temp_folder):  # Iterate over the contents of temp_folder
+        # with tarfile.open(output_file, "w:gz") as tar:
+        #     for item in os.listdir(temp_folder):  # Iterate over the contents of temp_folder
+        #         item_path = os.path.join(temp_folder, item)
+        #         tar.add(item_path, arcname=item)  # Add each item with its base name
+        #     print(f"{temp_folder} has been compressed to {output_file}")
+        with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for item in os.listdir(temp_folder): 
                 item_path = os.path.join(temp_folder, item)
-                tar.add(item_path, arcname=item)  # Add each item with its base name
+                zipf.write(item_path, arcname=item)
             print(f"{temp_folder} has been compressed to {output_file}")
         # if os.path.exists(temp_folder):
         #     # Remove all files in the output folder
@@ -309,7 +310,6 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
         ##############################Send email ############################################
 
-    if config.get("Email","send_email","val").upper() == "TRUE":
-        update_log("Sending Email")
-        send_email.send_email(output_file)
-    update_log("Execution completed")
+        if config.get("Email","send_email","val").upper() == "TRUE":
+            send_email.send_email(output_file)
+        update_log("Execution completed")

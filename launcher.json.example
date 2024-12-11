@@ -1,7 +1,7 @@
 [
     {
         "use_cached": true,
-		"environment":"Env1",
+		"environment":"Environment_name_1",
         "time_range": {
             "type": "--hours",
             "value": 3
@@ -14,7 +14,7 @@
     },
     {
         "use_cached": false,
-		"environment":"Env2",
+		"environment":"Environment_name_2",
         "vision_ip": "192.168.1.1",
         "vision_username": "admin",
         "vision_password": "radware",

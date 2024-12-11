@@ -56,6 +56,12 @@
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
 
 # Version Control
+	v0.15.10 - 11 December 2024 (Steve)
+		Added environment name capability to json_launcher.py (example file updated accordingly)
+		Sent email will now include the environment name.
+		Simplified send_email datetime code.
+		Compressed output format changed from .tgz to .zip
+		Expanded error handing in send_email
 	v0.15.9 - 9 December 2024 (Steve)
 		Fixed send_email.py - Spaces to indent, not tabs!
 	v0.15.8 - 9 December 2024 (Steve)

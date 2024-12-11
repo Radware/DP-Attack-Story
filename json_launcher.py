@@ -23,6 +23,11 @@ def build_arguments(json_entry):
     """Convert a JSON entry to command-line arguments for the main script."""
     args = []
 
+    #Include the environment name:
+    env = json_entry.get('environment')
+    if env:
+        args.extend(["--environment", env])
+
     # Check if using cached credentials
     if json_entry.get('use_cached'):
         args.append('--use-cached')

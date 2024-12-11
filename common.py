@@ -6,6 +6,7 @@ import os
 
 args = sys.argv.copy()
 script_filename = args.pop(0)
+script_start_time = datetime.datetime.now()
 
 temp_folder = "./Temp/"
 log_file = temp_folder + "Attack-Story.log"
@@ -16,9 +17,9 @@ if '-e' in args:
 elif '--environment' in args:
     index = args.index('--environment')
 else:
-    index = 0
+    index = -1
 
-if index:
+if index > -1:
     if index + 1 < len(args):
         environment_name = args.pop(index + 1)
         args.pop(index)
@@ -31,7 +32,7 @@ else:
     print(f"--environment <environment name> not specified, output will use 'Default'.")
 
 output_folder = f"./Reports/{environment_name}/"
-output_file = f"{output_folder}{environment_name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}.tgz"
+output_file = f"{output_folder}{environment_name}_{script_start_time.strftime('%Y-%m-%d_%H.%M.%S')}.zip"
 
 
 

@@ -6,8 +6,16 @@ rootpassword = radware
 
 [General]
 Top_N = 10
-Compress_Output = TRUE
 
 [PreviousRun]
 epoch_from_time = 1727907868000
 epoch_to_time = 1727907868000
+
+[Email]
+send_email = FALSE
+smtp_auth = TRUE
+smtp_password = $SMTP_PASSWD
+smtp_server = email.server.com
+smtp_server_port = 587
+smtp_sender = sender@gmail.com
+smtp_list = emailrecepient1,emailrecpeient2

@@ -36,8 +36,10 @@
 
 		At the time of updating this section of the readme (30 October 2024), the output of python main.py -h is:
 			Script syntax:
-				python main.py [--use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
+			python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
 				***Note: The order of arguments is important and must not deviate from the above template.***
+				--environment, -e      Optional: Specify an environment. This is used for output naming. Script will use 'Default' if not specified.
+				--offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in ./Temp/ for generating DP-Attack-Story_Report.html
 				--use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password
 				<time-range> options:
 					--hours, -h <number_of_hours>                      Select data from the past X hours.
@@ -49,11 +51,58 @@
 			Examples:
 				python main.py -c --hours 3 DefensePro1,DefensePro2,192.168.1.20 DefensePro1_BdosProfile,DefensePro1_SynFloodProtection DP2_BdosProfile,DP2_SynFloodProtection DP3_Policy1
 				python main.py 192.168.1.1 admin radware radware1 --epoch-range 859885200 859971600 '' ''
-				python main.py --use-cached --date-range "11 Oct 2024 09:00:00 UTC" "11 Oct 2024 18:00:00 UTC" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
+				python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
 
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
 
+		JSON launcher:
+			The purpose of the json launcher is to run the script against multiple predefined environments in quick succession. It is run by calling 'python json_launcher.py'.
+			json_launcher.py will automatically execute main.py with parameters based on the contents of launcher.json
+
+			launcher.json format: 
+				At it's top level it is a list. Each element contains a dictionary representing a separate execution of main.py [execution1details, execution2details, etc]
+				The elements of each dictionary are:
+					"environment" - String defining the environment name to be used for naming output files.
+					"use_cached" - Boolean that identifies if cached credentials in config.ini should be used.
+					"vision_ip", "vision_username", "vision_password", "vision_root_password" - Strings defining vision connection info.
+					"time_range" - Dictionary containing two elements:
+						"type" - String identifying the time range type. --hours, --date-range, --epoch-range, --previous-time-range are acceptable values. See 'main.py -h' for details.
+						"value" - Varieant based on type specified. If selected type requires multiple inputs, place them in a list [StartTime, Endtime]
+					"defensepros_policies" - Dictionary containing "defensepro" : "policies" pairs. Input a single space for the policy name to select 'All'
+				See the included launcher.json.example for a sample.
+
+
 # Version Control
+	v0.15.11 - 11 December 2024 (Steve)
+		Corrected hardcoded path in sftp_module.py
+		Improved logging
+		json_launcher now properly uses launcher.json file
+		Minor visual improvements
+	v0.15.10 - 11 December 2024 (Steve)
+		Added environment name capability to json_launcher.py (example file updated accordingly)
+		Sent email will now include the environment name.
+		Simplified send_email datetime code.
+		Compressed output format changed from .tgz to .zip
+		Expanded error handing in send_email
+	v0.15.9 - 9 December 2024 (Steve)
+		Fixed send_email.py - Spaces to indent, not tabs!
+	v0.15.8 - 9 December 2024 (Steve)
+		Resolved issue with parsing datetime in send_email module.
+	v0.15.7 - 9 December 2024 (Steve)
+		Bugfix
+	v0.15.76 - 9 December 2024 (Steve)
+		Renamed email.py to send_email.py
+	v0.15.5 - 9 December 2024 (Steve)
+		Added 'attack wave' section to Attack Summary. 
+			By defaults attacks that occur within 5 minutes of a wave are grouped. This can be adjusted through config.ini [General] 
+	v0.15.4 - 3 December 2024 (Steve)
+		Added --environment argument to allow specifying environment name.
+	v0.15.3 - 22 November 2024 (Steve)
+		The script now temporarily outputs to './Temp/'. The temp folder will be deleted at the beginning of each execution when the script is not run in offline mode.
+		The contents of './Temp/' will be compressed to './Reports/Default/Default_%Y-%m-%d_%H.%M.%S.tgz'
+		A future update will allow you to replace 'Default' with a custom environment name.
+	v0.15.2 - 18 November 2024 (Egor)
+		Added sending email option (user configurable).
 	v0.15.1 - 14 November 2024 (Steve)
 		Time range input now accepts UTC as an optional parameter to specify non-local timezone.
 		Improved Vision/CC login error handling

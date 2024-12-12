@@ -2,7 +2,8 @@ import os
 import traceback
 import json
 import datetime
-import tarfile
+#import tarfile
+import zipfile
 
 #internal modules
 import clsVision
@@ -13,6 +14,7 @@ import html_data
 import html_graphs
 import html_header
 import sftp_module
+import send_email
 
 #Default options such as topN and output folder are now stored in common.py. 
 from common import *
@@ -24,23 +26,22 @@ collect_data=True
 parse_data=True
 if __name__ == '__main__':
     if collect_data and (not args or (args[0].lower() != '--offline' and args[0] != '-o')):
-    #if collect_data:
-        #Make sure outputFolder exists and that it is empty
-        if os.path.exists(outputFolder):
-            # Remove all files in the output folder
-            for filename in os.listdir(outputFolder):
-                file_path = os.path.join(outputFolder, filename)
-                if LogfileName not in file_path:
-                    try:
-                        if os.path.isfile(file_path):
-                            os.unlink(file_path)
-                    except Exception as e:
-                        update_log(f"Failed to delete {file_path}. Reason: {e}")
+        update_log("Beginning data collection")
+        #Make sure temp_folder exists and that it is empty
+        if os.path.exists(temp_folder):
+            # Remove all files in the temp folder
+            for filename in os.listdir(temp_folder):
+                file_path = os.path.join(temp_folder, filename)
+                #if log_file not in file_path:#We can exclude the log file from deletion by uncommenting this line.
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    update_log(f"Failed to delete {file_path}. Reason: {e}")
             pass
         else:
-            # Create the output folder if it doesn't exist
-            os.makedirs(outputFolder)
-
+            # Create the temp folder if it doesn't exist
+            os.makedirs(temp_folder)
         #Connect to Vision (instantiate v as a logged in vision instance. This will prompt a user for credentials)
         v = clsVision.clsVision()
 
@@ -50,9 +51,7 @@ if __name__ == '__main__':
         epoch_to_time = epoch_from_to_time_list[1]
         from_month = epoch_from_to_time_list[2]
         start_year = epoch_from_to_time_list[3]
-        to_month = epoch_from_to_time_list[4] if len(epoch_from_to_time_list) == 5 else None
-
-        
+        to_month = epoch_from_to_time_list[4] if len(epoch_from_to_time_list) == 5 else None        
 
         #Prompt user for a list of DefensePros
         device_ips, dp_list_ip = collector.user_selects_defensePros(v)
@@ -79,11 +78,10 @@ if __name__ == '__main__':
                 policies[ip] = [policy.strip() for policy in policy_input.split(',')]
 
         #Get attack data
-
         attack_data = collector.get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_list_ip)
 
         #Save the formatted JSON to a file
-        with open(outputFolder + 'response.json', 'w') as file:
+        with open(temp_folder + 'response.json', 'w') as file:
             json.dump(attack_data, file, indent=4)
         update_log("Response saved to response.json")
 
@@ -96,7 +94,7 @@ if __name__ == '__main__':
         all_results = {}
 
         for file in found_files:
-            file_path = os.path.join(outputFolder, file)
+            file_path = os.path.join(temp_folder, file)
             update_log(f"Processing file for BDoS attack logs: {file}")
             result = data_parser.parse_log_file(file_path, syslog_ids)
             
@@ -112,7 +110,7 @@ if __name__ == '__main__':
 
         # Calculate top BPS and PPS using html_data.get_top_n
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
-        with open(outputFolder + 'TopMetrics.json', 'w') as file:
+        with open(temp_folder + 'TopMetrics.json', 'w') as file:
             json.dump({
                 'top_by_bps': top_by_bps,
                 'top_by_pps': top_by_pps,
@@ -123,7 +121,7 @@ if __name__ == '__main__':
         bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, combined_unique_samples = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
         print(combined_unique_samples)
 
-        with open(outputFolder + 'SampleData.json', 'w') as file:
+        with open(temp_folder + 'SampleData.json', 'w') as file:
             json.dump({
                 'bps_data': bps_data,
                 'pps_data': pps_data,
@@ -141,7 +139,7 @@ if __name__ == '__main__':
                 attackData = v.getRawAttackSSH(details['Attack ID'])
                 if len(attackData.get('data',"")) > 2:
                     attack_graph_data.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
-        with open(outputFolder + 'AttackGraphsData.json', 'w', encoding='utf-8') as file:
+        with open(temp_folder + 'AttackGraphsData.json', 'w', encoding='utf-8') as file:
             json.dump(attack_graph_data, file, ensure_ascii=False, indent=4)
 
         #Get the overall attack rate graph data for the specified time period
@@ -154,7 +152,7 @@ if __name__ == '__main__':
             'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps", selectedDevices)
             }
         #Save the raw attack rate graph data to a file
-        with open(outputFolder + 'TopGraphsData.json', 'w', encoding='utf-8') as file:
+        with open(temp_folder + 'TopGraphsData.json', 'w', encoding='utf-8') as file:
             json.dump(rate_data, file, ensure_ascii=False, indent=4)
         
         #Save a file with the details of the current run.
@@ -167,24 +165,29 @@ Vision / Cyber Controller IP: {v.ip}
 DPs: {', '.join(device_ips)}
 Policies: {"All" if len(policies) == 0 else policies}"""
         
-        with open(outputFolder + 'ExecutionDetails.txt', 'w', encoding='utf-8') as file:
+        with open(temp_folder + 'ExecutionDetails.txt', 'w', encoding='utf-8') as file:
             file.write(executionStatistics)
-
+        update_log("Data collection complete")
         ##############################End of Collect_Data section##############################
 
 
-
     if parse_data:
-        # Load saved metrics if collect_data is False
-        with open(outputFolder + 'TopMetrics.json') as file:
-            top_metrics = json.load(file)
+        update_log("Generating output:")
+        # Load saved metrics
+        
+        try:
+            with open(temp_folder + 'TopMetrics.json') as file:
+                top_metrics = json.load(file)
+        except FileNotFoundError:
+            update_log(f"{temp_folder + 'TopMetrics.json'} not found! Unable to continue.")
+            exit(0)
         top_by_bps = top_metrics['top_by_bps']
         top_by_pps = top_metrics['top_by_pps']
         unique_protocols = top_metrics['unique_protocols']
         count_above_threshold = top_metrics['count_above_threshold']
 
         # Read sample data from JSON file
-        with open(outputFolder + 'SampleData.json') as file:
+        with open(temp_folder + 'SampleData.json') as file:
             sample_data = json.load(file)
         bps_data = sample_data['bps_data']
         pps_data = sample_data['pps_data']
@@ -201,32 +204,35 @@ Policies: {"All" if len(policies) == 0 else policies}"""
             top_n_attack_ids.add(attack[1]['Attack ID'])
 
         #Load graph data from JSON file
-        with open(outputFolder + 'AttackGraphsData.json') as data_file:
+        with open(temp_folder + 'AttackGraphsData.json') as data_file:
             attack_graph_data = json.load(data_file)
-        with open(outputFolder + 'TopGraphsData.json') as data_file:
+        with open(temp_folder + 'TopGraphsData.json') as data_file:
             rate_data = json.load(data_file)
-        with open(outputFolder + 'response.json') as data_file:
+        with open(temp_folder + 'response.json') as data_file:
             attack_data = json.load(data_file)
 
         #Open executionStatistics.txt and include the contained information in the header
+        update_log("Generating header")
         statsForHeader = ""
-        with open(outputFolder + 'ExecutionDetails.txt', "r") as file:
+        with open(temp_folder + 'ExecutionDetails.txt', "r") as file:
             for line in file:
                 statsForHeader += f"<p>{line.strip()}</p>\n"
 
         finalHTML = html_header.getHeader(statsForHeader) + html_graphs.graphPrerequesites()
 
         finalHTML += "\n<h2>Attack Summary</h2>"
+        update_log("Generating attack summary")
         finalHTML += html_attack_summary.getSummary(top_metrics, rate_data, attack_graph_data, deduplicated_sample_data, attack_data, top_n_attack_ids)
 
         #Create the two graphs at the top of the HTML file
         finalHTML += "\n<h2>Traffic Bandwidth</h2>"
+        update_log("Generating first graphs")
         graphHTML = html_graphs.createTopGraphsHTML(rate_data['bps'], rate_data['pps'])
         finalHTML += graphHTML
 
         #Create pie charts
+        update_log("Generating pie charts")
         finalHTML += html_graphs.createPieCharts(attack_data, top_n_attack_ids)
-
 
         #top_by_bps, top_by_pps, unique_protocols, count_above_threshold = html_data.get_top_n(syslog_details, topN, threshold_gbps=1)
         #bps_data, pps_data = collector.get_all_sample_data(v, top_by_bps, top_by_pps)
@@ -236,18 +242,23 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         #print(combined_unique_samples)
         #print("BPS Data:", bps_data)
         #print("PPS Data:", pps_data)
+        update_log("Generating Tables")
         attackdataHTML = html_data.generate_html_report(top_by_bps, top_by_pps, unique_protocols, count_above_threshold, bps_data, pps_data, unique_ips_bps, unique_ips_pps, deduplicated_sample_data, topN, threshold_gbps=1)
         finalHTML += attackdataHTML 
 
         #Create dynamic graph combining all attacks into one graph.
         finalHTML += "\n<h2>Combined Chart</h2>"
+        update_log("Generating combined charts")
         try:
             finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data) 
         except:
             update_log("Unexpected createCombinedChart() error: ")
-            traceback.print_exc()
+            error_message = traceback.format_exc()
+            indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
+            update_log(indented_error_message)
 
         finalHTML += "\n<h2>Charts per attack ID</h2>"
+        update_log("Generating per-attack graphs")
         #Add an individual graph for each attack
         for attackID, data in attack_graph_data.items():
             try:
@@ -255,37 +266,55 @@ Policies: {"All" if len(policies) == 0 else policies}"""
                 finalHTML += html_graphs.createChart(attackID, data)
             except:
                 update_log(f"Error graphing attackID '{attackID}':")
-                traceback.print_exc()
+                #traceback.print_exc()
+                error_message = traceback.format_exc()
+                indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
+                update_log(indented_error_message)
 
         endHTML = "</body></html>"
         finalHTML += endHTML
 
-        html_file_path = os.path.join(outputFolder, 'DP-Attack-Story_Report.html')
+        update_log("Creating output file.")
+        html_file_path = os.path.join(temp_folder, 'DP-Attack-Story_Report.html')
         with open(html_file_path, 'w') as file:
             file.write(finalHTML)
         update_log(f"Graphs and metrics saved to {html_file_path}")
         
         #Script execution complete. Compress and delete the output folder
-        if False:
-            if config.get("General","Compress_Output","TRUE").upper() == "TRUE":
-                with tarfile.open(outputFolder[:-1] + ".tgz", "w:gz"):
-                    tarfile.add(outputFolder, arcname='.') #Arcname='.' preserves the folder structure
-                    print(f"{outputFolder} has been compressed to {outputFolder[:-1]}.tgz")
-                if os.path.exists(outputFolder):
-                    # Remove all files in the output folder
-                    for filename in os.listdir(outputFolder):
-                        file_path = os.path.join(outputFolder, filename)
-                        try:
-                            if os.path.isfile(file_path):
-                                os.unlink(file_path)
-                        except Exception as e:
-                            update_log(f"Failed to delete {file_path}. Reason: {e}")
-                    try:
-                        os.rmdir(outputFolder)
-                        print(f"{outputFolder} has been deleted.")
-                    except FileNotFoundError:
-                        print(f"{outputFolder} does not exist.")
-                    except OSError:
-                        print(f"{outputFolder} is not empty or cannot be deleted.")
+        update_log("Compressing Output")
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        # with tarfile.open(output_file, "w:gz") as tar:
+        #     for item in os.listdir(temp_folder):  # Iterate over the contents of temp_folder
+        #         item_path = os.path.join(temp_folder, item)
+        #         tar.add(item_path, arcname=item)  # Add each item with its base name
+        #     print(f"{temp_folder} has been compressed to {output_file}")
+        with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for item in os.listdir(temp_folder): 
+                item_path = os.path.join(temp_folder, item)
+                zipf.write(item_path, arcname=item)
+            update_log(f"{temp_folder} has been compressed to {output_file}")
+        # if os.path.exists(temp_folder):
+        #     # Remove all files in the output folder
+        #     for filename in os.listdir(temp_folder):
+        #         file_path = os.path.join(temp_folder, filename)
+        #         try:
+        #             if os.path.isfile(file_path):
+        #                 os.unlink(file_path)
+        #         except Exception as e:
+        #             update_log(f"Failed to delete {file_path}. Reason: {e}")
+        #     try:
+        #         os.rmdir(temp_folder)
+        #         print(f"{temp_folder} has been deleted.")
+        #     except FileNotFoundError:
+        #         print(f"{temp_folder} does not exist.")
+        #     except OSError:
+        #         print(f"{temp_folder} is not empty or cannot be deleted.")
 
         ##############################End of Parse_Data Section##############################
+
+        ##############################Send email ############################################
+
+        if config.get("Email","send_email","val").upper() == "TRUE":
+            send_email.send_email(output_file)
+        update_log("Execution completed")

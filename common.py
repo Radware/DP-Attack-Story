@@ -11,7 +11,14 @@ script_start_time = datetime.datetime.now()
 temp_folder = "./Temp/"
 log_file = temp_folder + "Attack-Story.log"
 
-print(args)
+def update_log(message):
+    print(message)
+    with(open(log_file,"a")) as file:
+        timeStamp = datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')
+        log_entry = f"[{timeStamp}] {message}\n"
+        file.write(log_entry)
+
+update_log(f"args: {args}")
 if '-e' in args:
     index = args.index('-e')
 elif '--environment' in args:
@@ -23,20 +30,20 @@ if index > -1:
     if index + 1 < len(args):
         environment_name = args.pop(index + 1)
         args.pop(index)
-        print(f"Using environment {environment_name}")
+        update_log(f"Using environment {environment_name}")
     else:
-        print("--environment used without specifying environment.")
+        update_log("--environment used without specifying environment.")
         exit(1)
 else:
     environment_name = "Default"
-    print(f"--environment <environment name> not specified, output will use 'Default'.")
+    update_log(f"--environment <environment name> not specified, output will use 'Default'.")
 
 output_folder = f"./Reports/{environment_name}/"
 output_file = f"{output_folder}{environment_name}_{script_start_time.strftime('%Y-%m-%d_%H.%M.%S')}.zip"
 
 
 
-if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?')):
+if len(args) > 0 and (args[0].startswith('-h') or args[0].startswith('?') or args[0].startswith('--h')):
     print("  Script syntax:")
     print("  python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...")
     print("    ***Note: The order of arguments is important and must not deviate from the above template.***")
@@ -117,11 +124,6 @@ class clsConfig():
 config = clsConfig()
 topN = int(config.get("General","Top_N","10"))
 
-def update_log(message):
-    print(message)
-    with(open(log_file,"a")) as file:
-        timeStamp = datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')
-        log_entry = f"[{timeStamp}] {message}\n"
-        file.write(log_entry)
+
 
 

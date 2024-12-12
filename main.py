@@ -253,7 +253,9 @@ Policies: {"All" if len(policies) == 0 else policies}"""
             finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data) 
         except:
             update_log("Unexpected createCombinedChart() error: ")
-            traceback.print_exc()
+            error_message = traceback.format_exc()
+            indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
+            update_log(indented_error_message)
 
         finalHTML += "\n<h2>Charts per attack ID</h2>"
         update_log("Generating per-attack graphs")
@@ -264,7 +266,10 @@ Policies: {"All" if len(policies) == 0 else policies}"""
                 finalHTML += html_graphs.createChart(attackID, data)
             except:
                 update_log(f"Error graphing attackID '{attackID}':")
-                traceback.print_exc()
+                #traceback.print_exc()
+                error_message = traceback.format_exc()
+                indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
+                update_log(indented_error_message)
 
         endHTML = "</body></html>"
         finalHTML += endHTML
@@ -288,7 +293,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
             for item in os.listdir(temp_folder): 
                 item_path = os.path.join(temp_folder, item)
                 zipf.write(item_path, arcname=item)
-            print(f"{temp_folder} has been compressed to {output_file}")
+            update_log(f"{temp_folder} has been compressed to {output_file}")
         # if os.path.exists(temp_folder):
         #     # Remove all files in the output folder
         #     for filename in os.listdir(temp_folder):

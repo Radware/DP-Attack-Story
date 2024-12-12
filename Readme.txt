@@ -55,7 +55,29 @@
 
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
 
+		JSON launcher:
+			The purpose of the json launcher is to run the script against multiple predefined environments in quick succession. It is run by calling 'python json_launcher.py'.
+			json_launcher.py will automatically execute main.py with parameters based on the contents of launcher.json
+
+			launcher.json format: 
+				At it's top level it is a list. Each element contains a dictionary representing a separate execution of main.py [execution1details, execution2details, etc]
+				The elements of each dictionary are:
+					"environment" - String defining the environment name to be used for naming output files.
+					"use_cached" - Boolean that identifies if cached credentials in config.ini should be used.
+					"vision_ip", "vision_username", "vision_password", "vision_root_password" - Strings defining vision connection info.
+					"time_range" - Dictionary containing two elements:
+						"type" - String identifying the time range type. --hours, --date-range, --epoch-range, --previous-time-range are acceptable values. See 'main.py -h' for details.
+						"value" - Varieant based on type specified. If selected type requires multiple inputs, place them in a list [StartTime, Endtime]
+					"defensepros_policies" - Dictionary containing "defensepro" : "policies" pairs. Input a single space for the policy name to select 'All'
+				See the included launcher.json.example for a sample.
+
+
 # Version Control
+	v0.15.11 - 11 December 2024 (Steve)
+		Corrected hardcoded path in sftp_module.py
+		Improved logging
+		json_launcher now properly uses launcher.json file
+		Minor visual improvements
 	v0.15.10 - 11 December 2024 (Steve)
 		Added environment name capability to json_launcher.py (example file updated accordingly)
 		Sent email will now include the environment name.

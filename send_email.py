@@ -50,7 +50,7 @@ def send_email(compressed_output):
     msg["From"] = smtp_sender
     msg["To"] = smtp_list
     #msg["Subject"] = f"Attack Story - {formatted_datetime}"
-    msg["Subject"] = f'Attack Story - {environment_name} {script_start_time.strftime("%B %d, %Y %H:%M")}'
+    msg["Subject"] = f'Attack Story - {environment_name} - {script_start_time.strftime("%B %d, %Y %H:%M")}'
     attach_files(msg,compressed_output)
     msg_body=email_body()
     msg.attach(MIMEText(msg_body, 'html'))

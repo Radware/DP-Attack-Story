@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 # Define the path to the main script and the JSON file
-json_file_path = 'config.json'
+json_file_path = 'launcher.json'
 main_script_path = 'main.py'
 
 def load_json(file_path):

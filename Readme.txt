@@ -73,35 +73,18 @@
 
 
 # Version Control
-	v0.15.11 - 11 December 2024 (Steve)
-		Corrected hardcoded path in sftp_module.py
-		Improved logging
-		json_launcher now properly uses launcher.json file
-		Minor visual improvements
-	v0.15.10 - 11 December 2024 (Steve)
+	v0.16.1 - 19 December 2024 (Steve)
+		The script now outputs to './Temp/'. The temp folder will be deleted at the beginning of each execution when the script is not run in offline mode.
+		The contents of './Temp/' will be compressed to './Reports/<environment name>/<environment name>_%Y-%m-%d_%H.%M.%S.zip'
+		<environment name> can be modified using the --environment runtime argument.
 		Added environment name capability to json_launcher.py (example file updated accordingly)
-		Sent email will now include the environment name.
-		Simplified send_email datetime code.
-		Compressed output format changed from .tgz to .zip
-		Expanded error handing in send_email
-	v0.15.9 - 9 December 2024 (Steve)
-		Fixed send_email.py - Spaces to indent, not tabs!
-	v0.15.8 - 9 December 2024 (Steve)
-		Resolved issue with parsing datetime in send_email module.
-	v0.15.7 - 9 December 2024 (Steve)
-		Bugfix
-	v0.15.76 - 9 December 2024 (Steve)
-		Renamed email.py to send_email.py
-	v0.15.5 - 9 December 2024 (Steve)
 		Added 'attack wave' section to Attack Summary. 
-			By defaults attacks that occur within 5 minutes of a wave are grouped. This can be adjusted through config.ini [General] 
-	v0.15.4 - 3 December 2024 (Steve)
-		Added --environment argument to allow specifying environment name.
-	v0.15.3 - 22 November 2024 (Steve)
-		The script now temporarily outputs to './Temp/'. The temp folder will be deleted at the beginning of each execution when the script is not run in offline mode.
-		The contents of './Temp/' will be compressed to './Reports/Default/Default_%Y-%m-%d_%H.%M.%S.tgz'
-		A future update will allow you to replace 'Default' with a custom environment name.
-	v0.15.2 - 18 November 2024 (Egor)
+			By defaults attacks that occur within 5 minutes of a wave are grouped. This can be adjusted through config.ini [General]
+		Corrected hardcoded path in sftp_module.py
+		json_launcher now uses launcher.json file
+		Minor visual improvements
+		Improved logging
+	v0.16.0 - 19 December 2024 (Egor)
 		Added sending email option (user configurable).
 	v0.15.1 - 14 November 2024 (Steve)
 		Time range input now accepts UTC as an optional parameter to specify non-local timezone.

@@ -220,7 +220,7 @@ def user_selects_defensePros(v):
                     #device_entries = valid_ips
                     break
                 else:
-                    print("Please enter valid IP addresses.")
+                    print("Please enter valid IP addresses or device hostnames.")
         return valid_ips, dp_list_ip
 
     except Exception as e:

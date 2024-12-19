@@ -4,7 +4,7 @@
 		"environment":"Environment_name_1",
         "time_range": {
             "type": "--hours",
-            "value": 3
+            "value": 24
         },
         "defensepros_policies": {
             "1.2.3.4": "Policies,policy2",

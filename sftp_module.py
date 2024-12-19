@@ -2,11 +2,12 @@ import re
 import warnings
 import configparser
 from getpass import getpass  # For secure password input
+from common import *
 
 try:
     import pysftp
 except ImportError:
-    print("The python module 'pysftp' is not installed. Please install it by running: pip install pysftp")
+    update_log("The python module 'pysftp' is not installed. Please install it by running: pip install pysftp")
     exit()
 
 warnings.filterwarnings(action='ignore', module='pysftp', category=UserWarning)
@@ -51,7 +52,7 @@ def get_attack_log(v, device_ips, from_month, start_year, to_month=None):
 
     # Define the remote and local paths
     remote_path = '/disk/var/attacklog/bdos'
-    local_path = './Output/'
+    #local_path = './Output/'
 
     #year = 2024 
 
@@ -71,24 +72,25 @@ def get_attack_log(v, device_ips, from_month, start_year, to_month=None):
             password = dpData['deviceSetup']['deviceAccess']['httpsPassword']
             port = dpData['deviceSetup']['deviceAccess']['cliPort']
             with pysftp.Connection(device_ip, username=username, password=password, port=port, cnopts=cnopts) as sftp:
-                print(f"Connected to {device_ip} ... ")
+                update_log(f"Connected to {device_ip} ... ")
 
                 files = sftp.listdir(remote_path)
                 found_files = [file for file in files if pattern.match(file)]
     
                 if found_files:
-                    print(f"Found files: {found_files}")
+                    update_log(f"Found files: {found_files}")
                     all_found_files.extend(found_files)
                     for found_file in found_files:
                         remote_file_path = f"{remote_path}/{found_file}"
-                        local_file_path = f"{local_path}/{found_file}"
+                        local_file_path = f"{temp_folder}{found_file}"
                         sftp.get(remote_file_path, local_file_path)
-                        print(f"Downloaded {remote_file_path} to {local_file_path}")
+                        update_log(f"Downloaded {remote_file_path} to {local_file_path}")
+                        
                 else:
-                    print(f"No files found on {device_ip} with the format BDOS{start_year}{from_month}")
+                    update_log(f"No files found on {device_ip} with the format BDOS{start_year}{from_month}")
 
         except Exception as e:
-            print(f"Failed to connect to {device_ip}: {str(e)}")
+            update_log(f"Failed to connect to {device_ip}: {str(e)}")
             
-    print("SFTP operations completed.")
+    update_log("SFTP operations completed.")
     return all_found_files

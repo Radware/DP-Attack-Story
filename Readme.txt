@@ -36,8 +36,10 @@
 
 		At the time of updating this section of the readme (30 October 2024), the output of python main.py -h is:
 			Script syntax:
-				python main.py [--use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
+			python main.py [--environment <name>] [--offline | --use-cached | <Vision_IP Username Password RootPassword>] <Time-Range> <DefensePro-list> <First-DP-policy-list> <Second-DP-policy-list> <X-DP-policy-list>...
 				***Note: The order of arguments is important and must not deviate from the above template.***
+				--environment, -e      Optional: Specify an environment. This is used for output naming. Script will use 'Default' if not specified.
+				--offline, -o         Instead of connecting to a live Vision appliance, use cached data stored in ./Temp/ for generating DP-Attack-Story_Report.html
 				--use-cached, -c      Use information stored in 'config.ini' for Vision IP, username, and password
 				<time-range> options:
 					--hours, -h <number_of_hours>                      Select data from the past X hours.
@@ -49,11 +51,41 @@
 			Examples:
 				python main.py -c --hours 3 DefensePro1,DefensePro2,192.168.1.20 DefensePro1_BdosProfile,DefensePro1_SynFloodProtection DP2_BdosProfile,DP2_SynFloodProtection DP3_Policy1
 				python main.py 192.168.1.1 admin radware radware1 --epoch-range 859885200 859971600 '' ''
-				python main.py --use-cached --date-range "11 Oct 2024 09:00:00 UTC" "11 Oct 2024 18:00:00 UTC" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
+				python main.py --use-cached --date-range "11 Oct 2024 09:00:00" "11 Oct 2024 18:00:00" "DP1, DP2" "DP1_Policy1, DP1_Policy2" "DP2_Policy1, DP2_Policy2"
 
 		** These arguments are subject to change. Don't trust the list on this page. They are only listed here to give you an idea of what options are available. **
 
+		JSON launcher:
+			The purpose of the json launcher is to run the script against multiple predefined environments in quick succession. It is run by calling 'python json_launcher.py'.
+			json_launcher.py will automatically execute main.py with parameters based on the contents of launcher.json
+
+			launcher.json format: 
+				At it's top level it is a list. Each element contains a dictionary representing a separate execution of main.py [execution1details, execution2details, etc]
+				The elements of each dictionary are:
+					"environment" - String defining the environment name to be used for naming output files.
+					"use_cached" - Boolean that identifies if cached credentials in config.ini should be used.
+					"vision_ip", "vision_username", "vision_password", "vision_root_password" - Strings defining vision connection info.
+					"time_range" - Dictionary containing two elements:
+						"type" - String identifying the time range type. --hours, --date-range, --epoch-range, --previous-time-range are acceptable values. See 'main.py -h' for details.
+						"value" - Varieant based on type specified. If selected type requires multiple inputs, place them in a list [StartTime, Endtime]
+					"defensepros_policies" - Dictionary containing "defensepro" : "policies" pairs. Input a single space for the policy name to select 'All'
+				See the included launcher.json.example for a sample.
+
+
 # Version Control
+	v0.16.1 - 19 December 2024 (Steve)
+		The script now outputs to './Temp/'. The temp folder will be deleted at the beginning of each execution when the script is not run in offline mode.
+		The contents of './Temp/' will be compressed to './Reports/<environment name>/<environment name>_%Y-%m-%d_%H.%M.%S.zip'
+		<environment name> can be modified using the --environment runtime argument.
+		Added environment name capability to json_launcher.py (example file updated accordingly)
+		Added 'attack wave' section to Attack Summary. 
+			By defaults attacks that occur within 5 minutes of a wave are grouped. This can be adjusted through config.ini [General]
+		Corrected hardcoded path in sftp_module.py
+		json_launcher now uses launcher.json file
+		Minor visual improvements
+		Improved logging
+	v0.16.0 - 19 December 2024 (Egor)
+		Added sending email option (user configurable).
 	v0.15.1 - 14 November 2024 (Steve)
 		Time range input now accepts UTC as an optional parameter to specify non-local timezone.
 		Improved Vision/CC login error handling

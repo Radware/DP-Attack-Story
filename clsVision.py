@@ -103,7 +103,7 @@ class clsVision:
             r = self.sess.post(url=login_url, json=self.auth_data, verify=False)
             r.raise_for_status()  # Raises an error for HTTP errors
         except requests.exceptions.RequestException as err:
-            self.update_log(err)  # Assuming update_log is defined elsewhere
+            update_log(err)  # Assuming update_log is defined elsewhere
             raise SystemExit(err)
         
         try:

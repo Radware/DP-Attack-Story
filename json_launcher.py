@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 # Define the path to the main script and the JSON file
-json_file_path = 'config.json'
+json_file_path = 'launcher.json'
 main_script_path = 'main.py'
 
 def load_json(file_path):
@@ -22,6 +22,11 @@ def substitute_env_vars(value):
 def build_arguments(json_entry):
     """Convert a JSON entry to command-line arguments for the main script."""
     args = []
+
+    #Include the environment name:
+    env = json_entry.get('environment')
+    if env:
+        args.extend(["--environment", env])
 
     # Check if using cached credentials
     if json_entry.get('use_cached'):

@@ -299,6 +299,12 @@ class clsVision:
                 "inverseFilter": True,
                 "field": "enrichmentContainer.eaaf.eaaf",
                 "value": "true"
+            },
+            {
+                "type": "termFilter",
+                "inverseFilter": True,
+                "field": "category",
+                "value": "Anomalies"
             }
         ]
         if filter_json:

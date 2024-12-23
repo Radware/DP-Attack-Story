@@ -73,6 +73,8 @@
 
 
 # Version Control
+	v0.16.2 - 23 December 2024 (Prateek)
+		Added functionality to ignore Packet Anomalies from the report (hardcoded)
 	v0.16.1 - 19 December 2024 (Steve)
 		The script now outputs to './Temp/'. The temp folder will be deleted at the beginning of each execution when the script is not run in offline mode.
 		The contents of './Temp/' will be compressed to './Reports/<environment name>/<environment name>_%Y-%m-%d_%H.%M.%S.zip'

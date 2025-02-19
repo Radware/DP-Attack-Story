@@ -13,7 +13,7 @@ def getHeader(stats):
     <table>
       <tr>
         <td width="50%" style="text-align: center; border: none;">{logo()}</td>
-        <td width="50%" style="border: none;">
+        <td width="50%" style="border: none; text-align: left;">
 {stats}  
       </td>
       </tr>
@@ -35,7 +35,7 @@ def getCSS():
         th, td {
             border: 1px solid black;
             padding: 8px;
-            text-align: left;
+            text-align: center;
         }
         th {
             background-color: #f2f2f2;

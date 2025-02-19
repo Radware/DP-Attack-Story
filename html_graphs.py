@@ -259,12 +259,197 @@ def createChart(Title, myData):
             }});
         }}
     </script>
-    <div id="{name}-bottom" style="width: 100%; height: 500px;"></div>
+    <div id="{name}-bottom" style="width: 100%; height: 500px; display: none;"></div>
     """
     return html_content
 
-
 def createCombinedChart(Title, myData):
+    """
+    Build HTML+JS to render a combined Google Chart with PPS/BPS lines,
+    including metadata in the tooltip.
+    
+    myData structure example:
+      {
+        "dataset1": {
+          "data": [
+            {"row": {"timeStamp": 1731526443458, "Bps": 4, "Pps": 0}},
+            {"row": {"timeStamp": 1731526458458, "Bps": 10, "Pps": 2}},
+            ...
+          ],
+          "metadata": {"dp_name": "DataPoint1", "other_info": "..." }
+        },
+        "dataset2": {
+          "data": [...],
+          "metadata": {...}
+        },
+        ...
+      }
+    """
+    out_datasets = {}
+    metadata_map = {}
+
+    for dataset_name, dataset_data in myData.items():
+        cur_dataset_pps = []
+        cur_dataset_bps = []
+        rows = dataset_data['data']
+        metadata_map[dataset_name] = dataset_data.get('metadata', {})
+
+        for row in rows:
+            cur_row = row['row']
+            timestamp = round(cur_row['timeStamp'] / 15000) * 15000  # Round to the nearest 15 seconds
+            cur_row_pps = [timestamp, cur_row['Pps']]
+            cur_row_bps = [timestamp, cur_row['Bps']]
+            cur_dataset_pps.append(cur_row_pps)
+            cur_dataset_bps.append(cur_row_bps)
+
+        sorted_dataset_pps = sorted(cur_dataset_pps, key=lambda x: x[0])
+        sorted_dataset_bps = sorted(cur_dataset_bps, key=lambda x: x[0])
+        out_datasets[f'{dataset_name}_pps'] = sorted_dataset_pps
+        out_datasets[f'{dataset_name}_bps'] = sorted_dataset_bps
+
+    sorted_keys = sorted(
+        out_datasets.keys(),
+        key=lambda k: out_datasets[k][0][0] if out_datasets[k] else float('inf')
+    )
+
+    out_datasets = {key: out_datasets[key] for key in sorted_keys}
+
+    out_html = f"""
+    <div id="checkboxes_{Title}"></div>
+    <div id="chart_div_pps_{Title}" style="width: 100%; height: 500px;"></div>
+    <div id="chart_div_bps_{Title}" style="width: 100%; height: 500px;"></div>
+
+    <script type="text/javascript">
+        (function() {{
+            const datasets_{Title} = {json.dumps(out_datasets)};
+            const metadataMap_{Title} = {json.dumps(metadata_map)};
+            const checkboxContainer_{Title} = document.getElementById('checkboxes_{Title}');
+            const filteredDataset_pps_{Title} = {{}};
+            const filteredDataset_bps_{Title} = {{}};
+
+            // Create checkboxes dynamically for each dataset pair (_pps and _bps)
+            Object.keys(datasets_{Title}).forEach(function(datasetName) {{
+                if (datasetName.endsWith('_pps')) {{
+                    const baseName = datasetName.replace('_pps', ''); // Get the base dataset name
+                    const label = document.createElement('label');
+                    label.innerHTML = 
+                        `<input type="checkbox" value="${{baseName}}" class="dataset-checkbox-{Title}"> ${{baseName}}`;
+                    checkboxContainer_{Title}.appendChild(label);
+                    checkboxContainer_{Title}.appendChild(document.createElement('br'));
+                }}
+            }});
+
+            // Prepare data for Google Charts
+            function prepareDataForGoogleCharts_{Title}(filteredDataset) {{
+                const allTimestamps = new Set();
+                Object.values(filteredDataset).forEach(dataset => {{
+                    dataset.forEach(dataPoint => {{
+                        allTimestamps.add(dataPoint[0]);
+                    }});
+                }});
+                const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+                const dataArray = [];
+                const datasetNames = Object.keys(filteredDataset);
+            
+                // Add headers, including a tooltip column for each dataset
+                const headerRow = ['Timestamp'];
+                datasetNames.forEach(name => {{
+                    headerRow.push(name); // Data column
+                    headerRow.push({{
+                        type: 'string',
+                        role: 'tooltip',
+                        p: {{ html: true }}
+                    }}); // Tooltip column
+                }});
+                dataArray.push(headerRow);
+            
+                // Populate rows with data and tooltips
+                sortedTimestamps.forEach(timestamp => {{
+                    const row = [new Date(timestamp)];
+                    datasetNames.forEach(datasetName => {{
+                        const dataPoint = filteredDataset[datasetName].find(dp => dp[0] === timestamp);
+                        const value = dataPoint ? dataPoint[1] : null;
+                        row.push(value); // Data value
+                        if (value !== null) {{
+                            const metadata = metadataMap_{Title}[datasetName.replace('_pps', '').replace('_bps', '')];
+                            //row.push(`<div><strong>Value:</strong> ${{value}} ${{JSON.stringify(metadata)}}</div>`); // Tooltip
+                            row.push(`<div style="margin-left: 20px;"><strong>Value:</strong> ${{value}} <br>${{Object.entries(metadata).map(([key, value]) => `${{key}}: ${{value}}`).join('<br>')}}</div>`); // Tooltip
+                            
+                        }} else {{
+                            row.push(null)
+                        }}
+                    }});
+                    dataArray.push(row);
+                }});
+                return dataArray;
+            }}
+
+
+            // Update the Google Charts
+            function updateChart_{Title}(type) {{
+                let chartData, chart, chartDiv;
+                if (type === 'pps') {{
+                    chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_pps_{Title});
+                    chartDiv = document.getElementById('chart_div_pps_{Title}');
+                    chart = new google.visualization.LineChart(chartDiv);
+                }} else if (type === 'bps') {{
+                    chartData = prepareDataForGoogleCharts_{Title}(filteredDataset_bps_{Title});
+                    chartDiv = document.getElementById('chart_div_bps_{Title}');
+                    chart = new google.visualization.LineChart(chartDiv);
+                }}
+                const data = google.visualization.arrayToDataTable(chartData);
+                const options = {{
+                    curveType: 'function',
+                    legend: {{
+                        position: 'top',
+                        textStyle: {{ fontSize: 12 }},
+                        maxLines: 6
+                    }},
+                    hAxis: {{
+                        title: 'Time (UTC)',
+                        format: 'HH:mm:ss',
+                        slantedText: true,
+                        slantedTextAngle: 45
+                    }},
+                    vAxis: {{
+                        viewWindow: {{ min: 0 }}
+                    }},
+                    tooltip: {{
+                        isHtml: true
+                    }},
+                    focusTarget: 'category',
+                    interpolateNulls: true
+                }};
+                chart.draw(data, options);
+            }}
+
+            // Load Google Charts and set up event listeners
+            google.charts.load('current', {{ packages: ['corechart'] }});
+            google.charts.setOnLoadCallback(() => {{
+                document.querySelectorAll('.dataset-checkbox-{Title}').forEach(function(checkbox) {{
+                    checkbox.addEventListener('change', function() {{
+                        const baseName = checkbox.value;
+                        if (checkbox.checked) {{
+                            filteredDataset_pps_{Title}[baseName + '_pps'] = datasets_{Title}[baseName + '_pps'];
+                            filteredDataset_bps_{Title}[baseName + '_bps'] = datasets_{Title}[baseName + '_bps'];
+                        }} else {{
+                            delete filteredDataset_pps_{Title}[baseName + '_pps'];
+                            delete filteredDataset_bps_{Title}[baseName + '_bps'];
+                        }}
+                        updateChart_{Title}('pps'); // Update PPS chart
+                        updateChart_{Title}('bps'); // Update BPS chart
+                    }});
+                    checkbox.checked = true;
+                    checkbox.dispatchEvent(new Event('change'));
+                }});
+            }});
+        }})();
+    </script>
+    """
+    return out_html
+
+
+def createCombinedChartOld(Title, myData):
     # Generate a random ID for the chart name
     rand_ID = random.randrange(100000000, 999999999)
     name = f'draw_{Title.replace(" ","_").replace("-","_")}_{str(rand_ID)}'

@@ -138,6 +138,11 @@ if __name__ == '__main__':
             if details.get('graph', False):
                 attackData = v.getRawAttackSSH(details['Attack ID'])
                 if len(attackData.get('data',"")) > 2:
+                    attackData['metadata'] = {
+                        'DefensePro IP':details['Device IP'],
+                        'DefensePro Name':dp_list_ip[details['Device IP']]['name'],
+                        'Policy':details['Policy']
+                        }
                     attack_graph_data.update({details['Attack Name'].replace(' ','_') + '_' + details['Attack ID']: attackData})
         with open(temp_folder + 'AttackGraphsData.json', 'w', encoding='utf-8') as file:
             json.dump(attack_graph_data, file, ensure_ascii=False, indent=4)
@@ -163,6 +168,7 @@ Start Time: {datetime.datetime.fromtimestamp(epoch_from_time/1000, tz=datetime.t
 End Time: {datetime.datetime.fromtimestamp(epoch_to_time  /1000, tz=datetime.timezone.utc).strftime('%d-%m-%Y %H:%M:%S %Z')}
 Vision / Cyber Controller IP: {v.ip}
 DPs: {', '.join(device_ips)}
+Unavailable DPs: {', '.join(common_globals['unavailable_devices'])}
 Policies: {"All" if len(policies) == 0 else policies}"""
         
         with open(temp_folder + 'ExecutionDetails.txt', 'w', encoding='utf-8') as file:
@@ -249,15 +255,18 @@ Policies: {"All" if len(policies) == 0 else policies}"""
         #Create dynamic graph combining all attacks into one graph.
         finalHTML += "\n<h2>Combined Chart</h2>"
         update_log("Generating combined charts")
-        try:
-            finalHTML += html_graphs.createCombinedChart("Custom", attack_graph_data) 
-        except:
-            update_log("Unexpected createCombinedChart() error: ")
-            error_message = traceback.format_exc()
-            indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
-            update_log(indented_error_message)
+        #try:
+        finalHTML += "\n" + html_graphs.createCombinedChart("Combined_Chart", attack_graph_data)
+        #finalHTML += "\n<h2>Combined Chart(old)</h2>"
+        #finalHTML += html_graphs.createCombinedChartOld("Custom", attack_graph_data) 
+        #except:
+        #    update_log("Unexpected createCombinedChart() error: ")
+        #    error_message = traceback.format_exc()
+        #    indented_error_message = "\n".join("\t" + line for line in error_message.splitlines())
+        #    update_log(indented_error_message)
 
-        finalHTML += "\n<h2>Charts per attack ID</h2>"
+        #Charts per attack ID are removed from bottom of the output. To readd, uncomment the follwoing line and remove display: none; from the output of createChart()
+        #finalHTML += "\n<h2>Charts per attack ID</h2>"  
         update_log("Generating per-attack graphs")
         #Add an individual graph for each attack
         for attackID, data in attack_graph_data.items():
@@ -317,4 +326,7 @@ Policies: {"All" if len(policies) == 0 else policies}"""
 
         if config.get("Email","send_email","val").upper() == "TRUE":
             send_email.send_email(output_file)
-        update_log("Execution completed")
+        if common_globals['unavailable_devices']:
+            update_log(f"Execution complete with warnings: The following devices were unreachable {', '.join(common_globals['unavailable_devices'])}")
+        else:
+            update_log("Execution completed")

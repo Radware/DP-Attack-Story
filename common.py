@@ -7,9 +7,12 @@ import os
 args = sys.argv.copy()
 script_filename = args.pop(0)
 script_start_time = datetime.datetime.now()
+common_globals = {'unavailable_devices':[]}
 
 temp_folder = "./Temp/"
 log_file = temp_folder + "Attack-Story.log"
+if not os.path.exists(temp_folder):
+    os.makedirs(temp_folder)
 
 def update_log(message):
     print(message)
@@ -125,7 +128,3 @@ class clsConfig():
 
 config = clsConfig()
 topN = int(config.get("General","Top_N","10"))
-
-
-
-

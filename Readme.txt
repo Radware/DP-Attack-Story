@@ -73,6 +73,17 @@
 
 
 # Version Control
+	v0.17.1 - 6 February 2025 (Steve + Prateek)
+		Added logic to skip if device is not available. 
+			Unavailable devices will be listed in the final report.
+			Unavailable devices will be part of the email body.
+		Corrected text alignment for execution details at the top of the final report.
+	v0.17.0 - 31 January 2025 (Steve)
+		Rewrote combined graph code.
+			Datasets can now contan an arbitrary number of metadata lines that will be displayed in the onHover tooltip. 
+			Currently: DefensePro IP, DefensePro Name, and Policy Name. More can be easily added on request.
+		Added Changed 'Device IP' table column to 'Device Info'. It now includes Device Name
+		Resolved an issue that occurs when no attacks are present in specified time period.
 	v0.16.7 - 9 January 2025 (Steve)
 		Additional fix for very low traffic condition.
 	v0.16.6 - 3 January 2025 (Prateek)

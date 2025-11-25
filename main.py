@@ -58,10 +58,10 @@ if __name__ == '__main__':
                 found_files = []
                 dp_list_ip = {}
                 foundtgz = False
-                foundzip = False
+                foundcsv = False
                 for filename in os.listdir(manual_folder):
                     file_path = os.path.join(manual_folder, filename)
-                    if filename.endswith(".tar.gz"):
+                    if filename.lower().endswith(".tar.gz"):
                         update_log(f'Processing {file_path}')
                         #Do tar support file stuff
                         with tarfile.open(file_path,'r:gz') as outer_tgz:
@@ -91,7 +91,7 @@ if __name__ == '__main__':
                                                     found_files.append(extracted_name)
                                                     update_log(f'     {color.GREEN}Complete{color.RESET} ({extracted_name})')
                                                     foundtgz = True
-                    elif ".zip" in filename:
+                    elif filename.lower().endswith(".zip"):
                         #BDOS csv file
                         update_log(f"Processing {file_path}")
                         with zipfile.ZipFile(file_path, 'r') as z:
@@ -123,13 +123,41 @@ if __name__ == '__main__':
                                             epoch_from_time = int(this_epoch_from_time)
                                         if 'epoch_to_time' not in locals() or this_epoch_to_time > epoch_to_time:
                                             epoch_to_time = int(this_epoch_to_time)
-                                        foundzip = True
+                                        foundcsv = True
                                         break
                             else:
                                 update_log(f"WARNING: CSV not found in {file_path}")
+                    elif filename.lower().endswith(".csv"):
+                        #Single CSV file (not in a zip)
+                        update_log(f"Opening {file_path}")
+                        with open(file_path, 'r', encoding='utf-8') as csv_file:
+                            update_log(f'     \033[92mComplete\033[0m')
+                            dp_list_temp, this_epoch_from_time, this_epoch_to_time, new_csv_attack_data = data_parser.parse_csv(csv_file)
+                            dp_list_ip.update(dp_list_temp)
+
+                            #Merge new_csv_attack_data into csv_attack_data
+                            #new_csv_attack_data = {"Destination IP Address": {"1.2.3.4": "15", "Multiple": "25333", "5.6.7.8": "7"},"Other Thing": {"2.3.4.5": "22", "3.4.5.6": "100"}}
+                            for key, values in new_csv_attack_data.items():
+                                if key != 'topN':
+                                    inner = csv_attack_data.setdefault(key, {})
+                                    for index, innerval in values.items():
+                                        inner[index] = int(inner.get(index, 0)) + int(innerval)
+                                else:
+                                    #Key = topN
+                                    topN_dest = csv_attack_data.setdefault('topN', {})
+                                    for topN_key, topN_values in values.items():
+                                        inner = topN_dest.setdefault(topN_key, {})
+                                        for index, innerval in topN_values.items():
+                                            inner[index] = int(inner.get(index, 0)) + int(innerval)
+
+                            if 'epoch_from_time' not in locals() or this_epoch_from_time < epoch_from_time:
+                                epoch_from_time = int(this_epoch_from_time)
+                            if 'epoch_to_time' not in locals() or this_epoch_to_time > epoch_to_time:
+                                epoch_to_time = int(this_epoch_to_time)
+                            foundcsv = True
                     else:
                         update_log(f"Notice: file {filename} in {manual_folder} does not end in .zip or .tar.gz and will be ignored")
-                if not foundzip:
+                if not foundcsv:
                     update_log(f"{color.YELLOW}Warning:{color.RESET} Forensics with attack details file not found.")
                     update_log("  Including forensics with attack details .zip files in the ./Manual/ folder will enhance the report.")
                 if not foundtgz:
@@ -215,22 +243,24 @@ if __name__ == '__main__':
         for file in found_files:
             #file_path = os.path.join(temp_folder, file)
             update_log(f"Processing file for BDoS attack logs: {file}")
-            result = data_parser.parse_log_file(file, syslog_ids)
+            result, rate_limiting_used, thresholds = data_parser.parse_log_file(file, syslog_ids)
             all_results.update(result)
             #print(f"Result for {file}: {result}")
+            #if rate_limiting_used:
+                #print("Rate limiting was used for this mitigation")
         #
-        # print(all_results)
+        #print(all_results)
         categorized_logs = data_parser.categorize_logs_by_state(all_results)
         state_6_logs = data_parser.extract_state_6_footprints(all_results)
         #print(state_6_logs) 
-        metrics = data_parser.calculate_attack_metrics(categorized_logs)
-        
+        metrics = data_parser.calculate_attack_metrics(categorized_logs, rate_limiting_used, thresholds)
         for syslog_id in syslog_ids:
             if syslog_id in metrics and syslog_id in state_6_logs:
                 syslog_details[syslog_id].update(metrics[syslog_id])
                 syslog_details[syslog_id].update(state_6_logs[syslog_id])
                 #print(syslog_details)
         # Calculate top BPS and PPS using html_data.get_top_n
+            #print(syslog_details)
         top_by_bps, top_by_pps, unique_protocols, count_above_threshold = data_parser.get_top_n(syslog_details, topN, threshold_gbps=1)
         for attack in top_by_bps + top_by_pps:
             dev = dp_list_ip.get(attack[1].get('Device IP', ''), {})

@@ -95,8 +95,11 @@
 		Inverse filters also effect traffic graphs.
 	v1.2.0 - 10 October 2025 (Steve)
 		Added capability for inverse policy filters. If the first policy name is --invert or -i, we will treat the rest of the policies as an exclude list.
+	v1.1.8 - 5 November 2025 (Prateek)
+		Added support to identify BDoS Rate limit in the attack lifecycle and print it in the BDoS lifecycle.
 	v1.1.7 - 29 September 2025 (Steve)
 		Removed pysftp dependencies. We now directly use paramiko instead.
+		Uncompressed .csv files are now processed in manual mode if a user unzips them.
 	v1.1.6 - 24 September 2025 (Steve)
 		Default to hex based AttackID to SyslogID conversion. 
 			Option to use decimal is available in config.ini 'useshexbasedsyslogids=false' (Only needed for DP version 8.32.x).

@@ -253,23 +253,38 @@ def get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_
                 update_log(f"Device IP {device_ip} is not available or does not exist. Skipping.")
                 continue
             device_policies = policies.get(device_ip, [])
-            filters = [
-                {
-                    "type": "termFilter",
-                    "inverseFilter": False,
-                    "field": "ruleName",
-                    "value": policy
-                }
-                for policy in device_policies
-            ]
-            
+            if not device_policies or device_policies[0].lower() not in ['--invert', '--inverse', '-i', '--exclude', '-e']:
+                #Policy list does not start with --invert or -i, so treat as inclusion list.
+                inverseFilters = False
+                filters = [
+                    {
+                        "type": "termFilter",
+                        "inverseFilter": False,
+                        "field": "ruleName",
+                        "value": policy,
+                    }
+                    for policy in device_policies
+                ]
+            else:
+                #Policy list starts with --invert or -i so treat as exclusion list
+                inverseFilters = True
+                filters = [
+                    {
+                        "type": "termFilter",
+                        "inverseFilter": True,
+                        "field": "ruleName",
+                        "value": policy,
+                    }
+                    for policy in device_policies[1:]
+                ]
             filter_json = {
-                "type": "orFilter",
+                #or filter for normal policies (term1 or term2 or term3), and filter for inverse policies (not term1 and not term2 and not term3)
+                "type": "andFilter" if inverseFilters else "orFilter", 
                 "inverseFilter": False,
                 "filters": filters
             } if filters else None
 
-            response_data = v.getAttackReports(device_ip, epoch_from_time, epoch_to_time,filter_json)
+            response_data = v.getAttackReports(device_ip, epoch_from_time, epoch_to_time, filter_json)
 
             print(f"Attack data for {device_ip}:")
             #print(response_data)
@@ -286,7 +301,6 @@ def get_attack_data(epoch_from_time, epoch_to_time, v, device_ips, policies, dp_
 
             attack_data[device_ip] = response_data
 
-        
         return attack_data
 
     except Exception as e:

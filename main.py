@@ -212,6 +212,7 @@ if __name__ == '__main__':
                         except:
                             policy_names = "<unavailable>"
                         print(f"\nPlease enter the policy names for {dp_list_ip[ip]['name']} ({ip}), separated by commas")
+                        print(f"    input --invert or -i as the first policy name to treat the list as an exclusion list instead of an inclusion list.")
                         print(f"    Available policies: ")
                         print(f"        {policy_names}")
                         policy_input = input(f"Policies (leave blank for All Policies): ").strip()
@@ -312,7 +313,13 @@ if __name__ == '__main__':
             selected_devices = []
             if len(device_ips) > 0:
                 for ip in device_ips:
-                    selected_devices.append({'deviceId': ip, 'networkPolicies': policies.get(ip, []), 'ports': []})
+                    p = policies.get(ip, [])
+                    if policies and p[0] in ['--inverse', '--invert', '-i', '--exclude', '-e']:
+                        all_policies = v.getDPPolicies(ip)['rsIDSNewRulesTable']
+                        inverse_policies = [policy['rsIDSNewRulesName'] for policy in all_policies if policy['rsIDSNewRulesName'] not in p[1:]]
+                        selected_devices.append({'deviceId': ip, 'networkPolicies': inverse_policies, 'ports': []})
+                    else:
+                        selected_devices.append({'deviceId': ip, 'networkPolicies': policies.get(ip, []), 'ports': []})
             rate_data = {
                 'bps': v.getAttackRate(epoch_from_time, epoch_to_time, "bps", selected_devices),
                 'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps", selected_devices)

@@ -1,4 +1,6 @@
 from common import *
+from collections import Counter
+from ipaddress import ip_address
 
 def timeline(waves: List[Dict[str, Any]], start_epoch: Optional[float] = None,  end_epoch: Optional[float] = None) -> str:
     # Tuning
@@ -336,26 +338,44 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
         #    'pps_time': int(graph_data['pps']['dataMap']['maxValue']['timeStamp']),
         #    }
         
-        attacked_destinations = set()
-        attack_sources = set()
-        destination_ports = set()
-        if sample_data != None:
-            for sample in sample_data:
-                attack_sources.add(sample['sourceAddress'])
-                attacked_destinations.add(sample['destAddress'])
-                destination_ports.add(sample['destPort'])
-        else:
-            attack_sources.add("0.0.0.0")
-            attacked_destinations.add("0.0.0.0")
-            destination_ports.add("0")
+        # attacked_destinations = set()
+        # attack_sources = set()
+        # destination_ports = set()
+        # if sample_data != None:
+        #     for sample in sample_data:
+        #         attack_sources.add(sample['sourceAddress'])
+        #         attacked_destinations.add(sample['destAddress'])
+        #         destination_ports.add(sample['destPort'])
+        # else:
+        #     attack_sources.add("0.0.0.0")
+        #     attacked_destinations.add("0.0.0.0")
+        #     destination_ports.add("0")
 
-        attack_sources = list(attack_sources)
-        attacked_destinations = list(attacked_destinations)
-        destination_ports = list(destination_ports)
+        # attack_sources = list(attack_sources)
+        # attacked_destinations = list(attacked_destinations)
+        # destination_ports = list(destination_ports)
 
-        attack_sources.sort(key=lambda ip: tuple(map(int, ip.split('.'))))
-        attacked_destinations.sort(key=lambda ip: tuple(map(int, ip.split('.'))))
-        destination_ports.sort(key=int)
+        # attack_sources.sort(key=lambda ip: tuple(map(int, ip.split('.'))))
+        # attacked_destinations.sort(key=lambda ip: tuple(map(int, ip.split('.'))))
+        # destination_ports.sort(key=int)
+
+        # pull fields (fallbacks if sample_data is None)
+        srcs  = [s.get('sourceAddress', '0.0.0.0') for s in sample_data] if sample_data else ['0.0.0.0']
+        dests = [s.get('destAddress',  '0.0.0.0') for s in sample_data] if sample_data else ['0.0.0.0']
+        ports = [int(s.get('destPort', 0))        for s in sample_data] if sample_data else [0]
+
+        # helper: counts -> sorted 2D by (-count, tie)
+        sorted_2d = lambda seq, tie: [[k, v] for k, v in sorted(Counter(seq).items(), key=lambda kv: (-kv[1], tie(kv[0])))]
+
+        # Sort by count, then by ip
+        attack_sources        = sorted_2d(srcs,  lambda k: (ip_address(k).version, int(ip_address(k))))
+        attacked_destinations = sorted_2d(dests, lambda k: (ip_address(k).version, int(ip_address(k))))
+        destination_ports     = sorted_2d(ports, lambda k: k)  # ports already int
+
+        if common_globals['Manual Mode']:
+            attacked_destinations = csv_data['topN']["Destination IP Address"].items()
+            destination_ports = csv_data['topN']["Destination Port"].items()
+
 
         included_attacks = 0
         total_attacks = 0
@@ -438,8 +458,51 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                     <td style="border: none; text-align: right; vertical-align: top;"><strong>Attacked Destinations:</strong></td>
                     <td style="border: none; text-align: left;">
                         Attacks were identified against <strong>{len(attacked_destinations)} destination IP address{'es' if len(attacked_destinations) != 1 else ''}</strong> and <strong>{len(destination_ports)} destination port{'s' if len(destination_ports) != 1 else ''}.</strong><br>
-                        <strong>Target IPs:</strong> {", ".join(attacked_destinations)}<br>
-                        <strong>Target Ports:</strong> {", ".join(destination_ports)}
+                        <!-- <div style="margin-left: 2em;">
+                                 <strong>Target IPs:</strong> {"; ".join(f"{ip}{' (' + str(count) + ' times)' if int(count) > 1 else ''}" for ip, count in attacked_destinations)}<br>
+                                 <strong>Target Ports:</strong> {"; ".join(f"{port}{' (' + str(count) + ' times)' if int(count) > 1 else ''}" for port, count in destination_ports)}<br>
+                        </div> -->
+                        <div style="margin-left: 2em;">
+                            <div style="margin-left: 2em; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 4px; display: inline-block;">
+                                <table style="border-collapse: separate; border-spacing: 0; width: auto; margin: 0 auto;">
+                                    <thead>
+                                    <tr>
+                                        <th colspan="2" style="text-align: center; padding: 4px 6px; position: sticky; top: -4; background: white; z-index: 3; box-shadow: inset 0 -1px #ccc;">Target IP Addresses</th>
+                                    </tr>
+                                    <tr>
+                                        <th style="text-align: center; padding: 2px 6px; position: sticky; top: 24px; background: white; z-index: 2; box-shadow: inset 0 -1px #ccc;">Target IP</th>
+                                        <th style="text-align: center; padding: 2px 6px; position: sticky; top: 24px; background: white; z-index: 2; box-shadow: inset 0 -1px #ccc;">Count</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {''.join(
+                                        f"<tr><td style='padding: 2px 6px; text-align: center;'>{ip}</td><td style='padding: 2px 6px; text-align: center;'>{count}</td></tr>"
+                                        for ip, count in attacked_destinations
+                                    )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="margin-left: 2em; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 4px; display: inline-block;">
+                                <table style="border-collapse: separate; border-spacing: 0; width: auto; margin: 0 auto;">
+                                    <thead>
+                                    <tr>
+                                        <th colspan="2" style="text-align: center; padding: 4px 6px; position: sticky; top: 0; background: white; z-index: 3; box-shadow: inset 0 -1px #ccc;">Target Ports</th>
+                                    </tr>
+                                    <tr>
+                                        <th style="text-align: center; padding: 2px 6px; position: sticky; top: 28px; background: white; z-index: 2; box-shadow: inset 0 -1px #ccc;">Target Port</th>
+                                        <th style="text-align: center; padding: 2px 6px; position: sticky; top: 28px; background: white; z-index: 2; box-shadow: inset 0 -1px #ccc;">Count</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {''.join(
+                                        f"<tr><td style='padding: 2px 6px; text-align: center;'>{port}</td><td style='padding: 2px 6px; text-align: center;'>{count}</td></tr>"
+                                        for port, count in destination_ports
+                                    )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
                     </td>
                 </tr>
                 """
@@ -506,14 +569,14 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
 #Include '(1 time) for ips and ports
 #                        <strong>Target IPs:</strong> {"; ".join(f"{ip} ({count} time{'s' if int(count) != 1 else ''})" for ip, count in csv_data["Destination IP Address"].items())}<br>
 #                        <strong>Target Ports:</strong> {"; ".join(f"{port} ({count} time{'s' if int(count) != 1 else ''})" for port, count in csv_data["Destination Port"].items())}
-        if attack_sources != ['0.0.0.0']:
+        if attack_sources != [['0.0.0.0', 1]]:
             output += f"""
                 <!-- Attack Sources -->
                 <tr style="border: none;">
                     <td style="border: none; text-align: right; vertical-align: top;"><strong>Attack Sources:</strong></td>
                     <td style="border: none; text-align: left;">
-                        Sampled data includes attacks from <strong>at least {len(attack_sources)} unique source IP addresses</strong><br>
-                        <!--{", ".join(attack_sources)}-->
+                        Sampled data includes attacks from <span title="{', '.join(f'{ip}{f' ({count} times)' if count > 1 else ''}' for ip, count in attack_sources)}"><strong>at least {len(attack_sources)} unique source IP addresses</strong></span><br>
+                        <!--{', '.join(f'{ip}{f' ({count} times)' if count > 100 else ''}' for ip, count in attack_sources)}-->
                     </td>
                 </tr>
                 """

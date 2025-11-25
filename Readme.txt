@@ -87,8 +87,10 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.2.3 - 25 November 2025 (Steve)
+		Changed 'Target IPs' and 'Target Ports' to a scrollable list instead of displaying them all at once.
 	v1.2.2 - 6 November 2025 (Steve)
-		Added ?count=1024 to rsIDSNewRulesTable query
+		Added ?count=1024 to rsIDSNewRulesTable query to resolve API failure when -i is used.
 	v1.2.1 - 27 October 2025 (Steve)
 		Inverse filters also effect traffic graphs.
 	v1.2.0 - 10 October 2025 (Steve)

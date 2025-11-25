@@ -189,8 +189,11 @@ def parse_response_file():
     returns syslog_ids, syslog_details
     """
     # Open and read the JSON response file
-    with open(temp_folder + 'response.json', 'r') as file:
-        data = json.load(file)
+    try:
+        with open(temp_folder + 'response.json', 'r') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        data = {}
 
     # Initialize lists and headers
     table_data = []

@@ -49,7 +49,7 @@
 			]
 		},
 		{
-			"name": "Python Debugger: Main.py --manually-collected --environment TestEnv",
+			"name": "Python Debugger: Main.py --manually-collected --environment Manual",
 			"type": "debugpy",
 			"request": "launch",
 			"program": "${workspaceFolder}/main.py",
@@ -58,7 +58,7 @@
 			"args":[
 				"--manually-collected",
 				"--environment",
-				"TestEnv"
+				"Manual"
 			]
 		},
 		{

@@ -87,6 +87,8 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.2.5 - 12 December 2025 (Steve)
+		Improved troubleshooting output for json_launcher
 	v1.2.4 - 27 November 2025 (Steve)
 		Added "filter_policies_effect_traffic_graphs" config.ini option. Default is True. 
 			Optional setting to make the overall traffic graphs immune to policy filters. 

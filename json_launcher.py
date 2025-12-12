@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import sys
+from common import get_readme_version, get_current_branch
 
 # Define the path to the main script and the JSON file
 json_file_path = 'launcher.json'
@@ -96,6 +97,9 @@ def run_main_script(args):
         sys.exit(0)
 
 if __name__ == "__main__":
+    print(f"Script version: {get_readme_version()}")
+    print(f"Git branch: {get_current_branch()}")
+    print(f"Python version: {sys.version}")
     # Load JSON data
     json_data = load_json(json_file_path)
 

@@ -328,4 +328,4 @@ def get_current_branch():
         branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"],stderr=subprocess.DEVNULL).decode().strip()
         return branch
     except Exception as e:
-        return f"Error: {e}"
+        return f"Error reading branch: {e}"

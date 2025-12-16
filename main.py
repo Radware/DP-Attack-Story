@@ -312,14 +312,18 @@ if __name__ == '__main__':
         if not common_globals['Manual Mode']:#Make sure we're not in manual mode
             selected_devices = []
             if len(device_ips) > 0:
+                filter_policies_effect_traffic_graphs = config.get("General","Policy_Filters_Effect_Traffic_Graphs", True)
                 for ip in device_ips:
-                    p = policies.get(ip, [])
-                    if policies and p[0] in ['--inverse', '--invert', '-i', '--exclude', '-e']:
-                        all_policies = v.getDPPolicies(ip)['rsIDSNewRulesTable']
-                        inverse_policies = [policy['rsIDSNewRulesName'] for policy in all_policies if policy['rsIDSNewRulesName'] not in p[1:]]
-                        selected_devices.append({'deviceId': ip, 'networkPolicies': inverse_policies, 'ports': []})
+                    if filter_policies_effect_traffic_graphs:
+                        p = policies.get(ip, [])
+                        if policies and p[0] in ['--inverse', '--invert', '-i', '--exclude', '-e']:
+                            all_policies = v.getDPPolicies(ip)['rsIDSNewRulesTable']
+                            inverse_policies = [policy['rsIDSNewRulesName'] for policy in all_policies if policy['rsIDSNewRulesName'] not in p[1:]]
+                            selected_devices.append({'deviceId': ip, 'networkPolicies': inverse_policies, 'ports': []})
+                        else:
+                            selected_devices.append({'deviceId': ip, 'networkPolicies': policies.get(ip, []), 'ports': []})
                     else:
-                        selected_devices.append({'deviceId': ip, 'networkPolicies': policies.get(ip, []), 'ports': []})
+                        selected_devices.append({'deviceId': ip, 'networkPolicies': [], 'ports': []})
             rate_data = {
                 'bps': v.getAttackRate(epoch_from_time, epoch_to_time, "bps", selected_devices),
                 'pps': v.getAttackRate(epoch_from_time, epoch_to_time, "pps", selected_devices)

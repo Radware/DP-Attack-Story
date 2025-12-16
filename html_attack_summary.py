@@ -575,8 +575,7 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
                 <tr style="border: none;">
                     <td style="border: none; text-align: right; vertical-align: top;"><strong>Attack Sources:</strong></td>
                     <td style="border: none; text-align: left;">
-                        Sampled data includes attacks from <span title="{', '.join(f'{ip}{f' ({count} times)' if count > 1 else ''}' for ip, count in attack_sources)}"><strong>at least {len(attack_sources)} unique source IP addresses</strong></span><br>
-                        <!--{', '.join(f'{ip}{f' ({count} times)' if count > 100 else ''}' for ip, count in attack_sources)}-->
+                        Sampled data includes attacks from <span title="{", ".join(f"{ip}{' (' + str(count) + ' times)' if int(count) > 1 else ''}" for ip, count in attack_sources)}"><strong>at least {len(attack_sources)} unique source IP addresses</strong></span><br>
                     </td>
                 </tr>
                 """

@@ -87,6 +87,8 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.2.6 - 5 January 2026 (Steve)
+		Quick fix for "NameError: name 'rate_limiting_used' is not defined" when no BDOS logs are present
 	v1.2.5 - 12 December 2025 (Steve)
 		Improved troubleshooting output for json_launcher
 	v1.2.4 - 27 November 2025 (Steve)

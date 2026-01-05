@@ -240,6 +240,10 @@ if __name__ == '__main__':
         #print(syslog_details)
         all_results = {}
 
+        result = {}
+        rate_limiting_used = {}
+        thresholds = {}
+
         for file in found_files:
             #file_path = os.path.join(temp_folder, file)
             update_log(f"Processing file for BDoS attack logs: {file}")

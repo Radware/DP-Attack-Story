@@ -87,6 +87,8 @@
 			3. Run the script with the '--manually-collected' or '-m' flag. Ex: 'python.exe main.py --manually-collected'
 
 # Version Control
+	v1.2.7 - 18 June 2026 (Steve)
+		Fixed {minimum_minutes_between_waves} output
 	v1.2.6 - 5 January 2026 (Steve)
 		Quick fix for "NameError: name 'rate_limiting_used' is not defined" when no BDOS logs are present
 	v1.2.5 - 12 December 2025 (Steve)

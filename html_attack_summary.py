@@ -411,8 +411,10 @@ def getSummary(top_metrics, graph_data, combined_graph_data, sample_data, attack
             output += f"""
             <tr style="border: none;">
                 <td style="border: none; text-align: right; vertical-align: top;"><strong>Attack Wave{'s' if len(waves) > 1 else ''}:</strong></td>
-                <td style="border: none; text-align: left;">The attacks can be broken into <strong>{len(waves)} non-overlapping attack wave{'s' if len(waves) > 1 else ''}</strong> {'with at least <strong>{minimum_minutes_between_waves} minutes</strong> between waves.' if len(waves) > 1 else ''}
+                <td style="border: none; text-align: left;">The attacks can be broken into <strong>{len(waves)} non-overlapping attack wave{'s' if len(waves) > 1 else ''}</strong> 
             """
+            if len(waves) > 1:
+                output += f"with at least <strong>{minimum_minutes_between_waves} minutes</strong> between waves."
             
             for wave in waves:
                 output += f"""<br><strong>{wave['start'].strftime(output_time_format)}</strong> to <strong>{wave['end'].strftime(output_time_format)}</strong> - <strong>{len(wave['attacks'])} attack{'s' if len(wave['attacks']) > 1 else ''}</strong> - <strong>Duration: {friendly_duration(wave['start'], wave['end'])}</strong>"""
